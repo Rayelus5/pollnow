@@ -1,0 +1,76 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VotingType {
+  SINGLE
+  MULTIPLE
+  LIMITED_MULTIPLE
+  SUBSET
+}
+
+model Poll {
+  id                     String     @id @default(uuid())
+  title                  String
+  description            String?
+  votingType             VotingType
+  maxChoices             Int?       // null = ilimitado, >0 = límite
+  startAt                DateTime
+  endAt                  DateTime
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  isPublished            Boolean    @default(false)
+  allowMultipleSelection Boolean    @default(false) // Helper flag
+  
+  options                Option[]
+  votes                  Vote[]
+}
+
+model Option {
+  id        String   @id @default(uuid())
+  pollId    String
+  name      String
+  imageUrl  String?
+  subtitle  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     VoteOption[]
+
+  @@index([pollId])
+}
+
+model Vote {
+  id          String       @id @default(uuid())
+  pollId      String
+  createdAt   DateTime     @default(now())
+  
+  // Anonimato: No guardamos UserID. 
+  // Opcional: hash de cookie para deduplicación ligera si se desea.
+  sessionHash String?      
+
+  poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  voteOptions VoteOption[]
+
+  @@index([pollId])
+}
+
+model VoteOption {
+  id       String @id @default(uuid())
+  voteId   String
+  optionId String
+  
+  vote     Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
+  option   Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@index([optionId])
+  @@index([voteId])
+}
