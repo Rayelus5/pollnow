@@ -106,7 +106,7 @@ export default function VotingForm({
 
             {/* Header de la Categoría */}
             <header className="text-center mb-10 space-y-4 animate-in slide-in-from-top-5 duration-700">
-                <span className="text-amber-500 text-xs font-bold tracking-[0.3em] uppercase">Categoría</span>
+                <span className="text-blue-500 text-xs font-bold tracking-[0.3em] uppercase">Categoría</span>
                 <h1 className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
                     {poll.title}
                 </h1>
@@ -117,8 +117,8 @@ export default function VotingForm({
 
             {/* Mensaje Feedback si ya votó */}
             {hasVoted && (
-                <div className="mb-8 max-w-xl mx-auto p-4 bg-amber-500/10 border border-amber-500/50 rounded-xl text-center animate-in fade-in zoom-in duration-300">
-                    <p className="text-amber-500 font-bold flex items-center justify-center gap-2">
+                <div className="mb-8 max-w-xl mx-auto p-4 bg-blue-500/10 border border-blue-500/50 rounded-xl text-center animate-in fade-in zoom-in duration-300">
+                    <p className="text-blue-500 font-bold flex items-center justify-center gap-2">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                         Tu voto ha sido registrado
                     </p>
@@ -143,7 +143,7 @@ export default function VotingForm({
                                 "group relative h-[400px] rounded-2xl overflow-hidden transition-all duration-300 ease-out text-left",
                                 // Estado Normal vs Seleccionado
                                 isSelected
-                                    ? "ring-4 ring-amber-500 shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)] scale-[1.02] z-10"
+                                    ? "ring-4 ring-blue-500 shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)] scale-[1.02] z-10"
                                     : "ring-1 ring-white/10 hover:ring-white/30 hover:scale-[1.01] opacity-80 hover:opacity-100"
                             )}
                         >
@@ -176,7 +176,7 @@ export default function VotingForm({
                                     {opt.name}
                                 </h3>
                                 {opt.subtitle && (
-                                    <p className="text-sm text-amber-200/80 font-medium uppercase tracking-wide border-l-2 border-amber-500 pl-3">
+                                    <p className="text-sm text-blue-200/80 font-medium uppercase tracking-wide border-l-2 border-blue-500 pl-3">
                                         {opt.subtitle}
                                     </p>
                                 )}
@@ -184,7 +184,7 @@ export default function VotingForm({
 
                             {/* Checkmark */}
                             {isSelected && (
-                                <div className="absolute top-4 right-4 bg-amber-500 text-black rounded-full p-2 shadow-lg animate-in zoom-in duration-300">
+                                <div className="absolute top-4 right-4 bg-blue-500 text-black rounded-full p-2 shadow-lg animate-in zoom-in duration-300">
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                 </div>
                             )}

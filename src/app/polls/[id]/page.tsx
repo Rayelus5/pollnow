@@ -61,7 +61,7 @@ export default async function PollPage({ params }: Props) {
     };
 
     return (
-        <main className="min-h-screen bg-black text-white selection:bg-amber-500/30">
+        <main className="min-h-screen bg-black text-white selection:bg-blue-300/30">
             <VotingForm
                 poll={formattedPoll}
                 nextPollId={nextPoll?.id || null}
