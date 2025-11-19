@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { createParticipant, deleteParticipant } from "../actions";
-import ParticipantList from "@/components/admin/ParticipantList";
+import ParticipantList from "@/components/dashboard/ParticipantList";
 
 export const dynamic = 'force-dynamic';
 

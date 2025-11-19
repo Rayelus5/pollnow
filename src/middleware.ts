@@ -1,37 +1,27 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { auth } from "@/auth"; // Importamos la configuración de auth
 
-// Tu IP pública permitida para el panel de Admin
-const ALLOWED_IP = '87.219.102.19';
-
-export function middleware(request: NextRequest) {
-    const response = NextResponse.next();
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // --- 1. SEGURIDAD ADMIN (IP WHITELIST) ---
-    if (pathname.startsWith('/admin')) {
-
-        let ip = (request as any).ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
-
-        if (ip.includes(',')) {
-            ip = ip.split(',')[0].trim();
-        }
-
-        // --- CORRECCIÓN AQUÍ ---
-        // Añadimos '::ffff:127.0.0.1' que es como Node suele ver localhost en algunos sistemas
-        const isLocal = ip === '::1' || ip === '127.0.0.1' || ip === '::ffff:127.0.0.1';
-
-        // Si no es tu IP pública Y no es local, bloqueamos
-        if (ip !== ALLOWED_IP && !isLocal) {
-            console.log(`⛔ Acceso denegado a Admin desde IP: ${ip}`);
-            return NextResponse.redirect(new URL('/', request.url));
+    // 1. PROTECCIÓN DE DASHBOARD
+    // Si intenta entrar a /dashboard y no tiene sesión -> Login
+    if (pathname.startsWith('/dashboard')) {
+        // @ts-ignore - Auth.js beta type issue workaround
+        const session = await auth(request);
+        if (!session) {
+            const loginUrl = new URL('/login', request.url);
+            // Guardamos adónde quería ir para redirigirle luego
+            loginUrl.searchParams.set('callbackUrl', pathname);
+            return NextResponse.redirect(loginUrl);
         }
     }
 
-    // --- 2. GESTIÓN DE VOTOS (COOKIE DE IDENTIDAD) ---
+    // 2. GESTIÓN DE VOTOS (Cookie Anónima) - Se mantiene igual
+    const response = NextResponse.next();
     if (!pathname.startsWith('/_next') && !pathname.includes('.')) {
         const voterId = request.cookies.get('foty_voter_id');
-
         if (!voterId) {
             const newVoterId = crypto.randomUUID();
             response.cookies.set('foty_voter_id', newVoterId, {

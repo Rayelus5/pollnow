@@ -82,7 +82,13 @@ Siga estos pasos para desplegar el entorno de desarrollo.
 5.  **Ejecución:**
     ```bash
     npm run dev
+
+    o
+
+    npx dotenv -e .env -- npm run dev
     ```
+
+    Resetear password: npx dotenv -e .env -- ts-node --compiler-options '{"module":"CommonJS"}' reset-password.ts
 
 ## Configuración del Sistema
 

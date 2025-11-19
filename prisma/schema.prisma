@@ -9,18 +9,87 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- MODELOS NUEVOS ---
+// --- 1. USUARIOS Y AUTH (NextAuth Standard) ---
 
-// El "Amigo" o Entidad recurrente
-model Participant {
-  id        String   @id @default(uuid())
-  name      String
-  imageUrl  String?  // URL de su foto oficial
-  createdAt DateTime @default(now())
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  username      String?   @unique // Para perfil público: foty.com/@rayelus
+  email         String?   @unique
+  emailVerified DateTime?
+  passwordHash  String?   // Para login con credenciales
+  image         String?
   
-  // Relación inversa: En qué encuestas ha sido nominado
-  nominations Option[]
+  // Stripe / Suscripción
+  stripeCustomerId       String?   @unique
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  subscriptionStatus     String?   @default("free") // free, active, past_due
+  subscriptionEndDate    DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  
+  // Relaciones de negocio
+  events        Event[]
 }
+
+// Modelos necesarios para NextAuth (Google login)
+model Account {
+  id                 String  @id @default(uuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// --- 2. EVENTOS (El contenedor principal) ---
+
+model Event {
+  id          String   @id @default(uuid())
+  slug        String   @unique // URL amigable: foty.com/e/mis-premios-2025
+  title       String
+  description String?
+  isPublic    Boolean  @default(false) // Public vs Private
+  tags        String[] // ["videojuegos", "amigos", "cine"]
+  
+  // Configuración
+  galaDate    DateTime? // Fecha de revelación
+  isAnonymousVoting Boolean @default(true) // Configurable por el creador
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  polls       Poll[]
+  participants Participant[] // "Roster" de participantes de este evento
+}
+
+// --- 3. ENCUESTAS Y VOTACIÓN (Adaptado) ---
 
 model Poll {
   id            String     @id @default(uuid())
@@ -28,58 +97,61 @@ model Poll {
   description   String?
   votingType    VotingType @default(SINGLE)
   maxChoices    Int?
+  order         Int        @default(0)
   
-  order         Int        @default(0) // <--- NUEVO CAMPO
-  
-  startAt       DateTime   @default(now())
-  endAt         DateTime
-  
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  isPublished   Boolean    @default(false)
+  isPublished   Boolean    @default(true)
+
+  eventId       String
+  event         Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
   options       Option[]
   votes         Vote[]
+
+  @@index([eventId])
 }
 
-// La "Nominación": Un participante en una encuesta específica
+model Participant {
+  id        String   @id @default(uuid())
+  name      String
+  imageUrl  String?
+
+  createdAt DateTime @default(now())
+  
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  nominations Option[]
+
+  @@index([eventId])
+}
+
 model Option {
   id            String      @id @default(uuid())
   pollId        String
   participantId String
+  subtitle      String?
   
-  // Campos opcionales específicos de esta nominación
-  // Ej: Participant es "Juan", pero subtitle es "Por dormirse en el cine"
-  subtitle      String?     
-  
-  order         Int         @default(0)
-  createdAt     DateTime    @default(now())
-
   poll          Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
   participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
   
   votes         VoteOption[]
 
-  // Un amigo solo puede estar una vez en la misma encuesta
   @@unique([pollId, participantId])
 }
 
-// --- SISTEMA DE VOTOS (Mantenemos igual la lógica) ---
-
 model Vote {
-  id          String       @id @default(uuid())
+  id          String   @id @default(uuid())
   pollId      String
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime @default(now())
   
-  // CAMBIO: Hacemos obligatorio el hash del votante
+  // Si el evento es público: usamos fingerprint/cookie
+  // Si el evento es privado: podríamos guardar userId si el creador lo permite, o seguir siendo anónimo
   voterHash   String       
 
   poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
   voteOptions VoteOption[]
 
-  // REGLA DE ORO: Un votante (voterHash) solo puede tener un voto por encuesta (pollId)
   @@unique([pollId, voterHash])
-  @@index([pollId])
 }
 
 model VoteOption {

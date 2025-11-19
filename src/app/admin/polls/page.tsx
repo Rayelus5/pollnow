@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { createPoll, deletePoll } from "../actions";
 import { format } from "date-fns";
-import PollList from "@/components/admin/PollList";
+import PollList from "@/components/dashboard/PollList";
 
 export const dynamic = 'force-dynamic';
 
