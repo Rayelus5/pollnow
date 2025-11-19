@@ -2,6 +2,10 @@
 
 Plataforma de votación anónima y gestión de eventos para grupos, diseñada con una arquitectura lineal y control temporal de resultados.
 
+
+https://github.com/user-attachments/assets/dbb8b9c7-f4cd-4e85-a1b7-07bb7a54937b
+
+
 ## Descripción General
 
 FOTY es una aplicación web Full-Stack que permite la creación y gestión de certámenes de premios. A diferencia de las herramientas de encuestas convencionales, FOTY estructura la experiencia en fases temporales definidas (Votación y Gala), asegurando la integridad de los resultados hasta una fecha específica.
