@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Poll" ADD COLUMN     "order" INTEGER NOT NULL DEFAULT 0;

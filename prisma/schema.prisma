@@ -27,11 +27,12 @@ model Poll {
   title         String
   description   String?
   votingType    VotingType @default(SINGLE)
-  maxChoices    Int?       // Para LIMITED_MULTIPLE
+  maxChoices    Int?
   
-  // Control de fechas
+  order         Int        @default(0) // <--- NUEVO CAMPO
+  
   startAt       DateTime   @default(now())
-  endAt         DateTime   // Cierre de votación
+  endAt         DateTime
   
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt

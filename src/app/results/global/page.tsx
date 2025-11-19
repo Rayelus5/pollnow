@@ -6,7 +6,7 @@ import GlobalResultsClient from "@/components/GlobalResultsClient";
 export const dynamic = "force-dynamic";
 
 export default async function GlobalResultsPage() {
-    // 1. Seguridad: Bloqueo Anti-Spoiler
+    // 1. Seguridad
     if (new Date() < GALA_DATE) {
         redirect("/");
     }
@@ -14,8 +14,9 @@ export default async function GlobalResultsPage() {
     // 2. Obtener datos
     const polls = await prisma.poll.findMany({
         where: { isPublished: true },
-        orderBy: { createdAt: 'asc' },
-        select: { id: true, title: true } // Solo necesitamos esto para la lista
+        // CAMBIO AQUÍ: Ordenar por 'order'
+        orderBy: { order: 'asc' },
+        select: { id: true, title: true }
     });
 
     // 3. Renderizar Cliente

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion"; // <--- Importar Variants
 import Link from "next/link";
 
 type Poll = {
@@ -9,18 +9,19 @@ type Poll = {
 };
 
 export default function GlobalResultsClient({ polls }: { polls: Poll[] }) {
-    // Variantes para la animación en cascada
-    const container = {
+
+    // Tipamos explícitamente las variantes
+    const container: Variants = {
         hidden: { opacity: 0 },
         show: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.1, // Cada tarjeta aparece 0.1s después de la anterior
+                staggerChildren: 0.1,
             },
         },
     };
 
-    const item = {
+    const item: Variants = {
         hidden: { opacity: 0, y: 20 },
         show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50 } },
     };
@@ -28,7 +29,6 @@ export default function GlobalResultsClient({ polls }: { polls: Poll[] }) {
     return (
         <main className="min-h-screen bg-black text-white p-6 selection:bg-sky-500/30 overflow-hidden relative">
 
-            {/* Fondo Ambiental Azulado */}
             <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
                 <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-900/20 rounded-full blur-[120px]" />
                 <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-sky-900/10 rounded-full blur-[120px]" />
@@ -36,7 +36,6 @@ export default function GlobalResultsClient({ polls }: { polls: Poll[] }) {
 
             <div className="max-w-6xl mx-auto relative z-10">
 
-                {/* HEADER ANIMADO */}
                 <motion.header
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -58,7 +57,6 @@ export default function GlobalResultsClient({ polls }: { polls: Poll[] }) {
                     </Link>
                 </motion.header>
 
-                {/* GRID DE TARJETAS */}
                 <motion.div
                     variants={container}
                     initial="hidden"
@@ -71,7 +69,6 @@ export default function GlobalResultsClient({ polls }: { polls: Poll[] }) {
                                 href={`/polls/${poll.id}/results`}
                                 className="group relative aspect-video bg-neutral-900/40 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/5 hover:border-sky-500/50 transition-all duration-500 block"
                             >
-                                {/* Contenido */}
                                 <div className="absolute inset-0 p-8 flex flex-col justify-between z-20">
 
                                     <div className="flex justify-between items-start">
@@ -97,10 +94,8 @@ export default function GlobalResultsClient({ polls }: { polls: Poll[] }) {
                                     </div>
                                 </div>
 
-                                {/* Efectos de Fondo Hover */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-sky-900/0 via-sky-900/0 to-blue-900/0 group-hover:via-sky-900/10 group-hover:to-blue-600/20 transition-all duration-700" />
 
-                                {/* Glow sutil en la parte inferior */}
                                 <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                             </Link>
                         </motion.div>

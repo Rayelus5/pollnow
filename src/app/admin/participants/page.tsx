@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { createParticipant, deleteParticipant } from "../actions";
+import ParticipantList from "@/components/admin/ParticipantList";
 
 export const dynamic = 'force-dynamic';
 
@@ -52,33 +53,7 @@ export default async function ParticipantsAdmin() {
 
                 {/* --- LISTA DE PARTICIPANTES --- */}
                 <div className="lg:col-span-2 space-y-3">
-                    {participants.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between bg-neutral-900/50 border border-white/5 p-4 rounded-xl hover:border-white/20 transition-colors group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gray-800 overflow-hidden">
-                                    {p.imageUrl ? (
-                                        <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">{p.name[0]}</div>
-                                    )}
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-200">{p.name}</h3>
-                                    <p className="text-xs text-gray-600 font-mono truncate max-w-[200px]">{p.id}</p>
-                                </div>
-                            </div>
-
-                            <form action={deleteParticipant.bind(null, p.id)}>
-                                <button className="text-xs text-red-900 hover:text-red-500 bg-red-950/30 hover:bg-red-950 px-3 py-1 rounded-md transition-colors">
-                                    Eliminar
-                                </button>
-                            </form>
-                        </div>
-                    ))}
-
-                    {participants.length === 0 && (
-                        <div className="text-center py-10 text-gray-600">No hay participantes aún.</div>
-                    )}
+                    <ParticipantList initialData={participants} />
                 </div>
             </div>
         </div>

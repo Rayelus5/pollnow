@@ -10,7 +10,7 @@ export default async function Home() {
   // 1. Buscar la PRIMERA encuesta para iniciar el flujo
   // Asumimos que el orden de creación define el orden de la gala
   const firstPoll = await prisma.poll.findFirst({
-    orderBy: { createdAt: 'asc' },
+    orderBy: { order: 'asc' }, 
     where: { isPublished: true }
   });
 

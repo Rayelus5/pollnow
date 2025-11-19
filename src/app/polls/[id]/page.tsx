@@ -1,8 +1,7 @@
-// app/polls/[id]/page.tsx
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import VotingForm from "@/components/VotingForm";
-import { cookies } from 'next/headers'; // Necesario para leer cookie
+import { cookies } from 'next/headers';
 
 type Props = {
     params: Promise<{ id: string }>
@@ -13,7 +12,7 @@ export default async function PollPage({ params }: Props) {
     const cookieStore = await cookies();
     const voterId = cookieStore.get('foty_voter_id')?.value;
 
-    // 1. Buscar encuesta
+    // 1. Buscar encuesta actual
     const poll = await prisma.poll.findUnique({
         where: { id },
         include: {
@@ -26,8 +25,10 @@ export default async function PollPage({ params }: Props) {
 
     if (!poll) notFound();
 
-    // 2. Buscar si YA VOTÓ
+    // 2. Buscar si YA VOTÓ y QUÉ votó
     let hasVoted = false;
+    let initialSelectedOptions: string[] = [];
+
     if (voterId) {
         const vote = await prisma.vote.findUnique({
             where: {
@@ -35,18 +36,26 @@ export default async function PollPage({ params }: Props) {
                     pollId: id,
                     voterHash: voterId
                 }
-            }
+            },
+            include: { voteOptions: true }
         });
-        hasVoted = !!vote;
+
+        if (vote) {
+            hasVoted = true;
+            initialSelectedOptions = vote.voteOptions.map(vo => vo.optionId);
+        }
     }
 
-    // 3. Buscar Siguiente
+    // --- CAMBIO CLAVE AQUÍ ---
+    // 3. Buscar Siguiente basada en el ORDEN
     const nextPoll = await prisma.poll.findFirst({
         where: {
             isPublished: true,
-            createdAt: { gt: poll.createdAt }
+            // Buscamos una que tenga un número de orden MAYOR que la actual
+            order: { gt: poll.order }
         },
-        orderBy: { createdAt: 'asc' },
+        // Ordenamos ascendente para coger la inmediatamente siguiente
+        orderBy: { order: 'asc' },
         select: { id: true }
     });
 
@@ -61,11 +70,12 @@ export default async function PollPage({ params }: Props) {
     };
 
     return (
-        <main className="min-h-screen bg-black text-white selection:bg-blue-300/30">
+        <main className="min-h-screen bg-black text-white selection:bg-blue-500/30">
             <VotingForm
                 poll={formattedPoll}
                 nextPollId={nextPoll?.id || null}
-                initialHasVoted={hasVoted} // Pasamos el estado
+                initialHasVoted={hasVoted}
+                initialSelected={initialSelectedOptions}
             />
         </main>
     );

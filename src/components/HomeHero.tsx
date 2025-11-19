@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion"; // <--- 1. Importamos Variants
 import Link from "next/link";
 import Countdown from "@/components/Countdown";
 
@@ -10,8 +10,8 @@ type Props = {
     galaDate: Date;
 };
 
-// Variantes de animación (Orquestación)
-const containerVariants = {
+// 2. Tipamos explícitamente como :Variants para evitar errores de TS en build
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
@@ -22,7 +22,8 @@ const containerVariants = {
     },
 };
 
-const itemVariants = {
+// 3. Tipamos explícitamente como :Variants
+const itemVariants: Variants = {
     hidden: { y: 30, opacity: 0, filter: "blur(10px)" },
     visible: {
         y: 0,
@@ -83,8 +84,8 @@ export default function HomeHero({ firstPollId, isGalaTime, galaDate }: Props) {
                         /* ESTADO: VOTACIÓN */
                         firstPollId ? (
                             <Link href={`/polls/${firstPollId}`} className="group relative">
-                                <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-                                <div className="relative px-10 py-4 bg-black rounded-full leading-none flex items-center">
+                                <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full blur-lg opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-x animate-pulse"></div>
+                                <div className="relative px-10 py-4 border border-blue-300/30 hover:border-white/10 bg-black hover:bg-blue-950/0 rounded-full leading-none flex items-center transition-all duration-500">
                                     <span className="text-gray-200 group-hover:text-white transition duration-200 font-bold tracking-wide">COMENZAR VOTACIÓN</span>
                                 </div>
                             </Link>

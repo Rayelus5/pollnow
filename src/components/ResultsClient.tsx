@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion"; // <--- 1. Importamos Variants
 import Link from "next/link";
 import WinnerConfetti from "@/components/WinnerConfetti";
 import { clsx } from "clsx";
@@ -22,8 +22,8 @@ type Props = {
 
 export default function ResultsClient({ pollTitle, pollDescription, results, winners, winnerImage }: Props) {
 
-    // Orquestación de entrada
-    const containerVariants = {
+    // 2. Tipamos explícitamente como :Variants
+    const containerVariants: Variants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -31,7 +31,8 @@ export default function ResultsClient({ pollTitle, pollDescription, results, win
         }
     };
 
-    const itemVariants = {
+    // 3. Tipamos explícitamente como :Variants
+    const itemVariants: Variants = {
         hidden: { y: 20, opacity: 0 },
         visible: {
             y: 0,
@@ -90,7 +91,6 @@ export default function ResultsClient({ pollTitle, pollDescription, results, win
 
                         {/* 2. CONTENIDO */}
                         <div className="relative z-10 w-full">
-                            {/* Línea decorativa superior */}
                             <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-px h-24 bg-gradient-to-b from-transparent to-blue-500"></div>
 
                             <motion.div
@@ -144,7 +144,6 @@ export default function ResultsClient({ pollTitle, pollDescription, results, win
 
                             {/* Barra de progreso */}
                             <div className="h-3 w-full bg-gray-900 rounded-full overflow-hidden border border-white/5 relative">
-                                {/* Fondo sutil para ver el track */}
                                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                 <motion.div
@@ -156,7 +155,6 @@ export default function ResultsClient({ pollTitle, pollDescription, results, win
                                         index === 0 ? 'bg-gradient-to-r from-blue-600 to-sky-400 shadow-[0_0_15px_rgba(56,189,248,0.5)]' : 'bg-gray-700'
                                     )}
                                 >
-                                    {/* Brillo en la barra del ganador */}
                                     {index === 0 && (
                                         <div className="absolute top-0 right-0 bottom-0 w-10 bg-white/30 blur-md transform skew-x-12 -translate-x-full animate-[shimmer_2s_infinite]"></div>
                                     )}
