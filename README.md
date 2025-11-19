@@ -1,36 +1,132 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FOTY (Friend of the Year)
 
-## Getting Started
+Plataforma de votación anónima y gestión de eventos para grupos, diseñada con una arquitectura lineal y control temporal de resultados.
 
-First, run the development server:
+## Descripción General
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+FOTY es una aplicación web Full-Stack que permite la creación y gestión de certámenes de premios. A diferencia de las herramientas de encuestas convencionales, FOTY estructura la experiencia en fases temporales definidas (Votación y Gala), asegurando la integridad de los resultados hasta una fecha específica.
+
+La aplicación prioriza la experiencia de usuario (UX) mediante un flujo de votación continuo y un diseño minimalista en modo oscuro, garantizando al mismo tiempo el anonimato técnico de los votantes sin requerir registro de usuarios.
+
+## Arquitectura y Stack Tecnológico
+
+El proyecto está construido sobre una arquitectura moderna orientada a Serverless y renderizado en servidor (SSR).
+
+* **Framework:** Next.js 16 (App Router)
+* **Lenguaje:** TypeScript
+* **Base de Datos:** PostgreSQL
+* **ORM:** Prisma
+* **Estilos:** Tailwind CSS
+* **Infraestructura:** Vercel (Soporte para Edge Middleware)
+
+### Modelo de Datos
+
+El sistema utiliza un modelo relacional que separa a los participantes de las encuestas, permitiendo la reutilización de entidades.
+
+* **Participant:** Entidad recurrente (el individuo susceptible de ser votado).
+* **Poll:** La categoría de votación.
+* **Option:** Tabla de relación que vincula un `Participant` con una `Poll` específica.
+* **Vote:** Registro de participación. Incluye un hash de identidad para prevenir duplicidad.
+
+## Funcionalidades Principales
+
+1.  **Votación Anónima Persistente:**
+    Utiliza un sistema de identificación basado en cookies `HttpOnly` firmadas y hashes en base de datos (`voterHash`). Esto impide votos múltiples por dispositivo/sesión sin necesidad de autenticación tradicional (email/password).
+
+2.  **Control Temporal (Anti-Spoiler):**
+    Las rutas de resultados (`/results`) implementan una validación de fecha contra la variable global `GALA_DATE`. Si la fecha actual es anterior al evento, el servidor bloquea el acceso a los datos y muestra una cuenta regresiva.
+
+3.  **Panel de Administración Seguro:**
+    CMS integrado en la ruta `/admin`. El acceso está restringido a nivel de red mediante un Middleware que verifica la dirección IP del cliente contra una lista blanca (`ALLOWED_IP`).
+
+4.  **Flujo Lineal:**
+    La navegación guía al usuario secuencialmente desde la primera categoría hasta la finalización, maximizando la tasa de participación completa.
+
+## Instalación y Configuración Local
+
+Siga estos pasos para desplegar el entorno de desarrollo.
+
+### Requisitos
+* Node.js 18 o superior.
+* Acceso a una instancia de PostgreSQL.
+
+### Pasos
+
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone <url-del-repositorio>
+    cd friend-of-the-year
+    ```
+
+2.  **Instalar dependencias:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configuración de Entorno:**
+    Cree un archivo `.env` en la raíz del proyecto basándose en el ejemplo provisto.
+    ```env
+    DATABASE_URL="postgresql://usuario:password@host:5432/database"
+    ```
+
+4.  **Inicialización de Base de Datos:**
+    Ejecute las migraciones y el script de semilla (seed) para poblar la base de datos con datos iniciales.
+    ```bash
+    npx prisma migrate dev --name init
+    ```
+
+5.  **Ejecución:**
+    ```bash
+    npm run dev
+    ```
+
+## Configuración del Sistema
+
+### Restricción de Acceso (Admin)
+Para asegurar el panel de administración, debe configurar su dirección IP pública en el middleware de seguridad.
+
+Edite el archivo `src/middleware.ts`:
+
+```typescript
+// Defina aquí su IP estática o pública actual
+const ALLOWED_IP = '87.219.XXX.XXX';
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Configuración de la Gala
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+La fecha de revelación de resultados se controla globalmente.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Edite el archivo `src/lib/config.ts`:
 
-## Learn More
+```typescript
+// Formato: Año, Mes (0-indexado), Día, Hora
+export const GALA_DATE = new Date('2025-12-31T23:59:59');
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Guía de Despliegue (Producción)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Esta aplicación está optimizada para su despliegue en Vercel.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1.  Importe el repositorio en Vercel.
+2.  Configure la variable de entorno `DATABASE_URL`.
+3.  **Configuración de Build:** Es crítico sobrescribir el comando de construcción predeterminado para asegurar la generación del cliente Prisma antes de la compilación de Next.js.
 
-## Deploy on Vercel
+**Build Command:**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx prisma generate && npx prisma migrate deploy && next build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estructura del Proyecto
+
+```text
+src/
+├── app/
+│   ├── admin/           # Panel de control (protegido por IP)
+│   ├── api/             # Endpoints REST (voto, resultados)
+│   ├── polls/           # Vistas públicas de votación
+│   └── results/         # Vistas de resultados (protegidas por fecha)
+├── components/          # Componentes UI reutilizables
+├── lib/                 # Lógica de negocio y configuración (Prisma, Config)
+└── middleware.ts        # Lógica de seguridad y gestión de sesiones
+```

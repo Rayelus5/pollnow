@@ -86,7 +86,7 @@ export default async function Home() {
 
       {/* Footer simple */}
       <footer className="absolute bottom-6 text-xs text-gray-700">
-        Created by @<a href="https://rayelus.com/portfolio" className="underline">Rayelus</a>. Built with Next.js.
+        Created by @<a href="https://rayelus.com/portfolio" className="underline">Rayelus</a> with ❤️ for the <a href="https://github.com/Rayelus5/friend_of_the_year" className="underline">Friends of the Year Awards</a>.
       </footer>
     </main>
   );
