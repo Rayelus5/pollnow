@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,50 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- 1. USUARIOS Y AUTH (NextAuth Standard) ---
-
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  username      String?   @unique // Para perfil público: foty.com/@rayelus
-  email         String?   @unique
-  emailVerified DateTime?
-  passwordHash  String?   // Para login con credenciales
-  image         String?
-  
-  // Stripe / Suscripción
-  stripeCustomerId       String?   @unique
-  stripeSubscriptionId   String?   @unique
-  stripePriceId          String?
-  subscriptionStatus     String?   @default("free") // free, active, past_due
-  subscriptionEndDate    DateTime?
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts      Account[]
-  sessions      Session[]
-  
-  // Relaciones de negocio
-  events        Event[]
+  id                   String    @id @default(uuid())
+  name                 String?
+  username             String?   @unique
+  email                String?   @unique
+  emailVerified        DateTime?
+  passwordHash         String?
+  image                String?
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  subscriptionStatus   String?   @default("free")
+  subscriptionEndDate  DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  accounts             Account[]
+  events               Event[]
+  sessions             Session[]
 }
 
-// Modelos necesarios para NextAuth (Google login)
 model Account {
-  id                 String  @id @default(uuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -65,94 +53,71 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// --- 2. EVENTOS (El contenedor principal) ---
-
 model Event {
-  id          String   @id @default(uuid())
-  slug        String   @unique // URL amigable: foty.com/e/mis-premios-2025
-  title       String
-  description String?
-  isPublic    Boolean  @default(false) // Public vs Private
-  tags        String[] // ["videojuegos", "amigos", "cine"]
-  
-  accessKey   String   @default(uuid())
-  
-  // Configuración
-  galaDate    DateTime? // Fecha de revelación
-  isAnonymousVoting Boolean @default(true) // Configurable por el creador
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  polls       Poll[]
-  participants Participant[] // "Roster" de participantes de este evento
+  id                String        @id @default(uuid())
+  slug              String        @unique
+  title             String
+  description       String?
+  isPublic          Boolean       @default(false)
+  tags              String[]
+  galaDate          DateTime?
+  isAnonymousVoting Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  userId            String
+  accessKey         String        @default(uuid())
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participants      Participant[]
+  polls             Poll[]
 }
 
-// --- 3. ENCUESTAS Y VOTACIÓN (Adaptado) ---
-
 model Poll {
-  id            String     @id @default(uuid())
-  title         String
-  description   String?
-  votingType    VotingType @default(SINGLE)
-  maxChoices    Int?
-  order         Int        @default(0)
-  
-  isPublished   Boolean    @default(true)
-  endAt         DateTime?
-
-  eventId       String
-  event         Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  options       Option[]
-  votes         Vote[]
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  votingType  VotingType @default(SINGLE)
+  maxChoices  Int?
+  order       Int        @default(0)
+  eventId     String
+  isPublished Boolean    @default(true)
+  endAt       DateTime?
+  options     Option[]
+  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  votes       Vote[]
 
   @@index([eventId])
 }
 
 model Participant {
-  id        String   @id @default(uuid())
-  name      String
-  imageUrl  String?
-
-  createdAt DateTime @default(now())
-  
-  eventId   String
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
+  id          String   @id @default(uuid())
+  name        String
+  imageUrl    String?
+  eventId     String
+  createdAt   DateTime @default(now())
   nominations Option[]
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
 }
 
 model Option {
-  id            String      @id @default(uuid())
+  id            String       @id @default(uuid())
   pollId        String
-  participantId String
   subtitle      String?
-  
-  order         Int         @default(0)
-
-  poll          Poll        @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  
+  participantId String
+  order         Int          @default(0)
+  participant   Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  poll          Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
   votes         VoteOption[]
 
   @@unique([pollId, participantId])
 }
 
 model Vote {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   pollId      String
-  createdAt   DateTime @default(now())
-  
-  // Si el evento es público: usamos fingerprint/cookie
-  // Si el evento es privado: podríamos guardar userId si el creador lo permite, o seguir siendo anónimo
-  voterHash   String       
-
+  createdAt   DateTime     @default(now())
+  voterHash   String
   poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
   voteOptions VoteOption[]
 
@@ -163,9 +128,8 @@ model VoteOption {
   id       String @id @default(uuid())
   voteId   String
   optionId String
-  
-  vote     Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
   option   Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  vote     Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
 }
 
 enum VotingType {

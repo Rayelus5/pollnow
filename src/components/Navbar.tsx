@@ -30,9 +30,9 @@ export default async function Navbar() {
                 {/* LOGO */}
                 <Link href="/" className="flex items-center gap-2 group">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-sky-300 rounded-lg flex items-center justify-center font-bold text-black group-hover:scale-110 transition-transform">
-                        F
+                        P
                     </div>
-                    <span className="font-bold text-lg tracking-tight text-white">FOTY</span>
+                    <span className="font-bold text-lg tracking-tight text-white">POLLNOW</span>
                 </Link>
 
                 {/* MENÚ CENTRAL */}

@@ -68,12 +68,14 @@ export default function VotingForm({
     poll,
     nextPollId,
     initialHasVoted = false,
-    initialSelected = [] 
+    initialSelected = [] ,
+    eventSlug
 }: {
     poll: PollData,
     nextPollId: string | null,
     initialHasVoted?: boolean,
-    initialSelected?: string[]
+    initialSelected?: string[],
+    eventSlug: string
 }) {
     const [selected, setSelected] = useState<string[]>(initialSelected);
     const [loading, setLoading] = useState(false);
@@ -96,12 +98,17 @@ export default function VotingForm({
     };
 
     const handleSubmit = async () => {
-        if (hasVoted) {
+        const doRedirect = () => {
             if (nextPollId) {
                 router.push(`/polls/${nextPollId}`);
             } else {
-                router.push(`/completed`);
+                // CAMBIO AQUÍ: Redirigir a la página específica del evento
+                router.push(`/e/${eventSlug}/completed`);
             }
+        };
+
+        if (hasVoted) {
+            doRedirect();
             return;
         }
 
@@ -118,13 +125,9 @@ export default function VotingForm({
             if (res.ok) {
                 setHasVoted(true);
                 localStorage.setItem(`voted_${poll.id}`, "true");
-
+                
                 setTimeout(() => {
-                    if (nextPollId) {
-                        router.push(`/polls/${nextPollId}`);
-                    } else {
-                        router.push(`/completed`);
-                    }
+                    doRedirect(); // Usar la función auxiliar
                 }, 500);
             } else {
                 if (res.status === 403) {
@@ -154,7 +157,7 @@ export default function VotingForm({
                 className="flex justify-start mb-8"
             >
                 <Link 
-                    href="/" 
+                    href={`/e/${eventSlug}`}
                     className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10"
                 >
                     <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

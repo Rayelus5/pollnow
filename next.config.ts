@@ -23,6 +23,12 @@ const nextConfig = {
         port: '',
         pathname: '/**', // Permitir cualquier ruta dentro de este dominio
       },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**', // Permitir cualquier ruta dentro de este dominio
+      },
     ],
   },
 };

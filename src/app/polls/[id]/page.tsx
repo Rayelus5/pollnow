@@ -20,7 +20,7 @@ export default async function PollPage({ params }: Props) {
                 orderBy: { order: 'asc' },
                 include: { participant: true }
             },
-            event: { select: { id: true } } // Necesitamos el ID del evento padre
+            event: { select: { id: true, slug: true } } // Necesitamos el ID del evento padre
         },
     });
 
@@ -75,6 +75,7 @@ export default async function PollPage({ params }: Props) {
                 nextPollId={nextPoll?.id || null}
                 initialHasVoted={hasVoted}
                 initialSelected={initialSelectedOptions}
+                eventSlug={poll.event.slug}
             />
         </main>
     );
