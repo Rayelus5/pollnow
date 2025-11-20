@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma"; // <--- Importar prisma
 import Image from "next/image";
+import { LogOut } from "lucide-react";
 
 export default async function Navbar() {
     const session = await auth();
@@ -38,9 +39,10 @@ export default async function Navbar() {
                 {/* MENÚ CENTRAL */}
                 <div className="hidden md:flex items-center gap-8">
                     <NavLink href="/">Home</NavLink>
+                    <NavLink href="/dashboard">Dashboard</NavLink>
                     <NavLink href="/polls">Polls</NavLink>
                     <NavLink href="/premium">
-                        <span className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]">Premium</span>
+                        <span className="text-indigo-400 drop-shadow-[0_0_8px_rgba(150,100,200,0.8)]">Premium</span>
                     </NavLink>
                     <NavLink href="/about">About</NavLink>
                 </div>
@@ -48,8 +50,8 @@ export default async function Navbar() {
                 {/* ZONA USUARIO */}
                 <div className="flex items-center gap-4">
                     {session?.user ? (
-                        <div className="flex items-center gap-4">
-                            <Link href="/dashboard" className="flex items-center gap-3 p-1 pr-4 rounded-full hover:bg-white/10 transition-colors group">
+                        <div className="flex items-center gap-3">
+                            <Link href="/dashboard/profile" className="flex items-center gap-3 p-1 pr-4 rounded-full hover:bg-white/10 transition-colors group border border-white/10">
                                 <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 relative">
                                     {userImage ? (
                                         <Image src={userImage} alt="Avatar" fill className="object-cover" />
@@ -70,8 +72,8 @@ export default async function Navbar() {
                                     await signOut({ redirectTo: "/" });
                                 }}
                             >
-                                <button className="text-xs text-red-400 hover:text-red-300 font-medium px-3 py-1.5 border border-red-500/20 rounded-md hover:bg-red-500/10 transition-colors">
-                                    Salir
+                                <button className="text-xs text-red-400 hover:text-red-300 font-medium p-3 border border-red-500/20 rounded-full hover:bg-red-500/10 transition-colors cursor-pointer">
+                                    <LogOut size={16} />
                                 </button>
                             </form>
                         </div>

@@ -40,7 +40,7 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
                 className="group relative flex flex-col h-full bg-neutral-900/40 border border-white/5 rounded-3xl overflow-hidden hover:border-blue-500/40 transition-colors duration-500"
             >
                 {/* Efecto Hover: Glow de fondo */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-transparent to-purple-600/0 group-hover:from-blue-600/10 group-hover:to-purple-600/10 transition-all duration-500 ease-out" />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-transparent to-purple-600/0 group-hover:from-blue-600/10 group-hover:to-sky-600/10 transition-all duration-500 ease-out" />
 
                 <div className="p-7 flex-1 relative z-10 flex flex-col">
 

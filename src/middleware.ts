@@ -12,7 +12,8 @@ export default auth(async (req) => {
     // 1. PROTECCIÓN DE DASHBOARD
     // La lógica `authorized` en auth.config.ts ya maneja el true/false,
     // pero si queremos redirección manual personalizada:
-    if (nextUrl.pathname.startsWith('/dashboard') && !isLoggedIn) {
+    const protectedPaths = ['/dashboard', '/polls', '/results', '/e', '/premium'];
+    if (protectedPaths.some(path => nextUrl.pathname.startsWith(path)) && !isLoggedIn) {
         const loginUrl = new URL('/login', req.url);
         loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
         return NextResponse.redirect(loginUrl);

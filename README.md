@@ -140,3 +140,10 @@ src/
 ├── lib/                 # Lógica de negocio y configuración (Prisma, Config)
 └── middleware.ts        # Lógica de seguridad y gestión de sesiones
 ```
+
+
+
+
+
+
+----

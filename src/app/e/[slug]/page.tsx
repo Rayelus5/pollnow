@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import HomeHero from "@/components/HomeHero";
 import { Lock } from "lucide-react"; // Necesitarás importar iconos si usas la UI de bloqueo
+import { auth } from "@/auth";
 
 type Props = {
     params: Promise<{ slug: string }>;
@@ -54,6 +55,9 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
     const now = new Date();
     const isGalaTime = now >= galaDate;
     const firstPollId = event.polls[0]?.id;
+
+    const session = await auth();
+    if (!session?.user) return null;
 
     return (
         <HomeHero

@@ -1,26 +1,39 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react'; // <--- CAMBIO: Nuevo hook de React 19/Next 15
 import { registerUser } from '@/app/lib/auth-actions';
 import Link from 'next/link';
 
 export default function RegisterForm() {
-    const [errorMessage, dispatch] = useFormState(registerUser, undefined);
+    // El nuevo hook usa (action, initialState, permalink?)
+    const [errorMessage, dispatch, isPending] = useActionState(registerUser, undefined);
 
     return (
         <form action={dispatch} className="space-y-5">
 
             <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
-                    Nombre Completo
+                    Nombre de Usuario
                 </label>
                 <input
                     name="name"
                     type="text"
-                    placeholder="Ej: Juan Pérez"
+                    placeholder="ej: jesus"
                     required
+                    // --- RESTRICCIONES HTML ---
+                    pattern="[a-z]+"
+                    maxLength={15}
+                    title="Solo letras minúsculas (a-z), sin espacios ni símbolos."
+                    // --------------------------
                     className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    onChange={(e) => {
+                        // Forzar minúsculas visualmente mientras escribe
+                        e.target.value = e.target.value.toLowerCase().replace(/[^a-z]/g, '');
+                    }}
                 />
+                <p className="text-[10px] text-gray-500 ml-1">
+                    Máx 15 caracteres. Solo letras minúsculas (a-z).
+                </p>
             </div>
 
             <div className="space-y-2">
@@ -59,25 +72,17 @@ export default function RegisterForm() {
                 </div>
             )}
 
-            <SubmitButton />
+            <button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-white text-black font-bold py-4 rounded-xl shadow-lg hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {isPending ? 'Creando cuenta...' : 'Registrarse Gratis'}
+            </button>
 
             <p className="text-center text-gray-500 text-sm pt-4">
                 ¿Ya tienes cuenta? <Link href="/login" className="text-blue-500 hover:underline font-bold">Inicia Sesión</Link>
             </p>
         </form>
-    );
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus();
-
-    return (
-        <button
-            type="submit"
-            disabled={pending}
-            className="w-full bg-white text-black font-bold py-4 rounded-xl shadow-lg hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            {pending ? 'Creando cuenta...' : 'Registrarse Gratis'}
-        </button>
     );
 }

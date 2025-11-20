@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import ExploreClient from "@/components/polls/ExploreClient"; // <--- Importamos el nuevo cliente
+import { auth } from "@/auth";
 
 type Props = {
     searchParams?: Promise<{
@@ -13,6 +14,8 @@ export const dynamic = "force-dynamic";
 export default async function ExplorePage({ searchParams }: Props) {
     const params = await searchParams;
     const query = params?.q || "";
+    const session = await auth();
+    if (!session?.user) return null;
 
     // Consulta a la DB
     const events = await prisma.event.findMany({

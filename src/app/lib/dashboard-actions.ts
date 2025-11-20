@@ -2,35 +2,41 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlanFromUser } from "@/lib/plans"; // <--- Importamos lógica
+import { getPlanFromUser } from "@/lib/plans";
 import { redirect } from "next/navigation";
 
 export async function createEvent(formData: FormData) {
     const session = await auth();
     if (!session?.user?.id) return { error: "No autorizado" };
 
-    // 1. OBTENER USUARIO COMPLETO (Para ver suscripción)
+    // 1. Verificar usuario y límites (Código existente...)
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        include: { _count: { select: { events: true } } } // Contamos sus eventos actuales
+        include: { _count: { select: { events: true } } }
     });
 
     if (!user) return { error: "Usuario no encontrado" };
 
-    // 2. VERIFICAR LÍMITES
     const plan = getPlanFromUser(user);
     const currentEvents = user._count.events;
 
     if (currentEvents >= plan.quota) {
         return {
-            error: `Has alcanzado el límite de tu plan ${plan.name} (${currentEvents}/${plan.quota}). Actualiza a Premium para crear más.`
+            error: `Has alcanzado el límite de tu plan ${plan.name} (${currentEvents}/${plan.quota}). Actualiza a Premium.`
         };
     }
 
-    // 3. CREAR EVENTO (Si pasa el filtro)
+    // 2. Preparar datos
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
-    const slug = title.toLowerCase().replace(/ /g, '-') + '-' + Math.floor(Math.random() * 10000);
+    // Generar Slug único
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 10000);
+
+    // --- LÓGICA DE FECHA POR DEFECTO (AQUÍ ESTÁ LA MAGIA) ---
+    // Calculamos la fecha actual + 2 días
+    const defaultGalaDate = new Date();
+    defaultGalaDate.setDate(defaultGalaDate.getDate() + 2);
+    // --------------------------------------------------------
 
     try {
         const newEvent = await prisma.event.create({
@@ -40,6 +46,8 @@ export async function createEvent(formData: FormData) {
                 slug,
                 userId: session.user.id,
                 isPublic: false,
+                galaDate: defaultGalaDate, // <--- Guardamos la fecha calculada
+                // accessKey se genera auto por el @default(uuid()) del schema
             }
         });
 

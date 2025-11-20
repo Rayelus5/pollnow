@@ -4,10 +4,15 @@ import Link from "next/link";
 import CreateEventButton from "@/components/dashboard/CreateEventButton"; // Lo crearemos ahora
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { getPlanFromUser } from "@/lib/plans";
 
 export default async function Dashboard() {
     const session = await auth();
     if (!session?.user) return null; // Middleware ya protege, pero por TS
+
+    // 2. Obtener usuario y plan
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    const plan = user ? getPlanFromUser(user) : { slug: 'free' };
 
     // Buscar eventos de ESTE usuario
     const events = await prisma.event.findMany({
@@ -26,7 +31,7 @@ export default async function Dashboard() {
                         <h1 className="text-3xl font-bold text-white tracking-tight">Mis Eventos</h1>
                         <p className="text-gray-400">Gestiona tus galas y entregas de premios.</p>
                     </div>
-                    <CreateEventButton />
+                    <CreateEventButton planSlug={plan.slug} user={user} />
                 </header>
 
                 {/* Grid de Eventos */}

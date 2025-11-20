@@ -1,11 +1,11 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react'; // <--- CAMBIO
 import { authenticate } from '@/app/lib/actions';
 import { motion } from 'framer-motion';
 
 export default function LoginForm() {
-    const [errorMessage, dispatch] = useFormState(authenticate, undefined);
+    const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined);
 
     return (
         <form action={dispatch} className="space-y-6">
@@ -39,7 +39,6 @@ export default function LoginForm() {
                 />
             </div>
 
-            {/* Mensaje de Error */}
             {errorMessage && (
                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-1">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,21 +48,13 @@ export default function LoginForm() {
                 </div>
             )}
 
-            <LoginButton />
+            <button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {isPending ? 'Entrando...' : 'Iniciar Sesión'}
+            </button>
         </form>
-    );
-}
-
-function LoginButton() {
-    const { pending } = useFormStatus();
-
-    return (
-        <button
-            type="submit"
-            aria-disabled={pending}
-            className="w-full bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            {pending ? 'Entrando...' : 'Iniciar Sesión'}
-        </button>
     );
 }

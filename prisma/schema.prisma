@@ -25,6 +25,7 @@ model User {
   accounts             Account[]
   events               Event[]
   sessions             Session[]
+  votes                Vote[]    @relation(name: "UserVotes")
 }
 
 model Account {
@@ -60,7 +61,7 @@ model Event {
   description       String?
   isPublic          Boolean       @default(false)
   tags              String[]
-  galaDate          DateTime?
+  galaDate          DateTime      @default(now())
   isAnonymousVoting Boolean       @default(true)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -118,6 +119,8 @@ model Vote {
   pollId      String
   createdAt   DateTime     @default(now())
   voterHash   String
+  userId      String
+  user        User         @relation(name: "UserVotes", fields: [userId], references: [id])
   poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
   voteOptions VoteOption[]
 

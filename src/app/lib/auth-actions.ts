@@ -7,54 +7,66 @@ import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 
-// Regex: Solo letras, números y espacios. Sin símbolos raros.
-const nameRegex = /^[a-zA-Z0-9\s]+$/;
+// --- VALIDACIÓN ESTRICTA ---
+// Regex: Solo letras minúsculas (a-z), sin números, sin espacios, sin acentos.
+const strictNameRegex = /^[a-z]+$/;
 
 const registerSchema = z.object({
     name: z.string()
-        .min(2, "El nombre es muy corto")
-        .regex(nameRegex, "El nombre solo puede contener letras y números"),
+        .min(3, "El nombre debe tener al menos 3 letras")
+        .max(15, "El nombre no puede superar los 15 caracteres")
+        .regex(strictNameRegex, "Solo se permiten letras minúsculas (a-z) sin espacios ni símbolos"),
     email: z.string().email("Email inválido"),
     password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
 export async function registerUser(prevState: string | undefined, formData: FormData) {
-    // 1. Validar datos
+    // 1. Obtener y sanitizar datos (Forzamos minúsculas en el nombre)
+    const rawName = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    const cleanName = rawName ? rawName.toLowerCase().trim() : "";
+
+    // 2. Validar datos con Zod
     const validatedFields = registerSchema.safeParse({
-        name: formData.get('name'),
-        email: formData.get('email'),
-        password: formData.get('password'),
+        name: cleanName,
+        email,
+        password,
     });
 
+    // --- CORRECCIÓN DEL CRASH 'reading 0' ---
     if (!validatedFields.success) {
-        return validatedFields.error.errors[0].message;
+        // Usamos flatten() para obtener los errores de forma segura
+        const fieldErrors = validatedFields.error.flatten().fieldErrors;
+        // Devolvemos el primer error que encontremos (de name, email o password)
+        return fieldErrors.name?.[0] || fieldErrors.email?.[0] || fieldErrors.password?.[0] || "Datos inválidos";
     }
 
-    const { name, email, password } = validatedFields.data;
+    const data = validatedFields.data;
 
     try {
-        // 2. Verificar si ya existe
+        // 3. Verificar si ya existe
         const existingUser = await prisma.user.findUnique({
-            where: { email },
+            where: { email: data.email },
         });
 
         if (existingUser) {
             return "Este email ya está registrado.";
         }
 
-        // 3. Encriptar contraseña
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // 4. Encriptar contraseña
+        const hashedPassword = await bcrypt.hash(data.password, 10);
 
-        // 4. Generar username único
-        const baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
-        const randomSuffix = Math.floor(Math.random() * 10000);
-        const username = `${baseUsername}${randomSuffix}`;
+        // 5. Generar username único basado en el nombre limpio
+        const randomSuffix = Math.floor(Math.random() * 1000);
+        const username = `${data.name}${randomSuffix}`;
 
-        // 5. Crear usuario
+        // 6. Crear usuario
         await prisma.user.create({
             data: {
-                name,
-                email,
+                name: data.name, // Guardamos el nombre estricto (ej: "jesus")
+                email: data.email,
                 username,
                 passwordHash: hashedPassword,
                 subscriptionStatus: 'free',
@@ -62,16 +74,16 @@ export async function registerUser(prevState: string | undefined, formData: Form
             },
         });
 
-        // 6. AUTO-LOGIN (Mejor experiencia que redirigir al login)
+        // 7. AUTO-LOGIN
         try {
             await signIn('credentials', {
-                email,
-                password,
-                redirectTo: "/dashboard" // Ruta relativa funciona en prod
+                email: data.email,
+                password: data.password,
+                redirectTo: "/dashboard"
             });
         } catch (err) {
-            if (err instanceof AuthError) throw err; // Relanzar para que NextAuth maneje el redirect
-            throw err; // Relanzar NEXT_REDIRECT
+            if (err instanceof AuthError) throw err;
+            throw err;
         }
 
     } catch (error: any) {
