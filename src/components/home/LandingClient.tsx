@@ -1,8 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, AnimatePresence } from "framer-motion";
 import { Trophy, Lock, Palette, ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { clsx } from "clsx";
+import { text } from "stream/consumers";
+
+// --- DATOS DE ANIMACIÓN DEL TÍTULO ---
+const WORDS = [
+    {
+        text: "Game Awards.",
+        // Degradado de Texto
+        gradient: "from-cyan-400 via-blue-500 to-indigo-600",
+        // Degradado de la Sombra/Glow
+        shadow: "from-cyan-500/50 via-blue-500/50 to-indigo-500/50"
+    },
+    {
+        text: "Oscars.",
+        gradient: "from-amber-200 via-yellow-400 to-orange-500",
+        shadow: "from-amber-300/50 via-yellow-500/50 to-orange-500/50"
+    },
+    {
+        text: "Grammys.",
+        gradient: "from-pink-300 via-purple-500 to-indigo-500",
+        shadow: "from-pink-500/50 via-purple-500/50 to-indigo-500/50"
+    },
+    {
+        text: "ESLANDs.",
+        gradient: "from-emerald-300 via-teal-500 to-cyan-600",
+        shadow: "from-emerald-500/50 via-teal-500/50 to-cyan-500/50"
+    },
+    {
+        text: "Tierlists.",
+        gradient: "from-teal-300 via-emerald-500 to-green-600",
+        shadow: "from-teal-500/50 via-emerald-500/50 to-green-500/50"
+    }
+];
+
+const TITLES = [
+    {
+        text: "Crea tus propios"
+    },
+    {
+        text: "Crea tus propias"
+    },
+]
 
 // --- VARIANTES DE ANIMACIÓN ---
 
@@ -11,7 +54,7 @@ const containerVariants: Variants = {
     visible: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.15, // Efecto cascada entre elementos
+            staggerChildren: 0.15,
             delayChildren: 0.2,
         },
     },
@@ -35,6 +78,21 @@ const featureContainerVariants: Variants = {
 };
 
 export default function LandingClient() {
+    const [index, setIndex] = useState(0);
+
+    // Rotación de palabras cada 3 segundos
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % WORDS.length);
+
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const specificIndexes = [4]; // Indexes específicos
+    const currentTitle = specificIndexes.includes(index) ? TITLES[1] : TITLES[0];
+    const currentWord = WORDS[index];
+
     return (
         <div className="relative overflow-hidden">
 
@@ -63,11 +121,61 @@ export default function LandingClient() {
                         <span className="text-xs font-medium text-gray-300 tracking-wide">Ahora disponible para todos</span>
                     </motion.div>
 
-                    {/* Título */}
-                    <motion.h1 variants={itemVariants} className="text-5xl md:text-8xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-gray-500 mb-6 drop-shadow-2xl">
-                        Crea tus propios <br />
-                        <span className="text-blue-500">Game Awards.</span>
-                    </motion.h1>
+                    {/* Título con Animación Compleja */}
+                    <div className="relative z-20 mb-6">
+                        <motion.h1 variants={itemVariants} className="text-5xl md:text-8xl font-extrabold tracking-tighter text-white drop-shadow-xl">
+                            {currentTitle.text} <br />
+
+                            {/* Contenedor de la palabra cambiante */}
+                            <div className="relative inline-block min-w-[500px] md:min-w-[900px] h-[1.2em]">
+                                <AnimatePresence mode="wait">
+
+                                    <motion.span
+                                        key={index}
+                                        initial={{ y: 40, opacity: 0, filter: "blur(10px)" }}
+                                        animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                                        exit={{ y: -40, opacity: 0, filter: "blur(10px)" }}
+                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                        className={clsx(
+                                            "absolute left-0 right-0 mx-auto bg-clip-text text-transparent bg-gradient-to-b pb-4 max-w-[800px]", // pb-4 para que no se corte la g o j
+                                            currentWord.gradient
+                                        )}
+                                    >
+                                        {currentWord.text}
+                                    </motion.span>
+                                </AnimatePresence>
+
+                                {/* Sombra / Glow Trasero Circular en Movimiento */}
+                                <div className="absolute m-auto inset-0 -z-10 pointer-events-none select-none flex justify-center items-center max-w-[300px] md:max-w-[500px]">
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={`glow-${index}`}
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1.2, rotate: 360 }}
+                                            exit={{ opacity: 0, scale: 1.5 }}
+                                            transition={{
+                                                opacity: { duration: 0.5 },
+                                                rotate: { duration: 10, repeat: Infinity, ease: "linear" } // Rotación continua
+                                            }}
+                                            className={clsx(
+                                                "w-[120%] h-[150%] rounded-[100%] blur-[90px] opacity-40 bg-gradient-to-r",
+                                                currentWord.shadow
+                                            )}
+                                        />
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Destello / Shimmer sobre el texto */}
+                                <motion.div
+                                    key={`shimmer-${index}`}
+                                    className="absolute bg-clip-text inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent skew-x-12"
+                                    initial={{ x: '-100%' }}
+                                    animate={{ x: '200%' }}
+                                    transition={{ duration: 1.5, ease: "easeInOut", delay: 0.2 }}
+                                />
+                            </div>
+                        </motion.h1>
+                    </div>
 
                     {/* Descripción */}
                     <motion.p variants={itemVariants} className="text-lg md:text-xl text-gray-400 max-w-2xl mb-10 leading-relaxed">
@@ -75,7 +183,7 @@ export default function LandingClient() {
                     </motion.p>
 
                     {/* Botones */}
-                    <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4">
+                    <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 relative z-30">
                         <Link
                             href="/register"
                             className="group px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:bg-gray-200 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 flex items-center gap-2"
@@ -94,7 +202,7 @@ export default function LandingClient() {
                     {/* MOCKUP VISUAL 3D */}
                     <motion.div
                         variants={itemVariants}
-                        className="mt-20 relative w-full max-w-5xl aspect-video bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden group"
+                        className="mt-20 relative w-full max-w-5xl aspect-video bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden group z-10"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10" />
 
@@ -150,7 +258,7 @@ export default function LandingClient() {
                         />
                         <FeatureCard
                             icon={<Palette className="text-purple-400" size={32} />}
-                            title="Diseño Pro"
+                            title="Diseño Épico"
                             desc="Una interfaz oscura, limpia y animada con Framer Motion que hará que tu evento parezca una producción de TV."
                         />
                     </motion.div>
@@ -178,13 +286,13 @@ export default function LandingClient() {
                         Crear Cuenta Gratis
                         <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </Link>
+                    
                 </motion.div>
 
-                <div className="absolute top-80 inset-0 bg-[radial-gradient(farthest-side,rgba(150,150,255,0.2),rgba(100,100,200,0.1))] blur-[80px] pointer-events-none" />
+                <div className="absolute top-80 inset-0 bg-[radial-gradient(farthest-side,rgba(150,150,255,0.7),rgba(100,100,200,0.1))] blur-[100px] pointer-events-none" />
             </section>
-            
+
         </div>
-        
     );
 }
 
