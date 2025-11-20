@@ -12,20 +12,21 @@ export default async function PollPage({ params }: Props) {
     const cookieStore = await cookies();
     const voterId = cookieStore.get('foty_voter_id')?.value;
 
-    // 1. Buscar encuesta actual
+    // 1. Buscar encuesta actual y su evento
     const poll = await prisma.poll.findUnique({
         where: { id },
         include: {
             options: {
                 orderBy: { order: 'asc' },
                 include: { participant: true }
-            }
+            },
+            event: { select: { id: true } } // Necesitamos el ID del evento padre
         },
     });
 
     if (!poll) notFound();
 
-    // 2. Buscar si YA VOTÓ y QUÉ votó
+    // 2. Buscar si YA VOTÓ
     let hasVoted = false;
     let initialSelectedOptions: string[] = [];
 
@@ -46,15 +47,13 @@ export default async function PollPage({ params }: Props) {
         }
     }
 
-    // --- CAMBIO CLAVE AQUÍ ---
-    // 3. Buscar Siguiente basada en el ORDEN
+    // 3. CRITICAL FIX: Buscar Siguiente del MISMO EVENTO
     const nextPoll = await prisma.poll.findFirst({
         where: {
+            eventId: poll.event.id, // <--- ESTA LÍNEA EVITA QUE SALTES A OTROS EVENTOS
             isPublished: true,
-            // Buscamos una que tenga un número de orden MAYOR que la actual
             order: { gt: poll.order }
         },
-        // Ordenamos ascendente para coger la inmediatamente siguiente
         orderBy: { order: 'asc' },
         select: { id: true }
     });

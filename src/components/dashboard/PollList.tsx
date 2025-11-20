@@ -90,8 +90,10 @@ export default function PollList({
                                                     <p className="text-xs text-gray-400 line-clamp-1">{poll.description}</p>
                                                     <div className="flex gap-4 mt-2 text-[10px] text-gray-500 font-mono">
                                                         <span>Votos: {poll._count.votes}</span>
-                                                        {/* USAMOS LA FECHA SEGURA */}
-                                                        <span>Cierra: {dateString}</span>
+                                                        {/* Mostrar solo si existe fecha */}
+                                                        {poll.endAt && isValid(new Date(poll.endAt)) && (
+                                                            <span>Cierra: {format(new Date(poll.endAt), 'dd/MM/yyyy')}</span>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -161,14 +163,15 @@ export default function PollList({
                                 />
                             </div>
                             <div>
-                                <label className="text-xs text-gray-500 uppercase block mb-1">Fecha de Cierre</label>
-                                <input
-                                    name="endAt"
-                                    type="datetime-local"
-                                    defaultValue={editingPoll && isValid(new Date(editingPoll.endAt)) ? new Date(editingPoll.endAt).toISOString().slice(0, 16) : ""}
-                                    className="w-full bg-black border border-white/20 rounded p-2 text-white dark-calendar"
-                                    required
+                                <label className="text-xs text-gray-500 uppercase block mb-1">Fecha de Cierre (Opcional)</label>
+                                <input 
+                                    name="endAt" 
+                                    type="datetime-local" 
+                                    defaultValue={editingPoll && editingPoll.endAt && isValid(new Date(editingPoll.endAt)) ? new Date(editingPoll.endAt).toISOString().slice(0, 16) : ""} 
+                                    className="w-full bg-black border border-white/20 rounded p-2 text-white dark-calendar" 
+                                    // QUITAMOS 'required'
                                 />
+                                <p className="text-[10px] text-gray-600 mt-1">Si lo dejas vacío, la votación seguirá abierta hasta la gala.</p>
                             </div>
 
                             <div className="pt-4 border-t border-white/10">

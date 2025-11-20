@@ -4,6 +4,12 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
+
+// Validación estricta de títulos
+const titleSchema = z.string()
+    .min(3, "El título es muy corto")
+    .regex(/^[a-zA-Z0-9\s\-_ñÑáéíóúÁÉÍÓÚ]+$/, "El título solo puede contener letras y números");
 
 // --- EVENTO PRINCIPAL ---
 
@@ -11,32 +17,35 @@ export async function updateEvent(eventId: string, formData: FormData) {
     const session = await auth();
     if (!session?.user) return;
 
-    const title = formData.get('title') as string;
+    const titleRaw = formData.get('title') as string;
+
+    // Validación
+    const titleResult = titleSchema.safeParse(titleRaw);
+    if (!titleResult.success) {
+        // En server actions void no podemos devolver error fácilmente al cliente sin useFormState
+        // Por ahora, si falla, no actualizamos el título.
+        return;
+    }
+
     const description = formData.get('description') as string;
     const galaDateStr = formData.get('galaDate') as string;
     const isPublic = formData.get('isPublic') === 'on';
-
-    // --- AÑADIR ESTO ---
-    // Los checkboxes envían 'on' si están marcados, o null si no.
     const isAnonymousVoting = formData.get('isAnonymousVoting') === 'on';
-    // -------------------
 
     let galaDate: Date | null = null;
     if (galaDateStr && galaDateStr !== "") {
         const parsedDate = new Date(galaDateStr);
-        if (!isNaN(parsedDate.getTime())) {
-            galaDate = parsedDate;
-        }
+        if (!isNaN(parsedDate.getTime())) galaDate = parsedDate;
     }
 
     await prisma.event.update({
         where: { id: eventId, userId: session.user.id },
         data: {
-            title,
+            title: titleRaw,
             description,
             galaDate,
             isPublic,
-            isAnonymousVoting, // <--- AÑADIRLO AQUÍ PARA QUE SE GUARDE
+            isAnonymousVoting
         }
     });
 
@@ -44,77 +53,43 @@ export async function updateEvent(eventId: string, formData: FormData) {
     if (isPublic) revalidatePath('/polls');
 }
 
+// ... (deleteEvent, rotateEventKey IGUAL que antes) ...
 export async function deleteEvent(eventId: string) {
     const session = await auth();
     if (!session?.user) return;
-
-    await prisma.event.delete({
-        where: { id: eventId, userId: session.user.id }
-    });
-
+    await prisma.event.delete({ where: { id: eventId, userId: session.user.id } });
     revalidatePath('/dashboard');
     redirect('/dashboard');
 }
 
-// --- SEGURIDAD (ESTA ES LA QUE TE FALTABA) ---
-
 export async function rotateEventKey(eventId: string) {
     const session = await auth();
     if (!session?.user) return;
-
-    // Generar nueva clave aleatoria
-    const newKey = crypto.randomUUID();
-
     await prisma.event.update({
         where: { id: eventId, userId: session.user.id },
-        data: { accessKey: newKey }
-    });
-
-    revalidatePath(`/dashboard/event/${eventId}`);
-}
-
-// --- PARTICIPANTES ---
-
-export async function createEventParticipant(eventId: string, formData: FormData) {
-    const name = formData.get('name') as string;
-    const imageUrl = formData.get('imageUrl') as string;
-    if (!name) return;
-
-    await prisma.participant.create({
-        data: { name, imageUrl, eventId }
+        data: { accessKey: crypto.randomUUID() }
     });
     revalidatePath(`/dashboard/event/${eventId}`);
 }
+// ...
 
-export async function updateEventParticipant(participantId: string, eventId: string, formData: FormData) {
-    const name = formData.get('name') as string;
-    const imageUrl = formData.get('imageUrl') as string;
-
-    await prisma.participant.update({
-        where: { id: participantId },
-        data: { name, imageUrl }
-    });
-    revalidatePath(`/dashboard/event/${eventId}`);
-}
-
-export async function deleteEventParticipant(participantId: string, eventId: string) {
-    await prisma.participant.delete({ where: { id: participantId } });
-    revalidatePath(`/dashboard/event/${eventId}`);
-}
-
-// --- ENCUESTAS (POLLS) ---
+// --- ENCUESTAS (POLLS) - SIN FECHA OBLIGATORIA ---
 
 export async function createEventPoll(eventId: string, formData: FormData) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
+
+    // Fecha opcional
     const endAtStr = formData.get('endAt') as string;
+    let endAt: Date | null = null;
+    if (endAtStr) {
+        const d = new Date(endAtStr);
+        if (!isNaN(d.getTime())) endAt = d;
+    }
+
     const participantIds = formData.getAll('participantIds') as string[];
 
-    if (!title || !endAtStr) return;
-
-    // Validación fecha encuesta
-    const endAt = new Date(endAtStr);
-    if (isNaN(endAt.getTime())) return; // Evitar crash si fecha inválida
+    if (!title) return;
 
     const lastPoll = await prisma.poll.findFirst({
         where: { eventId },
@@ -126,7 +101,7 @@ export async function createEventPoll(eventId: string, formData: FormData) {
         data: {
             title,
             description,
-            endAt,
+            endAt, // Puede ser null
             eventId,
             order: newOrder,
             isPublished: true,
@@ -139,51 +114,60 @@ export async function createEventPoll(eventId: string, formData: FormData) {
     revalidatePath(`/dashboard/event/${eventId}`);
 }
 
+// ... (updateEventPoll igual, pero aceptando endAt null) ...
 export async function updateEventPoll(pollId: string, eventId: string, formData: FormData) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const endAtStr = formData.get('endAt') as string;
     const participantIds = formData.getAll('participantIds') as string[];
 
-    const endAt = new Date(endAtStr);
+    let endAt: Date | null = null;
+    if (endAtStr) {
+        const d = new Date(endAtStr);
+        if (!isNaN(d.getTime())) endAt = d;
+    }
 
     await prisma.poll.update({
         where: { id: pollId },
-        data: { title, description, endAt: isNaN(endAt.getTime()) ? undefined : endAt }
+        data: { title, description, endAt }
     });
 
     // Sincronizar Participantes
     const currentOptions = await prisma.option.findMany({ where: { pollId } });
-
-    // Borrar desmarcados
     const toDelete = currentOptions.filter(o => !participantIds.includes(o.participantId));
-    for (const opt of toDelete) {
-        await prisma.option.delete({ where: { id: opt.id } });
-    }
-
-    // Crear nuevos marcados
+    for (const opt of toDelete) await prisma.option.delete({ where: { id: opt.id } });
     const currentIds = currentOptions.map(o => o.participantId);
     const toCreate = participantIds.filter(pId => !currentIds.includes(pId));
-    for (const pId of toCreate) {
-        await prisma.option.create({ data: { pollId, participantId: pId } });
-    }
+    for (const pId of toCreate) await prisma.option.create({ data: { pollId, participantId: pId } });
 
     revalidatePath(`/dashboard/event/${eventId}`);
 }
 
+// (deleteEventPoll y reorderEventPolls IGUAL que antes)
 export async function deleteEventPoll(pollId: string, eventId: string) {
     await prisma.poll.delete({ where: { id: pollId } });
     revalidatePath(`/dashboard/event/${eventId}`);
 }
-
 export async function reorderEventPolls(items: { id: string, order: number }[], eventId: string) {
-    await prisma.$transaction(
-        items.map((item) =>
-            prisma.poll.update({
-                where: { id: item.id },
-                data: { order: item.order }
-            })
-        )
-    );
+    await prisma.$transaction(items.map((item) => prisma.poll.update({ where: { id: item.id }, data: { order: item.order } })));
+    revalidatePath(`/dashboard/event/${eventId}`);
+}
+
+// ... (Participantes IGUAL que antes) ...
+export async function createEventParticipant(eventId: string, formData: FormData) {
+    const name = formData.get('name') as string;
+    const imageUrl = formData.get('imageUrl') as string;
+    if (!name) return;
+    await prisma.participant.create({ data: { name, imageUrl, eventId } });
+    revalidatePath(`/dashboard/event/${eventId}`);
+}
+export async function updateEventParticipant(participantId: string, eventId: string, formData: FormData) {
+    const name = formData.get('name') as string;
+    const imageUrl = formData.get('imageUrl') as string;
+    await prisma.participant.update({ where: { id: participantId }, data: { name, imageUrl } });
+    revalidatePath(`/dashboard/event/${eventId}`);
+}
+export async function deleteEventParticipant(participantId: string, eventId: string) {
+    await prisma.participant.delete({ where: { id: participantId } });
     revalidatePath(`/dashboard/event/${eventId}`);
 }

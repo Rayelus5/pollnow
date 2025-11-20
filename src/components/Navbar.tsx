@@ -5,6 +5,7 @@ import Image from "next/image";
 
 export default async function Navbar() {
     const session = await auth();
+    const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
     // --- CAMBIO CLAVE ---
     // En lugar de confiar en la sesión (que ya no tiene la imagen),
