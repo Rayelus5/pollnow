@@ -28,7 +28,7 @@ export default function ParticipantList({
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Lista de Nominados</h3>
                 <button
                     onClick={() => setIsCreating(true)}
-                    className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-200 transition-colors"
+                    className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-200 transition-colors cursor-pointer"
                 >
                     <Plus size={14} /> Añadir Nuevo
                 </button>
@@ -44,14 +44,14 @@ export default function ParticipantList({
                         }}
                         className="flex items-center gap-4"
                     >
-                        <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-bold">?</div>
+                        <div className="w-14 h-14 md:w-20 md:h-20 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-bold">?</div>
                         <div className="flex-1 grid gap-2">
-                            <input name="name" autoFocus className="bg-black border border-blue-500/30 rounded px-3 py-2 text-white text-sm w-full focus:border-blue-500 outline-none" placeholder="Nombre del amigo..." required />
+                            <input name="name" autoFocus className="bg-black border border-blue-500/30 rounded px-3 py-2 text-white text-sm w-full focus:border-blue-500 outline-none" placeholder="Nombre del participante..." required />
                             <input name="imageUrl" className="bg-black border border-blue-500/30 rounded px-3 py-2 text-white text-xs w-full focus:border-blue-500 outline-none" placeholder="https://foto.com/avatar.jpg" />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <button type="submit" className="px-4 py-1 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-500">Guardar</button>
-                            <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-1 bg-transparent text-gray-400 rounded text-xs hover:text-white">Cancelar</button>
+                            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-500 cursor-pointer">Guardar</button>
+                            <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 bg-transparent text-gray-400 rounded text-xs hover:text-white cursor-pointer">Cancelar</button>
                         </div>
                     </form>
                 </div>
@@ -59,7 +59,7 @@ export default function ParticipantList({
 
             {/* LISTA EXISTENTE */}
             {initialData.map((p) => (
-                <div key={p.id} className="bg-neutral-900/50 border border-white/5 p-4 rounded-xl flex items-center justify-between group hover:border-white/20 transition-colors">
+                <div key={p.id} className="bg-neutral-900/50 border border-white/10 p-4 rounded-xl flex items-center justify-between group hover:border-white/20 transition-colors cursor-pointer">
 
                     {editingId === p.id ? (
                         // MODO EDICIÓN
@@ -78,14 +78,14 @@ export default function ParticipantList({
                                 <input name="imageUrl" defaultValue={p.imageUrl || ""} className="bg-black border border-white/20 rounded px-2 py-1 text-white text-xs w-full" placeholder="URL Imagen" />
                             </div>
                             <div className="flex gap-2">
-                                <button type="submit" className="p-2 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30"><Save size={16} /></button>
-                                <button type="button" onClick={() => setEditingId(null)} className="p-2 bg-gray-800 text-gray-400 rounded hover:bg-gray-700"><X size={16} /></button>
+                                <button type="submit" className="p-4 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30 cursor-pointer"><Save size={20} /></button>
+                                <button type="button" onClick={() => setEditingId(null)} className="p-4 bg-gray-800 text-gray-400 rounded hover:bg-gray-700 cursor-pointer"><X size={20} /></button>
                             </div>
                         </form>
                     ) : (
                         // MODO VISTA
                         <>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 cursor-pointer ">
                                 <div className="w-12 h-12 rounded-full bg-gray-800 overflow-hidden shrink-0 border border-white/10">
                                     {p.imageUrl ? (
                                         <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
@@ -99,13 +99,13 @@ export default function ParticipantList({
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => setEditingId(p.id)} className="p-2 text-blue-400 hover:bg-blue-400/10 rounded transition">
-                                    <Pencil size={16} />
+                            <div className="flex items-center gap-2 opacity-100 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => setEditingId(p.id)} className="p-4 text-blue-400 hover:bg-blue-400/10 rounded transition cursor-pointer">
+                                    <Pencil size={20} />
                                 </button>
                                 <form action={deleteEventParticipant.bind(null, p.id, eventId)}>
-                                    <button className="p-2 text-red-400 hover:bg-red-400/10 rounded transition">
-                                        <Trash2 size={16} />
+                                    <button className="p-4 text-red-400 hover:bg-red-400/10 rounded transition cursor-pointer">
+                                        <Trash2 size={20} />
                                     </button>
                                 </form>
                             </div>

@@ -50,7 +50,7 @@ export default function PollList({
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Orden de Categorías</h3>
                 <button
                     onClick={() => setIsCreating(true)}
-                    className="bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-transform active:scale-95"
+                    className="bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-transform active:scale-95 cursor-pointer"
                 >
                     <Plus size={14} /> Nueva Categoría
                 </button>
@@ -97,13 +97,13 @@ export default function PollList({
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => setEditingPoll(poll)} className="p-2 bg-blue-500/10 text-blue-400 rounded hover:bg-blue-500/20">
-                                                        <Pencil size={14} />
+                                                <div className="flex flex-col gap-2 opacity-100 transition-opacity">
+                                                    <button onClick={() => setEditingPoll(poll)} className="p-3 bg-blue-500/10 text-blue-400 rounded hover:bg-blue-500/20 cursor-pointer">
+                                                        <Pencil size={20} />
                                                     </button>
                                                     <form action={deleteEventPoll.bind(null, poll.id, eventId)}>
-                                                        <button className="p-2 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20">
-                                                            <Trash2 size={14} />
+                                                        <button className="p-3 bg-red-500/10 text-red-400 rounded hover:bg-red-500/20 cursor-pointer">
+                                                            <Trash2 size={20} />
                                                         </button>
                                                     </form>
                                                 </div>
@@ -127,7 +127,7 @@ export default function PollList({
                                 {isCreating ? "Nueva Categoría" : "Editar Categoría"}
                             </h2>
                             <button onClick={() => { setEditingPoll(null); setIsCreating(false); }}>
-                                <X className="text-gray-400 hover:text-white" />
+                                <X className="text-gray-400 hover:text-white cursor-pointer" />
                             </button>
                         </div>
 
@@ -162,7 +162,7 @@ export default function PollList({
                                     className="w-full bg-black border border-white/20 rounded p-2 text-white focus:border-blue-500 outline-none"
                                 />
                             </div>
-                            <div>
+                            {/* <div>
                                 <label className="text-xs text-gray-500 uppercase block mb-1">Fecha de Cierre (Opcional)</label>
                                 <input 
                                     name="endAt" 
@@ -172,9 +172,9 @@ export default function PollList({
                                     // QUITAMOS 'required'
                                 />
                                 <p className="text-[10px] text-gray-600 mt-1">Si lo dejas vacío, la votación seguirá abierta hasta la gala.</p>
-                            </div>
+                            </div> */}
 
-                            <div className="pt-4 border-t border-white/10">
+                            <div>
                                 <label className="text-xs text-gray-500 uppercase block mb-3">Nominados</label>
                                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                                     {allParticipants.map(p => {
@@ -205,13 +205,13 @@ export default function PollList({
                                 <button
                                     type="button"
                                     onClick={() => { setEditingPoll(null); setIsCreating(false); }}
-                                    className="flex-1 py-3 bg-gray-800 rounded text-white font-bold hover:bg-gray-700"
+                                    className="flex-1 py-3 bg-gray-800 rounded text-white font-bold hover:bg-gray-700 cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-3 bg-blue-500 text-white rounded font-bold hover:bg-blue-400"
+                                    className="flex-1 py-3 bg-blue-500 text-white rounded font-bold hover:bg-blue-400 cursor-pointer"
                                 >
                                     {isCreating ? "Crear" : "Guardar"}
                                 </button>

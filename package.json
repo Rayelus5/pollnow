@@ -17,9 +17,13 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@hello-pangea/dnd": "^18.0.1",
+    "@pmndrs/assets": "^1.7.0",
+    "@pmndrs/branding": "^0.0.8",
     "@prisma/client": "^6.19.0",
+    "@react-spring/web": "^10.0.3",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.0",
+    "@react-three/postprocessing": "^3.0.4",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
@@ -36,6 +40,7 @@
     "tailwind-merge": "^3.4.0",
     "three": "^0.181.2",
     "use-debounce": "^10.0.6",
+    "wouter": "^3.7.1",
     "zod": "^4.1.12"
   },
   "devDependencies": {

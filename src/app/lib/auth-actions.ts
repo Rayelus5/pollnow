@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { registerSchema } from "@/lib/validations"; // <--- Usamos el nuevo validador centralizado
 import { redirect } from "next/navigation";
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 
 export async function registerUser(prevState: string | undefined, formData: FormData) {
@@ -55,7 +55,8 @@ export async function registerUser(prevState: string | undefined, formData: Form
                 username,
                 passwordHash: hashedPassword,
                 subscriptionStatus: 'free',
-                image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+                image: null
+                // image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
             },
         });
 
@@ -66,7 +67,7 @@ export async function registerUser(prevState: string | undefined, formData: Form
             await signIn('credentials', {
                 email: data.email,
                 password: data.password,
-                redirectTo: "/dashboard"
+                redirectTo: "/dashboard/profile"
             });
         } catch (err) {
             if (err instanceof AuthError) throw err;
@@ -78,4 +79,8 @@ export async function registerUser(prevState: string | undefined, formData: Form
         console.error("Register error:", error);
         return "Error interno al crear usuario.";
     }
+}
+
+export async function logoutUser() {
+    await signOut({ redirectTo: "/" });
 }

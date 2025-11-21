@@ -14,11 +14,11 @@ export default function EventTabs({
     participants: React.ReactNode,
     polls: React.ReactNode
 }) {
-    const [activeTab, setActiveTab] = useState<'stats' | 'settings' | 'participants' | 'polls'>('polls');
+    const [activeTab, setActiveTab] = useState<'stats' | 'settings' | 'participants' | 'polls'>('settings');
 
     const tabs = [
         { id: 'settings', label: 'Configuración' },
-        { id: 'participants', label: 'Participantes' },
+        { id: 'participants', label: 'Nominados' },
         { id: 'polls', label: 'Categorías' },
         { id: 'stats', label: 'Estadísticas' }
     ] as const;

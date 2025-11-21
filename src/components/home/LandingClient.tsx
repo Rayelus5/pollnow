@@ -6,7 +6,7 @@ import { Trophy, Lock, Palette, ArrowRight, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clsx } from "clsx";
 import { text } from "stream/consumers";
-import AwardMockup3D from "@/components/home/AwardMockup3D";
+import { AwardMockup3D } from "@/components/home/AwardMockup3D";
 
 // --- DATOS DE ANIMACIÓN DEL TÍTULO ---
 const WORDS = [
@@ -205,7 +205,10 @@ export default function LandingClient() {
                         variants={itemVariants}
                         className="mt-20 relative w-full max-w-5xl aspect-video bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden group z-10"
                     >
-                        <AwardMockup3D className="w-full h-full" />
+                        <Link href={"/dashboard"}>
+                            <AwardMockup3D />
+                        </Link>
+                        
                     </motion.div>
                 </motion.div>
             </section>

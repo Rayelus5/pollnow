@@ -1,139 +1,104 @@
-import React, { Suspense, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, OrbitControls, Sparkles } from "@react-three/drei";
-import { Mesh } from "three";
+import { Canvas, useFrame } from "@react-three/fiber"
+import { useGLTF, Float, Lightformer, Text, Html, ContactShadows, Environment, MeshTransmissionMaterial } from "@react-three/drei"
+import { Bloom, EffectComposer, N8AO, TiltShift2 } from "@react-three/postprocessing"
+import { suspend } from "suspend-react"
+import { easing } from "maath"
 
-// Componente principal exportado. Colócalo dentro de tu mockup visual
-// en lugar del bloque de contenido actual.
-// Ejemplo: <AwardMockup3D className="w-full h-full" />
+const inter = import("@pmndrs/assets/fonts/inter_regular.woff")
+useGLTF.preload("/bomb-gp.glb")
 
-export default function AwardMockup3D({ className = "w-full h-full" }: { className?: string }) {
-    return (
-        <div className={`relative ${className}`}>
-            {/* Canvas 3D dentro del mockup */}
-            <Canvas shadows camera={{ position: [0, 1.8, 4], fov: 40 }}>
-                <Suspense fallback={null}>
-                    <Scene />
-                </Suspense>
-            </Canvas>
+export const AwardMockup3D = () => (
+    <>
+        <Canvas eventPrefix="client" shadows camera={{ position: [0, 0, 20], fov: 120 }}>
+            <color attach="background" args={["#090A0F"]} />
+            <spotLight position={[20, 20, 10]} penumbra={1} castShadow angle={0.2} />
+                <Status position={[0, 0, 15]} />
+            <Float floatIntensity={2}>
 
-            {/* Sobreposición 2D ligera para dar sensación de UI/vidrio */}
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
-        </div>
-    );
+                    <Torus3 />
+                    <Torus />
+                    <Torus2 />
+                    {/* <Bomb scale={0.7} /> */}
+            </Float>
+            <ContactShadows scale={100} position={[0, -7.5, 0]} blur={1} far={100} opacity={0.2} />
+            <Environment preset="city">
+                <Lightformer intensity={9.8} position={[12, 5, 0]} scale={[10, 40, 1]} onUpdate={(self) => self.lookAt(0, 0, 0)} />
+            </Environment>
+            <EffectComposer>
+                <N8AO aoRadius={1} intensity={2} />
+                <Bloom mipmapBlur luminanceThreshold={8} intensity={2} levels={8} />
+                <TiltShift2 blur={0.5} />
+            </EffectComposer>
+            <Rig />
+        </Canvas>
+    </>
+)
+
+function Rig() {
+    useFrame((state, delta) => {
+        easing.damp3(
+            state.camera.position,
+            [Math.sin(-state.pointer.x) * 5, state.pointer.y * 3.5, 15 + Math.cos(state.pointer.x) * 10],
+            0.2,
+            delta,
+        )
+        state.camera.lookAt(0, 0, 0)
+    })
 }
 
-// Escena: trofeo central, escenario, focos y chispas (sparkles) como confeti.
-function Scene() {
+// const Drop = (props) => (
+//     <mesh>
+//         <sphereGeometry args={[1, 64, 64]} />
+//         <MeshTransmissionMaterial backside backsideThickness={5} thickness={2} />
+//     </mesh>
+// )
+
+const Torus = (props) => (
+    <mesh receiveShadow castShadow {...props}>
+        <torusGeometry args={[40, 3, 12, 64]} />
+        <MeshTransmissionMaterial color={"#47B5FF"} backside backsideThickness={12} thickness={2} />
+    </mesh>
+)
+
+
+const Torus2 = (props) => (
+    <mesh receiveShadow castShadow {...props}>
+        <torusGeometry args={[100, 3, 12, 64]} />
+        <MeshTransmissionMaterial color={"#4775FF"} backside backsideThickness={12} thickness={2} />
+    </mesh>
+)
+
+const Torus3 = (props) => (
+    <mesh receiveShadow castShadow {...props}>
+        <torusGeometry args={[15, 3, 12, 64]} />
+        <MeshTransmissionMaterial color={"#A6D3FF"} backside backsideThickness={12} thickness={2} />
+    </mesh>
+)
+
+// const Knot = (props) => (
+//     <mesh receiveShadow castShadow {...props}>
+//         <torusKnotGeometry args={[10, 2, 256, 40]} />
+//         <MeshTransmissionMaterial color={"green"} backside backsideThickness={12} thickness={2} />
+//     </mesh>
+// )
+
+// function Bomb(props) {
+//     const { nodes } = useGLTF("/bomb-gp.glb")
+//     return (
+//         <mesh receiveShadow castShadow geometry={nodes.Little_Boy_Little_Boy_Material_0.geometry} {...props}>
+//             <MeshTransmissionMaterial backside backsideThickness={10} thickness={5} />
+//         </mesh>
+//     )
+// }
+
+function Status(props) {
+    const text = "/pollnow"
     return (
-        <>
-            {/* Luces principales */}
-            <ambientLight intensity={0.35} />
-            <directionalLight position={[5, 5, 5]} intensity={1} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-
-            {/* Luz de relleno cálida desde atrás */}
-            <pointLight position={[-6, 2, -3]} intensity={0.6} />
-
-            {/* Entorno para reflejos suaves */}
-            <Environment preset="city" />
-
-            {/* Suelo reflectante sutil */}
-            <group position={[0, -1.05, 0]}>
-                <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-                    <planeGeometry args={[20, 20]} />
-                    <meshStandardMaterial metalness={0.2} roughness={0.6} color={"#0b1220"} opacity={0.85} transparent />
-                </mesh>
-            </group>
-
-            {/* Escenario (plataforma) */}
-            <mesh position={[0, -0.8, 0]} castShadow>
-                <cylinderGeometry args={[1.2, 1.5, 0.4, 64]} />
-                <meshStandardMaterial color={'#0f1724'} metalness={0.8} roughness={0.2} />
-            </mesh>
-
-            {/* Trofeo animado */}
-            <Trophy position={[0, 0.05, 0]} />
-
-            {/* Sparkles como confeti/partículas festivas */}
-            <Sparkles count={60} scale={2.5} size={7} speed={0.6} noise={0.6} />
-
-            {/* Controles suaves (útiles en desarrollo; se pueden quitar en producción) */}
-            <OrbitControls enablePan={false} enableZoom={false} minPolarAngle={Math.PI / 4} maxPolarAngle={Math.PI / 2.2} />
-        </>
-    );
+        <Text fontSize={14} letterSpacing={-0.025} font={suspend(inter).default} color="white" {...props}>
+            {text}
+            <Html style={{ color: "transparent", fontSize: "33.5em" }} transform>
+                {text}
+            </Html>
+        </Text>
+    )
 }
-
-// Trofeo simple construido combinando geometrías
-function Trophy({ position = [0, 0, 0] }: { position?: [number, number, number] }) {
-    const group = useRef<Mesh>(null!);
-
-    // Rotación lenta y oscilación vertical
-    useFrame(({ clock }) => {
-        const t = clock.getElapsedTime();
-        if (group.current) {
-            group.current.rotation.y = Math.sin(t * 0.4) * 0.25; // giro lento
-            group.current.position.y = Math.abs(Math.sin(t * 1.2)) * 0.03 + 0.02; // pulso sutil
-        }
-    });
-
-    return (
-        <group ref={group} position={position}>
-            {/* Base del trofeo */}
-            <mesh position={[0, -0.25, 0]} castShadow>
-                <cylinderGeometry args={[0.4, 0.5, 0.25, 48]} />
-                <meshStandardMaterial color={'#111827'} metalness={0.9} roughness={0.25} />
-            </mesh>
-
-            {/* Columnita */}
-            <mesh position={[0, -0.02, 0]} castShadow>
-                <cylinderGeometry args={[0.12, 0.12, 0.28, 32]} />
-                <meshStandardMaterial color={'#f59e0b'} metalness={1} roughness={0.15} />
-            </mesh>
-
-            {/* Copa principal */}
-            <mesh position={[0, 0.45, 0]} castShadow>
-                <cylinderGeometry args={[0.28, 0.42, 0.5, 48, 1, false]} />
-                <meshStandardMaterial color={'#f59e0b'} metalness={1} roughness={0.08} envMapIntensity={1} />
-            </mesh>
-
-            {/* Asa izquierda */}
-            <mesh position={[-0.4, 0.45, 0]} rotation={[0, 0, Math.PI / 6]} castShadow>
-                <torusGeometry args={[0.28, 0.06, 16, 60]} />
-                <meshStandardMaterial color={'#f59e0b'} metalness={1} roughness={0.08} />
-            </mesh>
-
-            {/* Asa derecha */}
-            <mesh position={[0.4, 0.45, 0]} rotation={[0, 0, -Math.PI / 6]} castShadow>
-                <torusGeometry args={[0.28, 0.06, 16, 60]} />
-                <meshStandardMaterial color={'#f59e0b'} metalness={1} roughness={0.08} />
-            </mesh>
-
-            {/* Placa frontal con número (puedes mapear textura aquí) */}
-            <mesh position={[0, -0.05, 0.42]} rotation={[0, 0, 0]}>
-                <boxGeometry args={[0.24, 0.14, 0.02]} />
-                <meshStandardMaterial color={'#111827'} metalness={0.6} roughness={0.3} />
-            </mesh>
-
-            {/* Pequeño glow/emisión debajo */}
-            <mesh position={[0, -0.6, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[0.5, 0.9, 64]} />
-                <meshBasicMaterial toneMapped={false} transparent opacity={0.12} />
-            </mesh>
-        </group>
-    );
-}
-
-/*
-Instrucciones de uso:
-1. Asegúrate de tener instaladas las dependencias:
-   npm install three @react-three/fiber @react-three/drei
-
-2. Importa y usa el componente en tu mockup original.
-   Reemplaza el bloque de elementos falsos por:
-
-   <AwardMockup3D className="w-full h-full max-w-2xl mx-auto" />
-
-3. Ajusta camera / luces / número de sparkles según necesites.
-4. Si quieres más efectos (confeti físico, partículas con gravedad,
-   o un modelo 3D real de trofeo), puedo añadir carga de GLTF y animaciones.
-*/
