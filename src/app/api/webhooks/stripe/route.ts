@@ -18,20 +18,28 @@ export async function POST(req: Request) {
     const headersList = await headers();
     const signature = headersList.get("Stripe-Signature") as string;
 
-    if (!signature) return new NextResponse("Missing Stripe Signature", { status: 400 });
+    if (!signature) {
+        console.error("❌ Webhook Error: Missing Stripe Signature header.");
+        return new NextResponse("Missing Stripe Signature", { status: 400 });
+    }
 
     let buffer: Buffer;
     try {
         const rawBody = await req.arrayBuffer();
         buffer = Buffer.from(rawBody);
     } catch (error) {
+        console.error("❌ Error reading request body as buffer:", error);
         return new NextResponse("Failed to read body", { status: 500 });
     }
 
     let event: Stripe.Event;
 
     try {
-        event = stripe.webhooks.constructEvent(buffer, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+        event = stripe.webhooks.constructEvent(
+            buffer,
+            signature,
+            process.env.STRIPE_WEBHOOK_SECRET!
+        );
     } catch (error: any) {
         console.error("⚠️ Webhook Signature Error:", error.message);
         return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
@@ -40,7 +48,7 @@ export async function POST(req: Request) {
     try {
         const session = event.data.object as Stripe.Checkout.Session;
 
-        // --- CASO 1: PAGO COMPLETADO ---
+        // --- CASO 1: PAGO COMPLETADO (CHECKOUT) ---
         if (event.type === "checkout.session.completed") {
             const appUserId = session.metadata?.userId;
             const subscriptionId = session.subscription as string;
@@ -50,9 +58,13 @@ export async function POST(req: Request) {
                 return new NextResponse("Missing essential IDs", { status: 400 });
             }
 
-            // Recuperar detalles (incluyendo cancel_at_period_end)
+            console.log(`🔄 Procesando checkout: ${subscriptionId}`);
+
+            // Recuperar detalles de la suscripción
             const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
             const priceId = subscription.items.data[0]?.price.id;
+
+            if (!priceId) return new NextResponse("Invalid subscription data", { status: 400 });
 
             await prisma.user.update({
                 where: { id: appUserId },
@@ -62,19 +74,21 @@ export async function POST(req: Request) {
                     stripePriceId: priceId,
                     subscriptionStatus: "active",
                     subscriptionEndDate: new Date(subscription.current_period_end * 1000),
-                    cancelAtPeriodEnd: subscription.cancel_at_period_end, // <--- NUEVO
+                    cancelAtPeriodEnd: subscription.cancel_at_period_end, // Guardamos estado inicial
                 },
             });
+            console.log(`✅ ÉXITO: Usuario ${appUserId} suscrito.`);
         }
 
         // --- CASO 2: SUSCRIPCIÓN ACTUALIZADA (RENOVACIÓN O CANCELACIÓN) ---
+        // Este es el evento que salta cuando le das a "Cancelar" en el portal
         if (event.type === "customer.subscription.updated") {
             const subscription = event.data.object as any;
             const customerId = subscription.customer as string;
 
             const userToUpdate = await prisma.user.findUnique({
                 where: { stripeCustomerId: customerId },
-                select: { id: true }
+                select: { id: true, email: true }
             });
 
             if (userToUpdate) {
@@ -86,32 +100,29 @@ export async function POST(req: Request) {
                         stripePriceId: priceId,
                         subscriptionStatus: subscription.status,
                         subscriptionEndDate: new Date(subscription.current_period_end * 1000),
-                        cancelAtPeriodEnd: subscription.cancel_at_period_end, // <--- NUEVO
+
+                        cancelAtPeriodEnd: subscription.cancel_at_period_end,
                     },
                 });
+                console.log(`✅ UPDATE: Suscripción ${userToUpdate.email} actualizada. Cancel At End: ${subscription.cancel_at_period_end}`);
             }
         }
 
         // --- CASO 3: SUSCRIPCIÓN ELIMINADA (FINALIZADA REALMENTE) ---
         if (event.type === "customer.subscription.deleted") {
             const customerId = session.customer as string;
-            const userToUpdate = await prisma.user.findUnique({
-                where: { stripeCustomerId: customerId },
-                select: { id: true }
-            });
 
-            if (userToUpdate) {
-                await prisma.user.update({
-                    where: { id: userToUpdate.id },
-                    data: {
-                        subscriptionStatus: "free",
-                        stripePriceId: null,
-                        stripeSubscriptionId: null,
-                        subscriptionEndDate: null,
-                        cancelAtPeriodEnd: false, // <--- RESET
-                    },
-                });
-            }
+            await prisma.user.update({
+                where: { stripeCustomerId: customerId },
+                data: {
+                    subscriptionStatus: "free",
+                    stripePriceId: null,
+                    stripeSubscriptionId: null,
+                    subscriptionEndDate: null,
+                    cancelAtPeriodEnd: false,
+                },
+            });
+            console.log(`🗑️ DELETE: Suscripción eliminada para cliente ${customerId}`);
         }
 
         return new NextResponse("OK", { status: 200 });

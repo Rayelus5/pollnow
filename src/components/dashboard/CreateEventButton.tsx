@@ -47,7 +47,7 @@ export default function CreateEventButton({ planSlug }: { planSlug: string }) {
                         <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl">
                         <h4 className="text-xl font-bold text-indigo-600 mb-4 py-2 border-b border-indigo-600">¡Ups!</h4>
                         <p className="text-white">
-                            Para crear más eventos, necesitas unirte a <b>Premium</b>. Haz clic en "Unirme ahora" para disfrutar de todas las características de nuestra plataforma.
+                            Para crear más eventos, necesitas unirte a {isPremium ? <b>Premium+</b> : isFree ? <b>Premium</b> : <b>Premium</b>}. Haz clic en "Unirme ahora" para disfrutar de todas las características de nuestra plataforma.
                         </p>
                             <div className="flex gap-3 pt-4">
                                 <button
