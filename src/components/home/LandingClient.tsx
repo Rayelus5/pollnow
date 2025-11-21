@@ -83,7 +83,7 @@ const featureContainerVariants: Variants = {
 export default function LandingClient( { session } : { session: any } ) {
     const [index, setIndex] = useState(0);
 
-    const loggedIn = session?.user?.id;
+    const loggedIn = session?.user?.id ? true : false;
 
     // Rotación de palabras cada 3 segundos
     useEffect(() => {
