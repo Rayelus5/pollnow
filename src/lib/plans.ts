@@ -10,14 +10,14 @@ export const PLANS = {
         slug: "premium",
         quota: 5,
         price: 4.99,
-        priceId: "price_1SVIs5AnnRNk3k0PGReKFytd", // Pon aquí el ID real de Stripe cuando lo crees
+        priceId: "price_1SVz0lAnnRNk3k0PSEZ15Dr0", // Pon aquí el ID real de Stripe cuando lo crees
     },
     PLUS: {
-        name: "Premium +",
+        name: "Unlimited",
         slug: "plus",
         quota: 9999, // Infinito a efectos prácticos
         price: 12.99,
-        priceId: "price_1SVIsUAnnRNk3k0P85zldNod",
+        priceId: "price_1SVz24AnnRNk3k0PvSjAEVQA",
     },
 };
 
