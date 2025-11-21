@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import ProfileForm from "@/components/dashboard/ProfileForm";
-import SubscriptionCard from "@/components/dashboard/SubscriptionCard"; // <--- Importar
+import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 
 export default async function ProfilePage() {
     const session = await auth();
@@ -27,7 +27,8 @@ export default async function ProfilePage() {
     const subData = {
         subscriptionStatus: user.subscriptionStatus,
         stripePriceId: user.stripePriceId,
-        subscriptionEndDate: user.subscriptionEndDate
+        subscriptionEndDate: user.subscriptionEndDate,
+        cancelAtPeriodEnd: user.cancelAtPeriodEnd, // <--- NUEVO
     };
 
     return (
@@ -41,7 +42,7 @@ export default async function ProfilePage() {
                 </header>
 
                 <div className="space-y-8">
-                    {/* 1. TARJETA DE SUSCRIPCIÓN (NUEVO) */}
+                    {/* 1. TARJETA DE SUSCRIPCIÓN */}
                     <SubscriptionCard user={subData} />
 
                     {/* 2. FORMULARIOS DE PERFIL */}

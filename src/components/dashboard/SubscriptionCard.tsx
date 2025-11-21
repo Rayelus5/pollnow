@@ -1,14 +1,16 @@
 "use client";
 
 import { PLANS, getPlanFromUser } from "@/lib/plans";
-import { CreditCard, Calendar, Settings } from "lucide-react";
+import { CreditCard, Calendar, AlertTriangle } from "lucide-react"; // Importar AlertTriangle
 import Link from "next/link";
 import ManageButton from "@/components/premium/ManageButton";
+import { clsx } from "clsx";
 
 type UserSubscription = {
     subscriptionStatus: string | null;
     stripePriceId: string | null;
     subscriptionEndDate: Date | null;
+    cancelAtPeriodEnd: boolean; // <--- NUEVO TIPO
 };
 
 export default function SubscriptionCard({ user }: { user: UserSubscription }) {
@@ -23,7 +25,6 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
     return (
         <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-8 relative overflow-hidden">
 
-            {/* Fondo decorativo para usuarios Premium */}
             {!isFree && (
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20" />
             )}
@@ -34,9 +35,14 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                         <CreditCard className="text-purple-500" size={20} /> Suscripción
                     </h2>
                     {!isFree && (
-                        <span className="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded-full border border-green-500/20 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                            Activa
+                        <span className={clsx(
+                            "px-3 py-1 text-xs font-bold rounded-full border flex items-center gap-2",
+                            user.cancelAtPeriodEnd
+                                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                : "bg-green-500/10 text-green-400 border-green-500/20"
+                        )}>
+                            <span className={clsx("w-2 h-2 rounded-full", user.cancelAtPeriodEnd ? "bg-amber-500" : "bg-green-500 animate-pulse")}></span>
+                            {user.cancelAtPeriodEnd ? "Cancelación Programada" : "Activa"}
                         </span>
                     )}
                 </div>
@@ -56,11 +62,19 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                             }
                         </p>
 
-                        {/* Mostrar fecha de renovación si es Premium */}
+                        {/* Lógica de Fecha Inteligente */}
                         {!isFree && renewalDate && (
-                            <div className="flex items-center gap-2 mt-4 text-xs text-gray-500">
-                                <Calendar size={12} />
-                                <span>Se renueva el {renewalDate}</span>
+                            <div className={clsx(
+                                "flex items-center gap-2 mt-4 text-xs",
+                                user.cancelAtPeriodEnd ? "text-amber-400/80" : "text-gray-500"
+                            )}>
+                                {user.cancelAtPeriodEnd ? <AlertTriangle size={12} /> : <Calendar size={12} />}
+                                <span>
+                                    {user.cancelAtPeriodEnd
+                                        ? `Finaliza el ${renewalDate}`
+                                        : `Se renueva el ${renewalDate}`
+                                    }
+                                </span>
                             </div>
                         )}
                     </div>
@@ -74,7 +88,6 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                                 Mejorar Plan
                             </Link>
                         ) : (
-                            // Botón para ir al Portal de Cliente de Stripe
                             <ManageButton />
                         )}
                     </div>

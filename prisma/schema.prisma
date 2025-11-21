@@ -20,6 +20,7 @@ model User {
   stripePriceId        String?
   subscriptionStatus   String?   @default("free")
   subscriptionEndDate  DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
   accounts             Account[]
