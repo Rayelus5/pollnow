@@ -34,6 +34,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 try {
                     const user = await prisma.user.findUnique({ where: { email } });
                     if (!user || !user.passwordHash) return null;
+                    if (!user.emailVerified) {
+                        console.log("❌ Usuario correcto pero email no verificado.");
+                        // Lanzamos un error específico que podríamos capturar en el frontend si quisiéramos
+                        // Auth.js devolverá un error de "AccessDenied" o similar
+                        return null; 
+                    }
                     const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
                     if (passwordsMatch) return user;
                 } catch (e) { return null }

@@ -2,34 +2,49 @@
 
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { registerSchema } from "@/lib/validations"; // <--- Usamos el nuevo validador centralizado
-import { redirect } from "next/navigation";
-import { signIn, signOut } from "@/auth";
-import { AuthError } from "next-auth";
+import { z } from "zod";
+import { generateVerificationToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/mail";
+import { signOut } from "@/auth";
 
+// --- 1. ESQUEMA DE VALIDACIÓN ESTRICTO ---
+const strictNameRegex = /^[a-z]+$/;
+
+const registerSchema = z.object({
+    name: z.string()
+        .min(3, "El nombre debe tener al menos 3 letras")
+        .max(15, "El nombre no puede superar los 15 caracteres")
+        .regex(strictNameRegex, "Solo se permiten letras minúsculas (a-z) sin espacios ni símbolos"),
+    email: z.string().email("Email inválido"),
+    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+});
+
+// --- 2. ACCIÓN DE REGISTRO ---
 export async function registerUser(prevState: string | undefined, formData: FormData) {
-    // 1. Obtener datos
+    // A. Sanitizar datos (Forzamos minúsculas)
     const rawName = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    // 2. Validación Fuerte (Zod + Anti-Spam + Password Policy)
+    const cleanName = rawName ? rawName.toLowerCase().trim() : "";
+
+    // B. Validar con Zod
     const validatedFields = registerSchema.safeParse({
-        name: rawName,
+        name: cleanName,
         email,
         password,
     });
 
     if (!validatedFields.success) {
-        // Devolvemos el primer error encontrado
-        const errors = validatedFields.error.flatten().fieldErrors;
-        return errors.email?.[0] || errors.password?.[0] || errors.name?.[0] || "Datos inválidos";
+        // Devolver el primer error encontrado
+        const fieldErrors = validatedFields.error.flatten().fieldErrors;
+        return fieldErrors.name?.[0] || fieldErrors.email?.[0] || fieldErrors.password?.[0] || "Datos inválidos";
     }
 
     const data = validatedFields.data;
 
     try {
-        // 3. Verificar existencia
+        // C. Verificar si el email ya existe
         const existingUser = await prisma.user.findUnique({
             where: { email: data.email },
         });
@@ -38,16 +53,14 @@ export async function registerUser(prevState: string | undefined, formData: Form
             return "Este email ya está registrado.";
         }
 
-        // 4. Encriptar
+        // D. Encriptar contraseña
         const hashedPassword = await bcrypt.hash(data.password, 10);
 
-        // 5. Generar username
-        // Usamos una estrategia simple: nombre + 4 digitos
-        const cleanName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const randomSuffix = Math.floor(Math.random() * 10000);
-        const username = `${cleanName}${randomSuffix}`;
+        // E. Generar username único
+        const randomSuffix = Math.floor(Math.random() * 1000);
+        const username = `${data.name}${randomSuffix}`;
 
-        // 6. Crear Usuario
+        // F. Crear el usuario en Base de Datos (emailVerified estará null por defecto)
         await prisma.user.create({
             data: {
                 name: data.name,
@@ -55,32 +68,26 @@ export async function registerUser(prevState: string | undefined, formData: Form
                 username,
                 passwordHash: hashedPassword,
                 subscriptionStatus: 'free',
-                image: null
-                // image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+                image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
             },
         });
 
-        // TODO: Aquí podríamos llamar a `sendVerificationEmail` si quisiéramos activar la verificación obligatoria.
-        // Por ahora, hacemos auto-login para no añadir fricción en el MVP, pero ya tenemos la validación de dominios basura.
+        // G. Generar Token de Verificación
+        const verificationToken = await generateVerificationToken(data.email);
 
-        try {
-            await signIn('credentials', {
-                email: data.email,
-                password: data.password,
-                redirectTo: "/dashboard/profile"
-            });
-        } catch (err) {
-            if (err instanceof AuthError) throw err;
-            throw err;
-        }
+        // H. Enviar Email (Usando Resend)
+        await sendVerificationEmail(verificationToken.email, verificationToken.token);
+
+        // I. Retornar ÉXITO (El formulario leerá este objeto para cambiar la UI)
+        return { success: "Cuenta creada. Por favor, revisa tu correo para verificarla." };
 
     } catch (error: any) {
-        if (error.message?.includes("NEXT_REDIRECT")) throw error;
         console.error("Register error:", error);
         return "Error interno al crear usuario.";
     }
 }
 
+// --- 3. ACCIÓN DE LOGOUT ---
 export async function logoutUser() {
     await signOut({ redirectTo: "/" });
 }
