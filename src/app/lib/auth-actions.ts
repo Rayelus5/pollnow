@@ -2,51 +2,34 @@
 
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
+import { registerSchema } from "@/lib/validations"; // <--- Usamos el nuevo validador centralizado
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 
-// --- VALIDACIÓN ESTRICTA ---
-// Regex: Solo letras minúsculas (a-z), sin números, sin espacios, sin acentos.
-const strictNameRegex = /^[a-z]+$/;
-
-const registerSchema = z.object({
-    name: z.string()
-        .min(3, "El nombre debe tener al menos 3 letras")
-        .max(15, "El nombre no puede superar los 15 caracteres")
-        .regex(strictNameRegex, "Solo se permiten letras minúsculas (a-z) sin espacios ni símbolos"),
-    email: z.string().email("Email inválido"),
-    password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-});
-
 export async function registerUser(prevState: string | undefined, formData: FormData) {
-    // 1. Obtener y sanitizar datos (Forzamos minúsculas en el nombre)
+    // 1. Obtener datos
     const rawName = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    const cleanName = rawName ? rawName.toLowerCase().trim() : "";
-
-    // 2. Validar datos con Zod
+    // 2. Validación Fuerte (Zod + Anti-Spam + Password Policy)
     const validatedFields = registerSchema.safeParse({
-        name: cleanName,
+        name: rawName,
         email,
         password,
     });
 
-    // --- CORRECCIÓN DEL CRASH 'reading 0' ---
     if (!validatedFields.success) {
-        // Usamos flatten() para obtener los errores de forma segura
-        const fieldErrors = validatedFields.error.flatten().fieldErrors;
-        // Devolvemos el primer error que encontremos (de name, email o password)
-        return fieldErrors.name?.[0] || fieldErrors.email?.[0] || fieldErrors.password?.[0] || "Datos inválidos";
+        // Devolvemos el primer error encontrado
+        const errors = validatedFields.error.flatten().fieldErrors;
+        return errors.email?.[0] || errors.password?.[0] || errors.name?.[0] || "Datos inválidos";
     }
 
     const data = validatedFields.data;
 
     try {
-        // 3. Verificar si ya existe
+        // 3. Verificar existencia
         const existingUser = await prisma.user.findUnique({
             where: { email: data.email },
         });
@@ -55,17 +38,19 @@ export async function registerUser(prevState: string | undefined, formData: Form
             return "Este email ya está registrado.";
         }
 
-        // 4. Encriptar contraseña
+        // 4. Encriptar
         const hashedPassword = await bcrypt.hash(data.password, 10);
 
-        // 5. Generar username único basado en el nombre limpio
-        const randomSuffix = Math.floor(Math.random() * 1000);
-        const username = `${data.name}${randomSuffix}`;
+        // 5. Generar username
+        // Usamos una estrategia simple: nombre + 4 digitos
+        const cleanName = data.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const randomSuffix = Math.floor(Math.random() * 10000);
+        const username = `${cleanName}${randomSuffix}`;
 
-        // 6. Crear usuario
+        // 6. Crear Usuario
         await prisma.user.create({
             data: {
-                name: data.name, // Guardamos el nombre estricto (ej: "jesus")
+                name: data.name,
                 email: data.email,
                 username,
                 passwordHash: hashedPassword,
@@ -74,7 +59,9 @@ export async function registerUser(prevState: string | undefined, formData: Form
             },
         });
 
-        // 7. AUTO-LOGIN
+        // TODO: Aquí podríamos llamar a `sendVerificationEmail` si quisiéramos activar la verificación obligatoria.
+        // Por ahora, hacemos auto-login para no añadir fricción en el MVP, pero ya tenemos la validación de dominios basura.
+
         try {
             await signIn('credentials', {
                 email: data.email,

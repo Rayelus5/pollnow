@@ -73,6 +73,24 @@ model Event {
   polls             Poll[]
 }
 
+model VerificationToken {
+  id         String   @id @default(uuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([email, token])
+}
+
 model Poll {
   id          String     @id @default(uuid())
   title       String
