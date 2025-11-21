@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { motion, Variants, AnimatePresence } from "framer-motion";
-import { Trophy, Lock, Palette, ArrowRight, Sparkles } from "lucide-react";
+import { Trophy, Lock, Palette, ArrowRight, Sparkles, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clsx } from "clsx";
 import { text } from "stream/consumers";
 import { AwardMockup3D } from "@/components/home/AwardMockup3D";
+import next from "next";
+import { is } from "date-fns/locale";
 
 // --- DATOS DE ANIMACIÓN DEL TÍTULO ---
 const WORDS = [
@@ -78,8 +80,10 @@ const featureContainerVariants: Variants = {
     }
 };
 
-export default function LandingClient() {
+export default function LandingClient( { session } : { session: any } ) {
     const [index, setIndex] = useState(0);
+
+    const loggedIn = session?.user?.id;
 
     // Rotación de palabras cada 3 segundos
     useEffect(() => {
@@ -186,11 +190,11 @@ export default function LandingClient() {
                     {/* Botones */}
                     <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 relative z-30">
                         <Link
-                            href="/register"
+                            href={loggedIn ? "/dashboard" : "/register"}
                             className="group px-8 py-4 bg-white text-black rounded-full font-bold text-lg hover:bg-gray-200 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 flex items-center gap-2"
                         >
-                            <Sparkles size={18} className="text-black" />
-                            Empezar Gratis
+                            {loggedIn ? <Plus size={18} className="text-black" /> : <Sparkles size={18} className="text-black" />}
+                            {loggedIn ? "Crear evento" : "Empezar Gratis"}
                         </Link>
                         <Link
                             href="/polls"
@@ -279,7 +283,7 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
         <motion.div
             variants={itemVariants}
             whileHover={{ y: -10 }}
-            className="p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 group"
+            className="p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 group cursor-pointer"
         >
             <div className="mb-6 p-4 bg-black/50 rounded-2xl w-fit border border-white/5 group-hover:border-white/20 transition-colors">
                 {icon}
