@@ -10,23 +10,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     typescript: true,
 });
 
-/**
- * Función para determinar la URL base de forma dinámica
- */
 function getBaseUrl() {
-    // 1. PRIORIDAD MÁXIMA: Variable manual definida en Vercel (Tu dominio real)
     if (process.env.NEXT_PUBLIC_APP_URL) {
         return process.env.NEXT_PUBLIC_APP_URL;
     }
-    // 2. Fallback: URL automática de Vercel (útil para ramas de preview)
     if (process.env.VERCEL_URL) {
         return `https://${process.env.VERCEL_URL}`;
     }
-    // 3. Localhost
     return 'http://localhost:3000';
 }
 
-// --- 1. CREAR SESIÓN DE PAGO (CHECKOUT) ---
+// --- 1. GESTIÓN DE SUSCRIPCIONES (ALTA Y CAMBIO) ---
 export async function createCheckoutSession(priceId: string) {
     const session = await auth();
 
@@ -36,14 +30,19 @@ export async function createCheckoutSession(priceId: string) {
 
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { stripeCustomerId: true, email: true },
+        select: {
+            stripeCustomerId: true,
+            email: true,
+            stripeSubscriptionId: true,
+            subscriptionStatus: true
+        },
     });
 
     if (!user) {
         return { error: "User not found." };
     }
 
-    // Obtener o crear Customer ID
+    // A. Obtener o crear Customer ID
     let customerId = user.stripeCustomerId;
     if (!customerId) {
         const customer = await stripe.customers.create({
@@ -52,16 +51,42 @@ export async function createCheckoutSession(priceId: string) {
             metadata: { userId: session.user.id }
         });
         customerId = customer.id;
-
-        await prisma.user.update({
-            where: { id: session.user.id },
-            data: { stripeCustomerId: customerId }
-        });
+        await prisma.user.update({ where: { id: session.user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    try {
-        const BASE_URL = getBaseUrl();
+    const BASE_URL = getBaseUrl();
 
+    try {
+        // --- ESCENARIO 1: ACTUALIZACIÓN DE PLAN (YA ES PREMIUM) ---
+        // Si ya tiene una suscripción activa, no abrimos checkout, la actualizamos directamente.
+        if (user.stripeSubscriptionId && user.subscriptionStatus === 'active') {
+
+            // 1. Recuperar la suscripción de Stripe para ver qué items tiene
+            const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+            const currentItem = subscription.items.data[0];
+
+            // Si intenta suscribirse a lo mismo que ya tiene, no hacemos nada
+            if (currentItem.price.id === priceId) {
+                return { error: "Ya estás suscrito a este plan." };
+            }
+
+            // 2. Actualizar la suscripción existente (Swap Plan)
+            // Esto cobra la diferencia o ajusta el crédito automáticamente
+            await stripe.subscriptions.update(user.stripeSubscriptionId, {
+                items: [{
+                    id: currentItem.id,     // ID del item que vamos a cambiar
+                    price: priceId,         // Nuevo precio (Plan)
+                }],
+                proration_behavior: 'always_invoice', // Generar factura por la diferencia ahora mismo
+            });
+
+            // 3. Redirigir al perfil con éxito (El webhook se encargará de actualizar la DB en segundo plano)
+            redirect(`${BASE_URL}/dashboard/profile?updated=true`);
+            return;
+        }
+
+        // --- ESCENARIO 2: NUEVA SUSCRIPCIÓN (ES FREE) ---
+        // Si no tiene suscripción activa, creamos una sesión de Checkout nueva.
         const checkoutSession = await stripe.checkout.sessions.create({
             customer: customerId,
             mode: 'subscription',
@@ -70,24 +95,24 @@ export async function createCheckoutSession(priceId: string) {
             success_url: `${BASE_URL}/dashboard/profile?checkout_status=success`,
             cancel_url: `${BASE_URL}/premium?checkout_status=cancelled`,
             metadata: {
-                userId: session.user.id // Importante para el webhook
+                userId: session.user.id
             }
         });
 
         if (checkoutSession.url) {
             redirect(checkoutSession.url);
         }
+
     } catch (error) {
-        console.error("Stripe Checkout Error:", error);
-        // Si es un error de redirección (NEXT_REDIRECT), lo dejamos pasar
+        console.error("Stripe Action Error:", error);
         if ((error as any).digest?.startsWith('NEXT_REDIRECT')) {
             throw error;
         }
-        return { error: "Error interno al iniciar el pago." };
+        return { error: "Error al procesar la solicitud." };
     }
 }
 
-// --- 2. CREAR SESIÓN DEL PORTAL DE CLIENTE (GESTIONAR) ---
+// --- 2. PORTAL DE CLIENTE (CANCELAR / FACTURAS) ---
 export async function createCustomerPortalSession() {
     const session = await auth();
     if (!session?.user?.id) return;
@@ -101,7 +126,6 @@ export async function createCustomerPortalSession() {
     try {
         const BASE_URL = getBaseUrl();
 
-        // Crear sesión del portal de facturación
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: user.stripeCustomerId,
             return_url: `${BASE_URL}/dashboard/profile`,
