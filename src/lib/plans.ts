@@ -23,10 +23,10 @@ export const PLANS = {
     PLUS: {
         name: "Unlimited",
         slug: "plus",
-        quota: 9999, // Infinito a efectos prácticos
+        quota: 10, // Infinito a efectos prácticos
         limits: {
-            pollsPerEvent: 50,
-            participantsPerEvent: 150
+            pollsPerEvent: 15,
+            participantsPerEvent: 50
         },
         price: 12.99,
         priceId: "price_1SVz24AnnRNk3k0PvSjAEVQA",

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Check, Sparkles, ArrowRight } from "lucide-react";
 import { clsx } from "clsx";
 import { PLANS } from "@/lib/plans";
 import CheckoutButton from "@/components/premium/CheckoutButton";
@@ -33,10 +34,10 @@ const PRICING_DATA = [
         title: "Unlimited",
         price: "12.99€",
         period: "/mes",
-        description: "Para organizadores de eventos seriales.",
-        features: ["Eventos ILIMITADOS", "50 Categorías máximo por evento", "150 Participantes máximo por evento", "Desactivación de voto anónimo", "Estadísticas Avanzadas", "Todo lo de Premium"],
+        description: "Para organizadores de eventos serios.",
+        features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Participantes máximo por evento", "Desactivación de voto anónimo", "Estadísticas Avanzadas", "Todo lo de Premium"],
         priceId: PLANS.PLUS.priceId
-    }
+    },
 ];
 
 // Variantes de animación
@@ -79,7 +80,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                     Elige tu nivel <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600">Premium</span>
                 </h1>
                 <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-                    Desbloquea todo el potencial de FOTY. Crea más eventos, invita a más amigos y gestiona múltiples galas simultáneamente.
+                    Desbloquea todo el potencial de POLLNOW. Crea más eventos, invita a más amigos y gestiona múltiples galas simultáneamente.
                 </p>
             </motion.div>
 
@@ -172,6 +173,95 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                     );
                 })}
             </motion.div>
+
+            {/* TARJETA ENTERPRISE FULL-WIDTH */}
+            <motion.div
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                className="mt-10 w-full"
+            >
+                <div className="relative overflow-hidden rounded-[2rem] border border-indigo-500/40 bg-gradient-to-r from-indigo-900/60 via-black to-purple-900/70 p-[1px] ">
+                    <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 px-8 py-12 md:py-20 bg-black/80 rounded-[2rem]">
+                        {/* Glow decorativo */}
+                        <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl" />
+                        <div className="pointer-events-none absolute right-0 bottom-0 h-40 w-40 rounded-full bg-purple-500/10 blur-3xl" />
+
+                        {/* Texto principal */}
+                        <div className="relative text-left max-w-2xl">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/40 border border-indigo-500/40 mb-4">
+                                <Sparkles size={12} className="text-indigo-300" />
+                                <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-indigo-200">
+                                    Para empresas y grandes creadores
+                                </span>
+                            </div>
+
+                            <h3 className="text-2xl md:text-3xl font-extrabold text-white mb-2">
+                                Plan Enterprise
+                            </h3>
+
+                            <p className="text-sm md:text-base text-gray-300 mb-4">
+                                Eventos ilimitados, máxima personalización y soporte prioritario. Diseñamos contigo la solución perfecta para tus galas y comunidades.
+                            </p>
+
+                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mt-8 text-gray-300">
+                                <li className="flex items-center gap-2">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                        <Check size={10} strokeWidth={3} />
+                                    </div>
+                                    Eventos y categorías ilimitadas
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                        <Check size={10} strokeWidth={3} />
+                                    </div>
+                                    Límites de participantes a medida
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                        <Check size={10} strokeWidth={3} />
+                                    </div>
+                                    Integraciones y features custom
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                        <Check size={10} strokeWidth={3} />
+                                    </div>
+                                    Soporte prioritario 1:1
+                                </li>
+                            </ul>
+                        </div>
+
+                        {/* Precio + CTA */}
+                        <div className="relative flex flex-col items-center md:items-end gap-4">
+                            <div className="text-center md:text-right">
+                                <span className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.2em] mb-1">
+                                    Precio
+                                </span>
+                                <div className="flex items-baseline gap-2 justify-start md:justify-end">
+                                    <span className="text-4xl md:text-5xl font-black text-indigo-200">
+                                        HABLEMOS
+                                    </span>
+                                </div>
+                            </div>
+
+                            <Link
+                                href="/about#contact"
+                                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm md:text-base bg-white text-black hover:bg-gray-100 transition-colors border border-white/10"
+                            >
+                                Hablar sobre Enterprise
+                                <ArrowRight size={16} />
+                            </Link>
+
+                            <span className="text-[11px] text-gray-500 max-w-xs text-center md:text-right">
+                                Cuéntanos tu caso y adaptamos POLLNOW a las necesidades de tu empresa o comunidad.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            
 
             <motion.p
                 initial={{ opacity: 0 }}

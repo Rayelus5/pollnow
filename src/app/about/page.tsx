@@ -183,7 +183,7 @@ export default function AboutPage() {
 
 
             {/* --- 4. CONTACTO --- */}
-            <section className="py-24 px-6 border-t border-white/5 bg-gradient-to-b from-black to-blue-950/20">
+            <section id="contact" className="py-24 px-6 border-t border-white/5 bg-gradient-to-b from-black to-blue-950/20">
                 <div className="max-w-3xl mx-auto">
                     <motion.div
                         initial="hidden"

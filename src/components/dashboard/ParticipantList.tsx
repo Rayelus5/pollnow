@@ -383,7 +383,7 @@ export default function ParticipantList({
                                 <div className="flex items-center gap-4 cursor-pointer flex-1 min-w-0">
                                     <div className="w-12 h-12 rounded-full bg-gray-800 overflow-hidden shrink-0 border border-white/10">
                                         {p.imageUrl ? (
-                                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                                            <img src={p.imageUrl} alt={p.name.charAt(0)} className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-sm">{p.name.substring(0, 2).toUpperCase()}</div>
                                         )}
