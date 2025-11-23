@@ -25,7 +25,7 @@ export const PLANS = {
         slug: "plus",
         quota: 9999, // Infinito a efectos prácticos
         limits: {
-            pollsPerEvent: 30,
+            pollsPerEvent: 50,
             participantsPerEvent: 150
         },
         price: 12.99,

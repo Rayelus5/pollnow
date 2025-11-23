@@ -15,7 +15,7 @@ const PRICING_DATA = [
         title: "Free",
         price: "GRATIS",
         description: "Prueba la experiencia sin compromiso.",
-        features: ["1 Evento Activo", "Votación Anónima", "Resultados Modo Gala", "Publicidad en resultados"],
+        features: ["1 Evento Activo", "5 Categorías máximo por evento", "12 Participantes máximo por evento", "Votación Anónima", "Resultados Modo Gala", "Sin publicidad"],
         priceId: null
     },
     {
@@ -24,7 +24,7 @@ const PRICING_DATA = [
         price: "4.99€",
         period: "/mes",
         description: "Para grupos de amigos activos.",
-        features: ["5 Eventos Activos", "Sin Publicidad", "Soporte Prioritario", "Todo lo de Free"],
+        features: ["5 Eventos Activos", "10 Categorías máximo por evento", "30 Participantes máximo por evento", "Estadísticas básicas", "Todo lo de Free"],
         priceId: PLANS.PREMIUM.priceId,
         highlight: true
     },
@@ -34,7 +34,7 @@ const PRICING_DATA = [
         price: "12.99€",
         period: "/mes",
         description: "Para organizadores de eventos seriales.",
-        features: ["Eventos ILIMITADOS", "Personalización de URL", "Analíticas Avanzadas", "Todo lo de Premium"],
+        features: ["Eventos ILIMITADOS", "50 Categorías máximo por evento", "150 Participantes máximo por evento", "Desactivación de voto anónimo", "Estadísticas Avanzadas", "Todo lo de Premium"],
         priceId: PLANS.PLUS.priceId
     }
 ];
@@ -102,7 +102,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                             variants={cardVariants}
                             onMouseEnter={() => setHoveredIndex(index)}
                             className={clsx(
-                                "cursor-pointer relative p-8 rounded-[2rem] flex flex-col transition-all duration-500 ease-out border h-[450px]",
+                                "cursor-pointer relative p-8 rounded-[2rem] flex flex-col transition-all duration-500 ease-out border max-h-[700px]",
                                 // Estilos base vs Highlight
                                 plan.highlight
                                     ? "bg-neutral-900 border-indigo-500/50 shadow-[0_0_40px_-10px_rgba(59,130,246,0.15)]"
