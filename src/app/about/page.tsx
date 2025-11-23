@@ -200,21 +200,27 @@ export default function AboutPage() {
                             <p className="text-gray-400">¿Tienes una idea, un bug o simplemente quieres saludar?</p>
                         </motion.div>
 
-                        <motion.form variants={fadeInUp} className="space-y-4">
+                        <motion.form action={"https://submit-form.com/dIye1ORvC"} variants={fadeInUp} className="space-y-4">
+                            <input
+                                type="hidden"
+                                name="_redirect"
+                                value="https://pollnow.es/thanks"
+                            />
+
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre</label>
-                                    <input type="text" placeholder="Tu nombre" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
+                                    <label htmlFor="name" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre</label>
+                                    <input name="name" id="name" type="text" placeholder="Tu nombre" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email</label>
-                                    <input type="email" placeholder="tu@email.com" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
+                                    <label htmlFor="email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email</label>
+                                    <input name="email" id="email" type="email" placeholder="tu@email.com" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Mensaje</label>
-                                <textarea rows={4} placeholder="¿En qué estás pensando?" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors"></textarea>
+                                <label htmlFor="msg" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Mensaje</label>
+                                <textarea name="msg" id="msg" rows={4} placeholder="¿En qué estás pensando?" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors"></textarea>
                             </div>
 
                             <button className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-transform active:scale-[0.98] flex items-center justify-center gap-2 mt-4">
