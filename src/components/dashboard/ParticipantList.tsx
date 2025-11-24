@@ -13,6 +13,7 @@ import { Bouncy } from 'ldrs/react'
 import 'ldrs/react/Bouncy.css'
 import 'ldrs/react/Mirage.css'
 import 'ldrs/react/Quantum.css'
+import { redirect } from "next/dist/server/api-utils";
 
 // --- TIPOS ---
 type Participant = {
@@ -55,13 +56,15 @@ function ParticipantForm({
     initialImage = "",
     onSubmit,
     onCancel,
-    isEditMode = false
+    isEditMode = false,
+    planSlug
 }: {
     initialName?: string,
     initialImage?: string,
     onSubmit: (formData: FormData) => Promise<void>,
     onCancel: () => void,
-    isEditMode?: boolean
+    isEditMode?: boolean,
+    planSlug: string
 }) {
     const [name, setName] = useState(initialName);
     const [image, setImage] = useState(initialImage);
@@ -162,7 +165,8 @@ function ParticipantForm({
                             placeholder="Nombre del participante..."
                             required
                         />
-
+                        {/*FREE no puede generar con IA */}
+                        {planSlug !== 'free' ? ( 
                         <button
                             type="button"
                             onClick={generateAIImage}
@@ -179,6 +183,19 @@ function ParticipantForm({
                                 </>
                             )}
                         </button>
+                        ) : (
+                            <Link
+                                type="button"
+                                href={'/premium'}
+                                className="px-3 py-2 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded hover:bg-purple-600/40 transition-colors opacity-40 flex items-center gap-2 text-xs font-bold whitespace-nowrap cursor-not-allowed min-h-[38px]"
+                                title="Generar con IA (PREMIUM)"
+                            >
+                                <>
+                                    <Wand2 size={14} />
+                                    {!isEditMode && <span className="hidden sm:inline">Generar (IA)</span>}
+                                </>
+                            </Link>
+                        )}
                     </div>
 
                     <div className="relative">
@@ -358,6 +375,7 @@ export default function ParticipantList({
                             setIsCreating(false);
                         }}
                         onCancel={() => setIsCreating(false)}
+                        planSlug={planSlug}
                     />
                 </div>
             )}
@@ -377,6 +395,7 @@ export default function ParticipantList({
                                     setEditingId(null);
                                 }}
                                 onCancel={() => setEditingId(null)}
+                                planSlug={planSlug}
                             />
                         ) : (
                             <>
