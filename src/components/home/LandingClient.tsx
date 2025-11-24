@@ -206,7 +206,7 @@ export default function LandingClient( { session } : { session: any } ) {
 
                     {/* MOCKUP VISUAL 3D */}
 
-                    <motion.div
+                    {/* <motion.div
                         variants={itemVariants}
                         className="mt-20 relative w-full max-w-5xl aspect-video bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden group z-10"
                     >
@@ -214,10 +214,10 @@ export default function LandingClient( { session } : { session: any } ) {
                             <AwardMockup3D />
                         </Link>
                         
-                    </motion.div>
+                    </motion.div> */}
 
                     
-                    {/* <motion.div
+                    <motion.div
                         variants={itemVariants}
                         className="mt-20 relative w-full max-w-5xl aspect-video bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden group z-10"
                     >
@@ -246,7 +246,7 @@ export default function LandingClient( { session } : { session: any } ) {
                         </div>
 
                         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black via-black/80 to-transparent" />
-                    </motion.div> */}
+                    </motion.div>
                 </motion.div>
             </section>
 

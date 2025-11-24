@@ -7,27 +7,62 @@ import { MAINTENANCE_MODE } from "@/lib/config";
 // Inicializamos NextAuth SOLO con la config ligera para el Edge
 const { auth } = NextAuth(authConfig);
 
+// Esta función ahora contiene TODA la lógica, priorizando el MANTENIMIENTO.
 export default auth(async (req) => {
     const { nextUrl } = req;
+    const { pathname } = nextUrl;
+
+    // =========================================================
+    // 1. COMPROBACIÓN DEL MODO MANTENIMIENTO (PRIORIDAD ALTA)
+    // =========================================================
+    if (MAINTENANCE_MODE) {
+        // Rutas permitidas durante el mantenimiento (para que no haya bucles de redirección)
+        const allowedMaintenancePaths = [
+            "/maintenance",
+            "/_next",                       // Archivos internos de Next.js
+            "/favicon.ico",
+            "/robots.txt",
+            "/sitemap.xml",
+        ];
+
+        // 1a. Permitir /maintenance, assets estáticos y rutas técnicas
+        if (
+            allowedMaintenancePaths.some(path => pathname.startsWith(path)) || // Rutas prefijadas o exactas
+            pathname.match(/\.(.*)$/)                                         // Cualquier archivo con extensión
+        ) {
+            return NextResponse.next();
+        }
+
+        // 1b. Reescribir el resto de rutas a /maintenance
+        const maintenanceUrl = new URL('/maintenance', req.url);
+        return NextResponse.rewrite(maintenanceUrl);
+    }
+    // Si no estamos en modo mantenimiento, la ejecución continúa con la autenticación.
+    // =========================================================
+
+    // =========================================================
+    // 2. LÓGICA DE AUTENTICACIÓN (NextAuth)
+    // =========================================================
     const isLoggedIn = !!req.auth;
 
-    // 1. PROTECCIÓN DE DASHBOARD
-    // La lógica `authorized` en auth.config.ts ya maneja el true/false,
-    // pero si queremos redirección manual personalizada:
+    // PROTECCIÓN DE RUTAS
+    // Esto resuelve el problema de /premium y otras rutas protegidas.
     const protectedPaths = ['/dashboard', '/polls', '/results', '/e', '/premium'];
-    if (protectedPaths.some(path => nextUrl.pathname.startsWith(path)) && !isLoggedIn) {
+    if (protectedPaths.some(path => pathname.startsWith(path)) && !isLoggedIn) {
+        // Redirige al /login si no está logeado. Esto resuelve el problema
+        // de que los usuarios no logeados vean sólo el nav/footer.
         const loginUrl = new URL('/login', req.url);
-        loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
+        loginUrl.searchParams.set('callbackUrl', pathname);
         return NextResponse.redirect(loginUrl);
     }
 
-    // 2. GESTIÓN DE VOTOS (Cookie Anónima) - Se mantiene
+    // GESTIÓN DE VOTOS (Cookie Anónima)
     const response = NextResponse.next();
-    if (!nextUrl.pathname.startsWith('/_next') && !nextUrl.pathname.includes('.')) {
-        const voterId = req.cookies.get('foty_voter_id');
+    if (!pathname.startsWith('/_next') && !pathname.includes('.')) {
+        const voterId = req.cookies.get('voter_id');
         if (!voterId) {
             const newVoterId = crypto.randomUUID();
-            response.cookies.set('foty_voter_id', newVoterId, {
+            response.cookies.set('voter_id', newVoterId, {
                 path: '/',
                 maxAge: 60 * 60 * 24 * 365,
                 httpOnly: true,
@@ -40,39 +75,7 @@ export default auth(async (req) => {
 });
 
 
-//MANTENIMIENTO
-
-export function middleware(req: NextRequest) {
-    if (!MAINTENANCE_MODE) {
-        return NextResponse.next();
-    }
-
-    const { pathname } = req.nextUrl;
-
-    // 1. Permitir la propia página de mantenimiento
-    if (pathname === "/maintenance") {
-        return NextResponse.next();
-    }
-
-    // 2. Permitir assets estáticos y rutas técnicas
-    if (
-        pathname.startsWith("/_next") ||                   // archivos de Next
-        pathname === "/favicon.ico" ||
-        pathname === "/robots.txt" ||
-        pathname === "/sitemap.xml" ||
-        pathname.match(/\.(.*)$/)                          // cualquier archivo con extensión: .png, .jpg, .css, .js, etc.
-    ) {
-        return NextResponse.next();
-    }
-
-    // 3. Reescribir el resto a /maintenance
-    const url = req.nextUrl.clone();
-    url.pathname = "/maintenance";
-
-    return NextResponse.rewrite(url);
-}
-
-
+// Mantenemos la configuración del matcher separada, ya que es el patrón recomendado.
 export const config = {
     // Matcher para excluir estáticos y llamadas internas
     matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
