@@ -37,6 +37,30 @@ export default auth(async (req) => {
     // =========================================================
     const isLoggedIn = !!req.auth;
 
+    // PROTECCIÓN DE RUTAS
+    // Esto resuelve el problema de /premium y otras rutas protegidas.
+    const protectedPaths = ['/dashboard', '/polls', '/results', '/e', '/premium'];
+    // Excluir /admin porque ya lo manejamos arriba
+    if (protectedPaths.some(path => nextUrl.pathname.startsWith(path)) && !nextUrl.pathname.startsWith('/admin') && !isLoggedIn) {
+        const loginUrl = new URL('/login', req.url);
+        loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
+        return NextResponse.redirect(loginUrl);
+    }
+
+    // GESTIÓN DE VOTOS (Cookie Anónima) - Se mantiene
+    const response = NextResponse.next();
+    if (!pathname.startsWith('/_next') && !pathname.includes('.')) {
+        const voterId = req.cookies.get('voter_id');
+        if (!voterId) {
+            const newVoterId = crypto.randomUUID();
+            response.cookies.set('voter_id', newVoterId, {
+                path: '/',
+                maxAge: 60 * 60 * 24 * 365,
+                httpOnly: true,
+                sameSite: 'lax',
+            });
+        }
+    }
 
     // 2.1 PROTECCIÓN DE PANEL ADMIN (NIVEL SUPERIOR)
     if (nextUrl.pathname.startsWith('/admin')) {
@@ -61,31 +85,6 @@ export default auth(async (req) => {
             return new NextResponse("Access Denied: IP not allowed", { status: 403 });
         }
         */
-    }
-
-    // PROTECCIÓN DE RUTAS
-    // Esto resuelve el problema de /premium y otras rutas protegidas.
-    const protectedPaths = ['/dashboard', '/polls', '/results', '/e', '/premium'];
-    // Excluir /admin porque ya lo manejamos arriba
-    if (protectedPaths.some(path => nextUrl.pathname.startsWith(path)) && !nextUrl.pathname.startsWith('/admin') && !isLoggedIn) {
-        const loginUrl = new URL('/login', req.url);
-        loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
-        return NextResponse.redirect(loginUrl);
-    }
-
-    // GESTIÓN DE VOTOS (Cookie Anónima) - Se mantiene
-    const response = NextResponse.next();
-    if (!pathname.startsWith('/_next') && !pathname.includes('.')) {
-        const voterId = req.cookies.get('voter_id');
-        if (!voterId) {
-            const newVoterId = crypto.randomUUID();
-            response.cookies.set('voter_id', newVoterId, {
-                path: '/',
-                maxAge: 60 * 60 * 24 * 365,
-                httpOnly: true,
-                sameSite: 'lax',
-            });
-        }
     }
 
     return response;
