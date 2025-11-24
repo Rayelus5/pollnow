@@ -12,11 +12,19 @@ export default auth(async (req) => {
     const { nextUrl } = req;
     const isLoggedIn = !!req.auth;
     // @ts-ignore
-    const userRole = req.auth?.user?.role || 'USER';
+    const userRole = (req.auth?.user?.role || 'USER').toUpperCase();
+
     
     // Obtener IP real del cliente (compatible con Vercel/Proxies)
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1';
     const isLocal = ip === '127.0.0.1' || ip === '::1';
+
+    console.log('MIDDLEWARE DEBUG', {
+        path: nextUrl.pathname,
+        isLoggedIn,
+        authUser: req.auth?.user,
+        userRole,
+    });
 
     // ---------------------------------------------------------
     // 1. MODO MANTENIMIENTO (Prioridad Absoluta)
@@ -52,9 +60,12 @@ export default auth(async (req) => {
         }
 
         // B. Segundo: ¿Tiene el rol adecuado?
-        if (userRole !== 'ADMIN' || userRole !== 'MODERATOR') {
-            return NextResponse.redirect(new URL('/dashboard', req.url));
+        if (isLoggedIn && userRole === 'ADMIN' && nextUrl.pathname.startsWith('/admin')) {
+            return NextResponse.next();
         }
+
+
+        //&& userRole !== 'MODERATOR'
 
         // C. Tercero: ¿Es una IP permitida? (Solo si hay lista blanca definida)
         if (ADMIN_IPS.length > 0 && !ADMIN_IPS.includes(ip) && !isLocal) {

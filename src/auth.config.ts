@@ -20,8 +20,13 @@ export const authConfig = {
                 delete token.image;
             }
             if (trigger === "update" && session) {
-                return { ...token, ...session.user };
+                return {
+                    ...token,
+                    ...session.user,
+                    role: (session.user as any)?.role ?? token.role, // conserva el rol si no viene
+                };
             }
+
             return token;
         },
         async session({ session, token }) {
