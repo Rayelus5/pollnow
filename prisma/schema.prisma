@@ -1,161 +1,237 @@
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
-model User {
-  id                   String    @id @default(uuid())
-  name                 String
-  username             String   @unique
-  email                String   @unique
-  emailVerified        DateTime?
-  passwordHash         String?
-  image                String?
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?   @unique
-  stripePriceId        String?
-  subscriptionStatus   String?   @default("free")
-  subscriptionEndDate  DateTime?
-  cancelAtPeriodEnd    Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  accounts             Account[]
-  events               Event[]
-  sessions             Session[]
-  votes                Vote[]    @relation(name: "UserVotes")
+// ===================================
+// ENUMS
+// ===================================
+
+enum UserRole {
+    USER
+    MODERATOR
+    ADMIN
 }
 
-model Account {
-  id                String  @id @default(uuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(uuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Event {
-  id                String        @id @default(uuid())
-  slug              String        @unique
-  title             String
-  description       String?
-  isPublic          Boolean       @default(false)
-  tags              String[]
-  galaDate          DateTime      @default(now())
-  isAnonymousVoting Boolean       @default(true)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  userId            String
-  accessKey         String        @default(uuid())
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  participants      Participant[]
-  polls             Poll[]
-}
-
-model VerificationToken {
-  id         String   @id @default(uuid())
-  email      String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([email, token])
-}
-
-model PasswordResetToken {
-  id         String   @id @default(uuid())
-  email      String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([email, token])
-}
-
-model Poll {
-  id          String     @id @default(uuid())
-  title       String
-  description String?
-  votingType  VotingType @default(SINGLE)
-  maxChoices  Int?
-  order       Int        @default(0)
-  eventId     String
-  isPublished Boolean    @default(true)
-  endAt       DateTime?
-  options     Option[]
-  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  votes       Vote[]
-
-  @@index([eventId])
-}
-
-model Participant {
-  id          String   @id @default(uuid())
-  name        String
-  imageUrl    String?
-  eventId     String
-  createdAt   DateTime @default(now())
-  nominations Option[]
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  @@index([eventId])
-}
-
-model Option {
-  id            String       @id @default(uuid())
-  pollId        String
-  subtitle      String?
-  participantId String
-  order         Int          @default(0)
-  participant   Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  poll          Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  votes         VoteOption[]
-
-  @@unique([pollId, participantId])
-}
-
-model Vote {
-  id          String       @id @default(uuid())
-  pollId      String
-  createdAt   DateTime     @default(now())
-  voterHash   String
-  userId      String
-  user        User         @relation(name: "UserVotes", fields: [userId], references: [id])
-  poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  voteOptions VoteOption[]
-
-  @@unique([pollId, voterHash])
-}
-
-model VoteOption {
-  id       String @id @default(uuid())
-  voteId   String
-  optionId String
-  option   Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  vote     Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
+enum EventStatus {
+    PENDING // En espera de revisión (Nuevo)
+    APPROVED // Publicado (Nuevo)
+    DENIED // Rechazado por admin (Nuevo)
 }
 
 enum VotingType {
-  SINGLE
-  MULTIPLE
-  LIMITED_MULTIPLE
+    SINGLE
+    MULTIPLE
+    LIMITED_MULTIPLE
+}
+
+// ===================================
+// MODELOS DE USUARIO Y CUENTA
+// ===================================
+
+model User {
+    id                   String            @id @default(uuid())
+    name                 String
+    username             String            @unique
+    email                String            @unique
+    emailVerified        DateTime?
+    passwordHash         String?
+    image                String?
+    role                 UserRole          @default(USER) // Nuevo campo de seguridad
+    ipBan                Boolean           @default(false) // Nuevo campo de seguridad para bloqueo
+    stripeCustomerId     String?           @unique
+    stripeSubscriptionId String?           @unique
+    stripePriceId        String?
+    subscriptionStatus   String?           @default("free")
+    subscriptionEndDate  DateTime?
+    cancelAtPeriodEnd    Boolean           @default(false)
+    createdAt            DateTime          @default(now())
+    updatedAt            DateTime          @updatedAt
+
+    accounts             Account[]
+    events               Event[]
+    sessions             Session[]
+    votes                Vote[]            @relation(name: "UserVotes")
+    notifications        Notification[]    // Relación para notificaciones (ej: para admins)
+    supportChats         SupportChat[]     @relation(name: "UserSupportChats") // Chats iniciados por el usuario
+    messages             ChatMessage[]     @relation(name: "UserChatMessages") // Mensajes enviados por el usuario
+}
+
+model Account {
+    id                String  @id @default(uuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String?
+    access_token      String?
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String?
+    session_state     String?
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(uuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ===================================
+// MODELO DE EVENTOS Y RELACIONES
+// ===================================
+
+model Event {
+    id                String          @id @default(uuid())
+    slug              String          @unique
+    title             String
+    description       String?
+    isPublic          Boolean         @default(false)
+    status            EventStatus     @default(PENDING) // Nuevo: Estado de revisión
+    reviewReason      String?         // Nuevo: Motivo de rechazo por admin
+    tags              String[]
+    galaDate          DateTime        @default(now())
+    isAnonymousVoting Boolean         @default(true)
+    createdAt         DateTime        @default(now())
+    updatedAt         DateTime        @updatedAt
+    userId            String
+    accessKey         String          @default(uuid())
+    user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+    participants      Participant[]
+    polls             Poll[]
+}
+
+model Participant {
+    id          String      @id @default(uuid())
+    name        String
+    imageUrl    String?
+    eventId     String
+    createdAt   DateTime    @default(now())
+    nominations Option[]
+    event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+    @@index([eventId])
+}
+
+model Poll {
+    id          String      @id @default(uuid())
+    title       String
+    description String?
+    votingType  VotingType  @default(SINGLE)
+    maxChoices  Int?
+    order       Int         @default(0)
+    eventId     String
+    isPublished Boolean     @default(true)
+    endAt       DateTime?
+    options     Option[]
+    event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    votes       Vote[]
+
+    @@index([eventId])
+}
+
+model Option {
+    id            String       @id @default(uuid())
+    pollId        String
+    subtitle      String?
+    participantId String
+    order         Int          @default(0)
+    participant   Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+    poll          Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+    votes         VoteOption[]
+
+    @@unique([pollId, participantId])
+}
+
+model Vote {
+    id          String       @id @default(uuid())
+    pollId      String
+    createdAt   DateTime     @default(now())
+    voterHash   String
+    userId      String
+    user        User         @relation(name: "UserVotes", fields: [userId], references: [id])
+    poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+    voteOptions VoteOption[]
+
+    @@unique([pollId, voterHash])
+}
+
+model VoteOption {
+    id       String @id @default(uuid())
+    voteId   String
+    optionId String
+    option   Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
+    vote     Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+    id       String   @id @default(uuid())
+    email    String
+    token    String   @unique
+    expires  DateTime
+
+    @@unique([email, token])
+}
+
+model PasswordResetToken {
+    id      String   @id @default(uuid())
+    email   String
+    token   String   @unique
+    expires DateTime
+
+    @@unique([email, token])
+}
+
+// ===================================
+// MODELOS DE MODERACIÓN Y SOPORTE (Nuevos)
+// ===================================
+
+model Notification {
+    id          String   @id @default(uuid())
+    message     String   // El contenido de la notificación
+    link        String?  // Enlace directo a la acción (ej: /admin/review/event-id)
+    isRead      Boolean  @default(false)
+    createdAt   DateTime @default(now())
+    adminUserId String   // A qué administrador va dirigida
+
+    admin User @relation(fields: [adminUserId], references: [id])
+
+    @@index([adminUserId])
+}
+
+model SupportChat {
+    id            String        @id @default(uuid())
+    userId        String        // Usuario que inicia la conversación
+    adminId       String?       // Administrador asignado (puede ser null)
+    isClosed      Boolean       @default(false)
+    createdAt     DateTime      @default(now())
+    lastMessageAt DateTime      @updatedAt
+
+    user      User            @relation(name: "UserSupportChats", fields: [userId], references: [id])
+    messages  ChatMessage[]
+
+    @@index([userId])
+}
+
+model ChatMessage {
+    id        String   @id @default(uuid())
+    chatId    String
+    senderId  String   // userId o adminId
+    content   String
+    createdAt DateTime @default(now())
+
+    chat      SupportChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+    sender    User        @relation(name: "UserChatMessages", fields: [senderId], references: [id]) // Relación con el User
+
+    @@index([chatId])
 }

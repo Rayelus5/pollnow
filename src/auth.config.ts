@@ -1,19 +1,21 @@
 import type { NextAuthConfig } from "next-auth";
 
-// Definimos la configuración ligera para el Edge
 export const authConfig = {
     pages: {
         signIn: "/login",
     },
     session: { strategy: "jwt" },
     callbacks: {
-        // Lógica de JWT y Sesión (sin DB)
         async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.id = user.id;
                 // @ts-ignore
                 token.username = user.username;
-                // Limpiamos imagen para que no pese
+                // --- AÑADIR ESTO ---
+                // @ts-ignore
+                token.role = user.role;
+                // -------------------
+
                 delete token.picture;
                 delete token.image;
             }
@@ -27,11 +29,14 @@ export const authConfig = {
                 session.user.id = token.id as string;
                 // @ts-ignore
                 session.user.username = token.username as string;
+                // --- AÑADIR ESTO ---
+                // @ts-ignore
+                session.user.role = token.role as string;
+                // -------------------
                 session.user.image = null;
             }
             return session;
         },
-        // Lógica de autorización (Protección de rutas)
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
@@ -43,5 +48,5 @@ export const authConfig = {
             return true;
         },
     },
-    providers: [], // Se deja vacío intencionalmente para el Middleware
+    providers: [],
 } satisfies NextAuthConfig;

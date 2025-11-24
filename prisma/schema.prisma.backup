@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  name                 String
+  username             String   @unique
+  email                String   @unique
+  emailVerified        DateTime?
+  passwordHash         String?
+  image                String?
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  subscriptionStatus   String?   @default("free")
+  subscriptionEndDate  DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  accounts             Account[]
+  events               Event[]
+  sessions             Session[]
+  votes                Vote[]    @relation(name: "UserVotes")
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id                String        @id @default(uuid())
+  slug              String        @unique
+  title             String
+  description       String?
+  isPublic          Boolean       @default(false)
+  tags              String[]
+  galaDate          DateTime      @default(now())
+  isAnonymousVoting Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  userId            String
+  accessKey         String        @default(uuid())
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participants      Participant[]
+  polls             Poll[]
+}
+
+model VerificationToken {
+  id         String   @id @default(uuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([email, token])
+}
+
+model Poll {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  votingType  VotingType @default(SINGLE)
+  maxChoices  Int?
+  order       Int        @default(0)
+  eventId     String
+  isPublished Boolean    @default(true)
+  endAt       DateTime?
+  options     Option[]
+  event       Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  votes       Vote[]
+
+  @@index([eventId])
+}
+
+model Participant {
+  id          String   @id @default(uuid())
+  name        String
+  imageUrl    String?
+  eventId     String
+  createdAt   DateTime @default(now())
+  nominations Option[]
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model Option {
+  id            String       @id @default(uuid())
+  pollId        String
+  subtitle      String?
+  participantId String
+  order         Int          @default(0)
+  participant   Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  poll          Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes         VoteOption[]
+
+  @@unique([pollId, participantId])
+}
+
+model Vote {
+  id          String       @id @default(uuid())
+  pollId      String
+  createdAt   DateTime     @default(now())
+  voterHash   String
+  userId      String
+  user        User         @relation(name: "UserVotes", fields: [userId], references: [id])
+  poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  voteOptions VoteOption[]
+
+  @@unique([pollId, voterHash])
+}
+
+model VoteOption {
+  id       String @id @default(uuid())
+  voteId   String
+  optionId String
+  option   Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  vote     Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
+}
+
+enum VotingType {
+  SINGLE
+  MULTIPLE
+  LIMITED_MULTIPLE
+}
