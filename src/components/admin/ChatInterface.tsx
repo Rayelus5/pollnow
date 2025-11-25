@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { sendSupportMessage } from "@/app/lib/support-actions";
 import { Bouncy } from "ldrs/react";
 import "ldrs/react/Bouncy.css";
@@ -37,15 +36,56 @@ export default function ChatInterface({
     const [messages, setMessages] = useState<ChatMessageType[]>(initialMessages);
     const [input, setInput] = useState("");
     const [isSending, setIsSending] = useState(false);
-    const router = useRouter();
     const bottomRef = useRef<HTMLDivElement | null>(null);
 
     const isOwn = (msg: ChatMessageType) => msg.senderId === currentUserId;
 
+    // 👉 Scroll al final cuando cambien los mensajes
     useEffect(() => {
-        // Scroll al final cuando llegan mensajes nuevos
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages.length]);
+
+    // 👉 POLLING: pedir mensajes actualizados cada X segundos
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchMessages = async () => {
+            try {
+                const res = await fetch(`/api/support/messages/${chatId}`, {
+                    cache: "no-store",
+                });
+                if (!res.ok) return;
+
+                const data: ChatMessageType[] = await res.json();
+
+                if (!isMounted) return;
+
+                // Evitar re-renders innecesarios si no hay cambios
+                setMessages((prev) => {
+                    if (
+                        prev.length === data.length &&
+                        prev[prev.length - 1]?.id === data[data.length - 1]?.id
+                    ) {
+                        return prev;
+                    }
+                    return data;
+                });
+            } catch (err) {
+                console.error("Error fetching chat messages", err);
+            }
+        };
+
+        // Llamada inicial
+        fetchMessages();
+
+        // Polling cada 5 segundos
+        const interval = setInterval(fetchMessages, 5000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [chatId]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -59,18 +99,19 @@ export default function ChatInterface({
             sender: { id: currentUserId, name: "Tú" },
         };
 
+        // Optimistic UI
         setMessages((prev) => [...prev, optimistic]);
         setInput("");
         setIsSending(true);
 
         try {
             const res = await sendSupportMessage(chatId, optimistic.content);
-            if (res?.message) {
-                // Reemplazamos el optimista por el real o simplemente refrescamos
-                router.refresh();
-            } else if (res?.error) {
+
+            if (res?.error) {
                 console.error(res.error);
+                // Si quieres, podrías revertir el mensaje optimista aquí o mostrar un toast
             }
+            // NO hace falta router.refresh(); el polling traerá el mensaje real
         } catch (err) {
             console.error(err);
         } finally {
@@ -106,8 +147,7 @@ export default function ChatInterface({
                 {messages.map((msg) => (
                     <div
                         key={msg.id}
-                        className={`flex ${isOwn(msg) ? "justify-end" : "justify-start"
-                            }`}
+                        className={`flex ${isOwn(msg) ? "justify-end" : "justify-start"}`}
                     >
                         <div
                             className={`max-w-xs md:max-w-md px-3 py-2 rounded-lg text-xs ${isOwn(msg)

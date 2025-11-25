@@ -45,8 +45,8 @@ export default async function UserSupportChatPage({ params }: Props) {
                 <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
                     <div>
                         <div className="text-xs text-gray-400 mb-1">
-                            <Link href="/dashboard/support" className="hover:text-white">
-                                Mis tickets
+                            <Link href="/dashboard" className="hover:text-white">
+                                Dashboard
                             </Link>{" "}
                             / Chat de soporte
                         </div>

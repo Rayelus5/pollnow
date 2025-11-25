@@ -79,12 +79,19 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
     const defaultDate = formatLocalDatetime(currentEvent.galaDate);
 
     const handleCopy = async () => {
-        const origin = typeof window !== 'undefined' ? window.location.origin : '';
-        const shareUrl = `${origin}/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
-        await navigator.clipboard.writeText(shareUrl);
+        const origin =
+            typeof window !== "undefined" ? window.location.origin : "";
+        const path = `/e/${event.slug}${
+            !currentEvent.isPublic ? `?key=${event.accessKey}` : ""
+        }`;
+
+        const fullUrl = `${origin}${path}`;
+        await navigator.clipboard.writeText(fullUrl);
+
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
     };
+
 
     const handleFormSubmit = async (formData: FormData) => {
         if (!isPlus) {
@@ -135,27 +142,36 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
     const confirmRequestPublication = async () => {
         setIsRequesting(true);
         try {
-            const updated = await requestEventPublication(event.id);
+            const res = await requestEventPublication(event.id);
+
+            // Si hubo error en la server action, opcionalmente lo puedes mostrar con un toast
+            if (!res || !("success" in res) || !res.success || !res.event) {
+                console.error("Error al solicitar publicación:", res?.error);
+                // aquí podrías hacer setAlgúnError(...) si quieres
+                return;
+            }
+
+            // Actualizamos el estado local con los datos devueltos
             setCurrentEvent(prev => ({
                 ...prev,
-                status: updated.status,
-                reviewReason: updated.reviewReason,
+                status: res.event.status,
+                reviewReason: res.event.reviewReason ?? null,
             }));
 
-
             setShowRequestModal(false);
-            // Sincronizamos el resto del dashboard con el server
+
+            // Opcional: si quieres forzar que el resto del dashboard se sincronice:
             router.refresh();
         } catch (e) {
             console.error("Error al solicitar publicación", e);
-            // Podrías meter un toast/error aquí si quieres
         } finally {
             setIsRequesting(false);
         }
     };
 
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const shareUrl = `${origin}/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
+
+    const shareUrl = `/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
+
 
     return (
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -179,7 +195,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                                             'text-gray-400 bg-gray-700/30'
                                     }`}>
                                     {isPending ? 'En Revisión' :
-                                        isApproved ? 'Publicado' :
+                                        isApproved ? 'Aprovado' :
                                             isDenied ? 'Rechazado' : 'Borrador'}
                                 </span>
                             </h3>

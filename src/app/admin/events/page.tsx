@@ -132,7 +132,7 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
                                     {/* Botón de borrado directo */}
                                     <form action={async () => {
                                         "use server";
-                                        await deleteEvent(event.id);
+                                        await deleteEvent(event.id, true);
                                     }}>
                                         <button className="p-2 text-red-400 hover:bg-red-500/10 rounded transition" title="Eliminar definitivamente">
                                             <Trash2 size={16} />

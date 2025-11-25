@@ -37,8 +37,8 @@ export default function NavbarClient({ user }: NavbarProps) {
                 {/* --- MENÚ DESKTOP (Hidden on Mobile) --- */}
                 <div className="hidden md:flex items-center gap-8">
                     <NavLink href="/" active={pathname === "/"}>Home</NavLink>
+                    <NavLink href="/polls" active={pathname.startsWith("/polls")}>Events</NavLink>
                     <NavLink href="/dashboard" active={pathname.startsWith("/dashboard")}>Dashboard</NavLink>
-                    <NavLink href="/polls" active={pathname.startsWith("/polls")}>Polls</NavLink>
                     <NavLink href="/premium" active={pathname.startsWith("/premium")}>
                         <span className="text-indigo-400 drop-shadow-[0_0_8px_rgba(150,100,200,0.8)]">Premium</span>
                     </NavLink>

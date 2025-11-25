@@ -26,7 +26,7 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
         <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-8 relative overflow-hidden">
 
             {!isFree && (
-                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20" />
+                <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20" />
             )}
 
             <div className="relative z-10">
@@ -51,7 +51,7 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                     <div className="flex-1 w-full">
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Tu Plan Actual</p>
                         <div className="flex items-baseline gap-3">
-                            <span className={`text-3xl font-black ${isFree ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400'}`}>
+                            <span className={`text-3xl font-black ${isFree ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-400'}`}>
                                 {plan.name}
                             </span>
                         </div>

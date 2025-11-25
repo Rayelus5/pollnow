@@ -58,7 +58,7 @@ export default function AboutPage() {
                     </motion.h1>
 
                     <motion.p variants={fadeInUp} className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
-                        POLLNOW nació de una necesidad simple: poner fin a las discusiones sobre quién llegó más tarde o quién contó el peor chiste. Lo que empezó como una broma interna, hoy es la plataforma definitiva para celebrar la amistad.
+                        POLLNOW nació de una necesidad simple: poner fin a las discusiones sobre quién llegó más tarde o quién contó el peor chiste. Lo que empezó como una broma interna, hoy es la plataforma definitiva para crear eventos digitales de encuestas de todo tipo.
                     </motion.p>
                 </motion.div>
             </section>
@@ -80,10 +80,10 @@ export default function AboutPage() {
                             <div className="relative aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 bg-neutral-900">
                                 {/* REEMPLAZA ESTA URL CON TU FOTO REAL */}
                                 <Image
-                                    src="https://placehold.co/500x500"
+                                    src="/rayelus-img2.jpg"
                                     alt="Rayelus Image"
                                     fill
-                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                    className="object-cover transition-all duration-700 group-hover:scale-105 grayscale hover:grayscale-50"
                                 />
 
                                 <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black via-black/80 to-transparent">
@@ -97,10 +97,13 @@ export default function AboutPage() {
                         <div className="space-y-8">
                             <h2 className="text-4xl font-bold text-white">Creador de Pollnow</h2>
                             <p className="text-gray-400 text-lg leading-relaxed">
-                                Hola! soy Rayelus, el desarrollador detrás de este proyecto. Como apasionado de la tecnología y las comunidades, quería crear algo que uniera a las personas de una manera divertida y moderna.
+                                Hola! soy Rayelus, el desarrollador detrás de este proyecto. Como buen apasionado por la informática que soy, quería crear algo que uniera a las personas de una manera divertida y moderna.
                             </p>
                             <p className="text-gray-400 text-lg leading-relaxed">
                                 POLLNOW está construido con las últimas tecnologías web (Next.js 14, TypeScript, Tailwind CSS) para asegurar una experiencia fluida, rápida y segura.
+                            </p>
+                            <p className="text-gray-400 text-lg leading-relaxed">
+                                Este proyecto nació para unir (o destruir) tu grupo de amigos, para pasar un buen rato en la comida familiar, o simplemente para crear encuestas/votaciones de todo tipo.
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4">

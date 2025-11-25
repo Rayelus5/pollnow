@@ -35,13 +35,56 @@ export async function updateEvent(eventId: string, formData: FormData) {
     if (isPublic) revalidatePath('/polls');
 }
 
-export async function deleteEvent(eventId: string) {
+export async function deleteEvent(eventId: string, isAdmin: boolean = false) {
     const session = await auth();
     if (!session?.user) return;
-    await prisma.event.delete({ where: { id: eventId, userId: session.user.id } });
-    revalidatePath('/dashboard');
-    redirect('/dashboard');
+
+    // Seguridad extra: verificar rol cuando viene como admin
+    if (isAdmin && session.user.role !== "ADMIN" && session.user.role !== "MODERATOR") {
+        return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+        // 1) Borrar reports relacionados (bloquean el delete)
+        await tx.report.deleteMany({
+            where: { eventId },
+        });
+
+        // 2) Opcional: si quieres mantener logs, simplemente despega el eventId
+        await tx.moderationLog.updateMany({
+            where: { eventId },
+            data: { eventId: null },
+        });
+
+        // 3) Borrar el evento (participants, polls, options, votes ya tienen onDelete: Cascade)
+        if (isAdmin) {
+            await tx.event.delete({
+                where: { id: eventId },
+            });
+        } else {
+            await tx.event.delete({
+                where: { id: eventId, userId: session.user.id },
+            });
+        }
+    });
+
+    if (isAdmin) {
+        revalidatePath("/admin/events");
+        redirect("/admin/events");
+    } else {
+        revalidatePath("/dashboard");
+        redirect("/dashboard");
+    }
 }
+
+
+// export async function deleteEvent(eventId: string) {
+//     const session = await auth();
+//     if (!session?.user) return;
+//     await prisma.event.delete({ where: { id: eventId, userId: session.user.id } });
+//     revalidatePath('/dashboard');
+//     redirect('/dashboard');
+// }
 
 export async function rotateEventKey(eventId: string) {
     const session = await auth();

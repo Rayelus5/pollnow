@@ -72,15 +72,12 @@ export default async function EventDashboardPage({ params }: Props) {
 
             <div className="max-w-7xl mx-auto px-6 py-8">
                 <EventTabs
-                    // PESTAÑA 1: Estadísticas (NUEVA)
-                    stats={
-                        <EventStatistics stats={stats} planSlug={plan.slug} />
-                    }
+                    
 
-                    // PESTAÑA 2: Configuración (Actualizada con plan)
+                    // PESTAÑA 1: Configuración (Actualizada con plan)
                     settings={<EventSettings event={event} planSlug={plan.slug} />}
 
-                    // PESTAÑA 3: Participantes
+                    // PESTAÑA 2: Participantes
                     participants={
                         <div className="max-w-5xl">
                             <div className="mb-6 flex gap-2 items-center">
@@ -91,7 +88,7 @@ export default async function EventDashboardPage({ params }: Props) {
                         </div>
                     }
 
-                    // PESTAÑA 4: Encuestas
+                    // PESTAÑA 3: Encuestas
                     polls={
                         <div className="max-w-5xl">
                             <div className="mb-6 flex gap-2 items-center">
@@ -100,6 +97,11 @@ export default async function EventDashboardPage({ params }: Props) {
                             </div>
                             <PollList initialPolls={event.polls} allParticipants={event.participants} eventId={event.id} planSlug={plan.slug}/>
                         </div>
+                    }
+
+                    // PESTAÑA 4: Estadísticas (NUEVA)
+                    stats={
+                        <EventStatistics stats={stats} planSlug={plan.slug} />
                     }
                 />
             </div>
