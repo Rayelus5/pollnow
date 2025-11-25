@@ -1,63 +1,154 @@
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import Link from "next/link";
+import { Search, Filter, Eye, ShieldAlert, MoreVertical } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ q?: string, role?: string }> }) {
+    const params = await searchParams;
+    const query = params?.q || "";
+    const roleFilter = params?.role;
+
+    // Construcción dinámica del filtro
+    const whereClause: any = {
+        OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { email: { contains: query, mode: 'insensitive' } },
+            { username: { contains: query, mode: 'insensitive' } }
+        ]
+    };
+
+    if (roleFilter && roleFilter !== 'ALL') {
+        whereClause.role = roleFilter;
+    }
+
     const users = await prisma.user.findMany({
+        where: whereClause,
         orderBy: { createdAt: 'desc' },
-        include: { _count: { select: { events: true } } }
+        include: {
+            _count: { select: { events: true, reports: true } }
+        },
+        take: 50
     });
 
     return (
-        <div className="max-w-6xl mx-auto">
-            <header className="mb-8 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white">Gestión de Usuarios</h1>
-                    <p className="text-gray-400">Base de datos de usuarios registrados.</p>
+                    <p className="text-gray-400 mt-1">Base de datos completa de usuarios registrados.</p>
                 </div>
-                <div className="text-sm text-gray-500 font-mono bg-white/5 px-3 py-1 rounded">
-                    Total: {users.length}
+
+                <div className="flex gap-2 w-full md:w-auto">
+                    {/* Buscador */}
+                    <form className="relative flex-1 md:flex-none">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                        <input
+                            name="q"
+                            placeholder="Nombre, email o usuario..."
+                            defaultValue={query}
+                            className="bg-neutral-900 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:border-blue-500 outline-none w-full md:w-64 transition-all focus:w-80"
+                        />
+                        {roleFilter && <input type="hidden" name="role" value={roleFilter} />}
+                    </form>
+
+                    {/* Filtro de Rol */}
+                    <div className="flex bg-neutral-900 border border-white/10 rounded-lg p-1">
+                        <FilterLink role="ALL" current={roleFilter} label="Todos" />
+                        <FilterLink role="ADMIN" current={roleFilter} label="Admins" />
+                        <FilterLink role="USER" current={roleFilter} label="Usuarios" />
+                    </div>
                 </div>
-            </header>
+            </div>
 
             <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
                             <th className="p-4 font-medium">Usuario</th>
-                            <th className="p-4 font-medium">Email</th>
-                            <th className="p-4 font-medium">Rol</th>
+                            <th className="p-4 font-medium">Estado</th>
                             <th className="p-4 font-medium">Plan</th>
-                            <th className="p-4 font-medium">Eventos</th>
+                            <th className="p-4 font-medium">Actividad</th>
                             <th className="p-4 font-medium">Registro</th>
                             <th className="p-4 font-medium text-right">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-sm text-gray-300">
                         {users.map(user => (
-                            <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                                <td className="p-4 font-medium text-white">{user.name || "Sin nombre"}</td>
-                                <td className="p-4 text-gray-400">{user.email}</td>
+                            <tr key={user.id} className={`hover:bg-white/5 transition-colors group ${user.ipBan ? 'bg-red-900/10' : ''}`}>
                                 <td className="p-4">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${user.role === 'ADMIN' ? 'bg-red-900/30 text-red-400' : 'bg-blue-900/30 text-blue-400'}`}>
-                                        {user.role}
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden text-xs font-bold text-gray-500">
+                                            {user.image ? <img src={user.image} className="w-full h-full object-cover" /> : user.name?.[0]}
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-white">{user.name}</div>
+                                            <div className="text-xs text-gray-500">{user.email}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="p-4">
+                                    <div className="flex gap-2">
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${user.role === 'ADMIN' ? 'bg-purple-900/20 text-purple-400 border-purple-500/20' :
+                                                user.role === 'MODERATOR' ? 'bg-blue-900/20 text-blue-400 border-blue-500/20' :
+                                                    'bg-gray-800 text-gray-400 border-gray-700'
+                                            }`}>
+                                            {user.role}
+                                        </span>
+                                        {user.ipBan && (
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-900/20 text-red-400 border border-red-500/20 flex items-center gap-1">
+                                                <ShieldAlert size={10} /> BANNED
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="p-4">
+                                    <span className={`capitalize text-xs ${user.subscriptionStatus === 'active' ? 'text-green-400' : 'text-gray-500'}`}>
+                                        {user.subscriptionStatus}
                                     </span>
                                 </td>
-                                <td className="p-4 capitalize">{user.subscriptionStatus}</td>
-                                <td className="p-4">{user._count.events}</td>
-                                <td className="p-4 text-gray-500">
+                                <td className="p-4 text-xs text-gray-400 font-mono">
+                                    <div>{user._count.events} Eventos</div>
+                                    {user._count.reports > 0 && <div className="text-red-400">{user._count.reports} Reportes</div>}
+                                </td>
+                                <td className="p-4 text-gray-500 text-xs">
                                     {format(new Date(user.createdAt), 'dd MMM yyyy', { locale: es })}
                                 </td>
                                 <td className="p-4 text-right">
-                                    <button className="text-xs text-blue-400 hover:underline">Editar</button>
+                                    <Link
+                                        href={`/admin/users/${user.id}`}
+                                        className="inline-flex p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                        title="Ver Detalles"
+                                    >
+                                        <Eye size={16} />
+                                    </Link>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+
+                {users.length === 0 && (
+                    <div className="p-12 text-center text-gray-500">
+                        No se encontraron usuarios.
+                    </div>
+                )}
             </div>
         </div>
     );
+}
+
+function FilterLink({ role, current, label }: { role: string, current?: string, label: string }) {
+    const isActive = (role === 'ALL' && !current) || current === role;
+    return (
+        <Link
+            href={`?role=${role}`}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${isActive ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'
+                }`}
+        >
+            {label}
+        </Link>
+    )
 }

@@ -75,6 +75,40 @@ export async function rejectEvent(eventId: string, reason: string) {
 
 // --- GESTIÓN DE USUARIOS ---
 
+export async function toggleUserBan(userId: string) {
+    await checkAdminPermissions();
+    
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return;
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { ipBan: !user.ipBan } 
+    });
+    
+    revalidatePath(`/admin/users/${userId}`);
+}
+
+export async function changeUserRole(userId: string, newRole: 'USER' | 'ADMIN' | 'MODERATOR') {
+    await checkAdminPermissions();
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { role: newRole }
+    });
+
+    revalidatePath(`/admin/users/${userId}`);
+}
+
+export async function deleteUser(userId: string) {
+    await checkAdminPermissions();
+    
+    // El borrado en cascada de Prisma se encargará de eventos, votos, etc.
+    await prisma.user.delete({ where: { id: userId } });
+    
+    revalidatePath('/admin/users');
+}
+
 export async function toggleIpBan(userId: string) {
     await checkAdminPermissions();
 

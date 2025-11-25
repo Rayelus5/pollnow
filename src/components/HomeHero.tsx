@@ -6,14 +6,15 @@ import { useEffect, useState } from "react";
 import { Bouncy } from 'ldrs/react'
 import 'ldrs/react/Bouncy.css'
 import Countdown from "@/components/Countdown";
+import ReportButton from "@/components/ReportButton";
 
 type Props = {
     firstPollId: string | undefined;
     isGalaTime: boolean;
     galaDate: Date;
-    // Nuevas props opcionales para personalización
     title?: string;
     description?: string;
+    eventId: string;
     slug?: string;
 };
 
@@ -39,8 +40,9 @@ export default function HomeHero({
     firstPollId,
     isGalaTime,
     galaDate,
-    title = "FOTY 2025", // Valor por defecto
-    description = "Celebramos los momentos, los memes y las leyendas.",
+    title = "Evento", // Valor por defecto
+    description = "Descripción del evento",
+    eventId,
     slug
 }: Props) {
 
@@ -123,7 +125,10 @@ export default function HomeHero({
 
             </motion.div>
 
-            {/* (Footer eliminado de aquí para usar el del Layout global si se prefiere, o mantenlo) */}
+            <div className="absolute top-6 right-6 z-50">
+                <ReportButton eventId={eventId} />
+            </div>
+
         </main>
     );
 }

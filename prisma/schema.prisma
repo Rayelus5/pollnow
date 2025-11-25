@@ -18,6 +18,7 @@ enum UserRole {
 }
 
 enum EventStatus {
+    DRAFT
     PENDING // En espera de revisión (Nuevo)
     APPROVED // Publicado (Nuevo)
     DENIED // Rechazado por admin (Nuevo)
@@ -132,14 +133,14 @@ model Event {
     slug           String          @unique // URL amigable (ej: mejor-pelicula-2024)
     accessKey      String          @unique @default(uuid()) // Clave privada para administrar (aparte de userId)
     isPublic       Boolean         @default(false) // Si es visible en la página principal
-    status         EventStatus     @default(PENDING) // Estado de moderación (PENDING, APPROVED, DENIED)
     tags           String[]        // Etiquetas para búsqueda (ej: ["cine", "oscar", "fiesta"])
     galaDate       DateTime        // Fecha de la celebración o fin del evento
     isAnonymousVoting Boolean       @default(true)
     createdAt      DateTime        @default(now())
     updatedAt      DateTime        @updatedAt
 
-    reviewReason    String?
+    status            EventStatus     @default(DRAFT) // <--- CAMBIO: Por defecto nace como borrador
+    reviewReason      String?   
 
     // Relaciones
     user           User            @relation(fields: [userId], references: [id])
@@ -266,7 +267,7 @@ model ModerationLog {
     admin         User     @relation(name: "AdminActions", fields: [adminId], references: [id])
     // Relación opcional con el Evento, útil para búsquedas rápidas en la tabla de Eventos
     eventId       String?
-    event         Event?   @relation(fields: [eventId], references: [id])
+    event         Event?   @relation(fields: [eventId], references: [id])     
 
     @@index([adminId])
     @@index([targetId])

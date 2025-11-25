@@ -7,9 +7,9 @@
 
 ## 1. Flujo de Publicación de Eventos
 
-- [ ] Botón Solicitar publicación en dashboard evento.
-- [ ] Crear /dashboard/requests/page.tsx.
-- [ ] Motivo de rechazo con ModerationLog.
+- [x] Botón Solicitar publicación en dashboard evento.
+- [x] Crear /dashboard/requests/page.tsx.
+- [x] Motivo de rechazo con ModerationLog.
 
 ## 2. Revisión de Eventos (ADMIN)
 
@@ -25,17 +25,17 @@
 
 ## 4. Gestión de Usuarios
 
-- [ ] Mejorar /admin/users/page.tsx.
-- [ ] Crear /admin/users/[userId]/page.tsx.
+- [x] Mejorar /admin/users/page.tsx.
+- [x] Crear /admin/users/[userId]/page.tsx.
 
 ## 5. Sistema de Reportes
 
-- [ ] Botón Reportar evento en vista pública.
-- [ ] Completar /admin/reports/page.tsx.
+- [x] Botón Reportar evento en vista pública.
+- [x] Completar /admin/reports/page.tsx.
 
 ## 6. Historial de Moderación
 
-- [ ] Crear /admin/logs/page.tsx.
+- [x] Crear /admin/logs/page.tsx.
 
 ## 7. Notificaciones
 
@@ -86,16 +86,16 @@
 
 ### **1.1. Ajustes en creación/edición de eventos (usuario)**
 
-* [ ] En `/dashboard/event/[id]` añadir botón **“Solicitar publicación”**
-* [ ] Enviar evento a `status = PENDING` cuando el usuario lo solicite
-* [ ] Desactivar auto-publicación en la creación de eventos
+* [x] En `/dashboard/event/[id]` añadir botón **“Solicitar publicación”**
+* [x] Enviar evento a `status = PENDING` cuando el usuario lo solicite
+* [x] Desactivar auto-publicación en la creación de eventos
 
 ### **1.2. Sección de solicitudes del usuario**
 
-* [ ] Crear: `src/app/dashboard/requests/page.tsx`
-* [ ] Mostrar lista de eventos del usuario con `PENDING` o `DENIED`
-* [ ] Mostrar **motivo de rechazo** leyendo `ModerationLog`
-* [ ] Añadir botón **“Volver a solicitar revisión”** tras DENIED
+* [x] Crear: `src/app/dashboard/requests/page.tsx`
+* [x] Mostrar lista de eventos del usuario con `PENDING` o `DENIED`
+* [x] Mostrar **motivo de rechazo** leyendo `ModerationLog`
+* [x] Añadir botón **“Volver a solicitar revisión”** tras DENIED
 
 ---
 
@@ -126,8 +126,8 @@
 
 ### **3.1. Vista general**
 
-* [ ] Mejorar: `src/app/admin/events/page.tsx`
-* [ ] Mostrar TODOS los eventos del sistema con filtros por:
+* [x] Mejorar: `src/app/admin/events/page.tsx`
+* [x] Mostrar TODOS los eventos del sistema con filtros por:
 
   * Status (PENDING / APPROVED / DENIED)
   * isPublic
@@ -137,21 +137,21 @@
 
 ### **3.2. Vista de evento para admin (supervisión total)**
 
-* [ ] Crear: `src/app/admin/events/[eventId]/page.tsx`
+* [x] Crear: `src/app/admin/events/[eventId]/page.tsx`
 
-  * [ ] Resumen general
-  * [ ] Participantes
-  * [ ] Polls y Options
-  * [ ] Estadísticas de votación
-  * [ ] Logs de moderación
-  * [ ] Reportes asociados
-  * [ ] Acciones completas CRUD (editar título, descripción, slug, tags…)
+  * [x] Resumen general
+  * [x] Participantes
+  * [x] Polls y Options
+  * [x] Estadísticas de votación
+  * [x] Logs de moderación
+  * [x] Reportes asociados
+  * [x] Acciones completas CRUD (editar título, descripción, slug, tags…)
 
 ### **3.3. Modo “ADMIN Impersonate”**
 
-* [ ] Desde el panel admin, botón: **“Gestionar como creador”**
-* [ ] Redirigir a `/dashboard/event/[id]` sin bloquear acceso en el middleware
-* [ ] Permitir edición total aunque no sea owner
+* [x] Desde el panel admin, botón: **“Gestionar como creador”**
+* [x] Redirigir a `/dashboard/event/[id]` sin bloquear acceso en el middleware
+* [x] Permitir edición total aunque no sea owner
 
 ---
 
@@ -159,21 +159,21 @@
 
 ### **4.1. Listado completo de usuarios**
 
-* [ ] Completar: `src/app/admin/users/page.tsx`
+* [x] Completar: `src/app/admin/users/page.tsx`
 
-  * [ ] Filtros (role, ipBan, email, username)
-  * [ ] Acciones rápidas (cambiar rol, banear IP, ver eventos)
+  * [x] Filtros (role, ipBan, email, username)
+  * [x] Acciones rápidas (cambiar rol, banear IP, ver eventos)
 
 ### **4.2. Vista individual de usuario**
 
-* [ ] Crear: `src/app/admin/users/[userId]/page.tsx`
+* [x] Crear: `src/app/admin/users/[userId]/page.tsx`
 
-  * [ ] Mostrar datos completos
-  * [ ] Editar rol (`USER | MODERATOR | ADMIN`)
-  * [ ] Toggle `ipBan`
-  * [ ] Eliminar usuario (y cascada de datos)
-  * [ ] Ver eventos del usuario
-  * [ ] Ver reportes enviados
+  * [x] Mostrar datos completos
+  * [x] Editar rol (`USER | MODERATOR | ADMIN`)
+  * [x] Toggle `ipBan`
+  * [x] Eliminar usuario (y cascada de datos)
+  * [x] Ver eventos del usuario
+  * [ ] Ver reportes enviados (details)
   * [ ] Ver logs asociados
   * [ ] Ver chats abiertos con soporte
 
@@ -183,21 +183,21 @@
 
 ### **5.1. Reportar evento desde la vista pública**
 
-* [ ] Añadir botón “Reportar evento” en `/e/[slug]`
-* [ ] Formulario para:
+* [x] Añadir botón “Reportar evento” en `/e/[slug]`
+* [x] Formulario para:
 
   * reason (`SPAM`, `SCAM`, etc.)
   * details
-* [ ] Crear `Report` en BD
+* [x] Crear `Report` en BD
 
 ### **5.2. Panel de reportes**
 
-* [ ] Completar: `src/app/admin/reports/page.tsx`
+* [x] Completar: `src/app/admin/reports/page.tsx`
 
-  * [ ] Lista de reportes con filtros
-  * [ ] Botón “Marcar como revisado”
-  * [ ] Acceso al evento y al usuario reportado
-  * [ ] Acciones complementarias: `BAN_USER`, `DENY_EVENT`
+  * [x] Lista de reportes con filtros
+  * [x] Botón “Marcar como revisado”
+  * [x] Acceso al evento y al usuario reportado
+  * [x] Acciones complementarias: `BAN_USER`, `DENY_EVENT`
   * [ ] Crear `ModerationLog` por cada acción
 
 ---
@@ -206,8 +206,8 @@
 
 ### **6.1. Panel de logs**
 
-* [ ] Crear: `src/app/admin/logs/page.tsx`
-* [ ] Listar `ModerationLog` con filtros:
+* [x] Crear: `src/app/admin/logs/page.tsx`
+* [x] Listar `ModerationLog` con filtros:
 
   * adminId
   * actionType
