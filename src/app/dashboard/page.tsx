@@ -5,6 +5,7 @@ import CreateEventButton from "@/components/dashboard/CreateEventButton"; // Lo 
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { getPlanFromUser } from "@/lib/plans";
+import CreateTicketButton from "@/components/dashboard/CreateTicketButton";
 
 export default async function Dashboard() {
     const session = await auth();
@@ -79,6 +80,8 @@ export default async function Dashboard() {
                 </div>
 
             </div>
+
+            <CreateTicketButton />
         </main>
     );
 }

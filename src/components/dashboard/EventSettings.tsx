@@ -58,12 +58,24 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isRegenerating, setIsRegenerating] = useState(false);
-    const [isRequesting, setIsRequesting] = useState(false); // Estado para el botón de publicar
+    const [isRequesting, setIsRequesting] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [showRequestModal, setShowRequestModal] = useState(false);
+
 
     const router = useRouter();
     const isPlus = planSlug === 'plus';
+
+    // 👇 NUEVO: lógica de estado de moderación
+    const isApproved = currentEvent.status === "APPROVED";
+    const isPending = currentEvent.status === "PENDING";
+    const isDraft = currentEvent.status === "DRAFT";
+    const isDenied = currentEvent.status === "DENIED";
+
+    // Solo se puede tocar la visibilidad cuando está aprobado
+    const canEditVisibility = isApproved;
+
     const defaultDate = formatLocalDatetime(currentEvent.galaDate);
 
     const handleCopy = async () => {
@@ -113,23 +125,37 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
     };
 
     // --- LÓGICA NUEVA: SOLICITAR PUBLICACIÓN ---
-    const handleRequestPublication = async () => {
-        if (!confirm("¿Estás seguro? Esto enviará el evento a revisión para hacerlo público.")) return;
+
+    // Abre el modal
+    const handleOpenRequestModal = () => {
+        setShowRequestModal(true);
+    };
+
+    // Confirmación dentro del modal
+    const confirmRequestPublication = async () => {
         setIsRequesting(true);
-        // @ts-ignore - Asegúrate de importar requestEventPublication correctamente
-        await requestEventPublication(event.id);
-        setIsRequesting(false);
-        router.refresh();
+        try {
+            const updated = await requestEventPublication(event.id);
+            setCurrentEvent(prev => ({
+                ...prev,
+                status: updated.status,
+                reviewReason: updated.reviewReason,
+            }));
+
+
+            setShowRequestModal(false);
+            // Sincronizamos el resto del dashboard con el server
+            router.refresh();
+        } catch (e) {
+            console.error("Error al solicitar publicación", e);
+            // Podrías meter un toast/error aquí si quieres
+        } finally {
+            setIsRequesting(false);
+        }
     };
 
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const shareUrl = `${origin}/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
-
-    // Helpers de estado
-    const isDraft = currentEvent.status === 'DRAFT';
-    const isPending = currentEvent.status === 'PENDING';
-    const isApproved = currentEvent.status === 'APPROVED';
-    const isDenied = currentEvent.status === 'DENIED';
 
     return (
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -139,18 +165,18 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
 
                 {/* NUEVO: CAJA DE ESTADO DE PUBLICACIÓN */}
                 <div className={`p-6 rounded-xl border ${isApproved ? 'bg-green-900/20 border-green-500/30' :
-                        isPending ? 'bg-yellow-900/20 border-yellow-500/30' :
-                            isDenied ? 'bg-red-900/20 border-red-500/30' :
-                                'bg-neutral-900 border-white/10'
+                    isPending ? 'bg-yellow-900/20 border-yellow-500/30' :
+                        isDenied ? 'bg-red-900/20 border-red-500/30' :
+                            'bg-neutral-900 border-white/10'
                     }`}>
                     <div className="flex justify-between items-start mb-4">
                         <div>
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 Estado:
                                 <span className={`uppercase tracking-wider text-sm px-2 py-0.5 rounded ${isApproved ? 'text-green-400 bg-green-500/10' :
-                                        isPending ? 'text-yellow-400 bg-yellow-500/10' :
-                                            isDenied ? 'text-red-400 bg-red-500/10' :
-                                                'text-gray-400 bg-gray-700/30'
+                                    isPending ? 'text-yellow-400 bg-yellow-500/10' :
+                                        isDenied ? 'text-red-400 bg-red-500/10' :
+                                            'text-gray-400 bg-gray-700/30'
                                     }`}>
                                     {isPending ? 'En Revisión' :
                                         isApproved ? 'Publicado' :
@@ -184,17 +210,21 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     {/* BOTÓN DE ACCIÓN */}
                     {(isDraft || isDenied) && (
                         <button
-                            onClick={handleRequestPublication}
+                            onClick={handleOpenRequestModal}
                             disabled={isRequesting}
                             className="w-full py-3 bg-white text-black font-bold rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                         >
-                            {isRequesting ? <Bouncy size="20" color="black" /> : (
+                            {isRequesting ? (
+                                <Bouncy size="20" color="black" />
+                            ) : (
                                 <>
-                                    <Send size={16} /> {isDenied ? "Corregir y Solicitar de Nuevo" : "Solicitar Publicación"}
+                                    <Send size={16} />
+                                    {isDenied ? "Corregir y Solicitar de Nuevo" : "Solicitar Publicación"}
                                 </>
                             )}
                         </button>
                     )}
+
                 </div>
 
                 {/* FORMULARIO ORIGINAL */}
@@ -204,24 +234,62 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     <h2 className="text-2xl font-bold text-white mb-4 border-b border-neutral-700 pb-3">Configuración General</h2>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Nombre del Evento</label>
-                        <input name="title" defaultValue={currentEvent.title} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required />
+                        <input name="title" maxLength={40} defaultValue={currentEvent.title} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
-                        <textarea name="description" defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" />
+                        <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-1">Fecha de la Gala</label>
                             <input type="datetime-local" name="galaDate" defaultValue={defaultDate} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white dark-calendar focus:border-blue-500 outline-none" />
                         </div>
-                        {/* VISIBILIDAD DESHABILITADA MANUALMENTE SI ESTÁ PENDING */}
-                        <div className={isPending ? "opacity-50 pointer-events-none" : ""}>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Visibilidad</label>
-                            <label className="flex items-center gap-3 p-3 border border-white/10 rounded-lg bg-black cursor-pointer hover:border-white/30 transition-colors h-[50px]">
-                                <input type="checkbox" name="isPublic" defaultChecked={currentEvent.isPublic} onChange={(e) => setCurrentEvent({ ...currentEvent, isPublic: e.target.checked })} className="accent-blue-500 w-5 h-5" />
+                        {/* VISIBILIDAD (solo editable si el evento está APROBADO) */}
+                        <div className={!canEditVisibility ? "opacity-60" : ""}>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                                Visibilidad
+                            </label>
+
+                            <label
+                                className={`flex items-center gap-3 p-3 border border-white/10 rounded-lg bg-black transition-colors h-[50px] ${canEditVisibility
+                                    ? "cursor-pointer hover:border-white/30"
+                                    : "cursor-not-allowed"
+                                    }`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    name="isPublic"
+                                    disabled={!canEditVisibility} // 👈 AQUÍ SE BLOQUEA REALMENTE
+                                    defaultChecked={currentEvent.isPublic}
+                                    onChange={(e) => {
+                                        if (!canEditVisibility) return; // doble seguridad
+                                        setCurrentEvent({
+                                            ...currentEvent,
+                                            isPublic: e.target.checked,
+                                        });
+                                    }}
+                                    className="accent-blue-500 w-5 h-5 disabled:opacity-50"
+                                />
                                 <span className="text-sm text-gray-300">Evento Público</span>
                             </label>
+
+                            {/* Mensajito explicativo según estado */}
+                            {!canEditVisibility && (
+                                isDenied ? (
+                                    <p className="mt-1 text-xs text-red-400">
+                                        El evento ha sido <strong>DENEGADO</strong>. Revisa los motivos en la sección
+                                        de solicitudes y corrige el contenido antes de volver a enviarlo.
+                                    </p>
+                                ) : (
+                                    <p className="mt-2 text-xs text-yellow-400">
+                                        Tu evento todavía no ha sido aprobado por el equipo de revisión.
+                                        No puedes cambiar la visibilidad hasta que esté <strong>APROBADO</strong>.
+                                    </p>
+                                )
+                            )}
+
+                            
                         </div>
                     </div>
                     <div className={`p-4 rounded-lg border transition-colors ${isPlus ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-70'}`}>
@@ -244,6 +312,43 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     </div>
                 </form>
             </div>
+
+            {showRequestModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-blue-500">
+                        <h2 className="text-xl font-bold text-white mb-2">Enviar a revisión</h2>
+                        <p className="text-gray-400 text-sm mb-6">
+                            ¿Estás seguro de que quieres enviar <strong>{event.title}</strong> a revisión?
+                            <br />
+                            Un administrador revisará el contenido antes de hacerlo público.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowRequestModal(false)}
+                                disabled={isRequesting}
+                                className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded text-gray-300 font-bold cursor-pointer disabled:opacity-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmRequestPublication}
+                                disabled={isRequesting}
+                                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isRequesting ? (
+                                    <Bouncy size={20} color="white" />
+                                ) : (
+                                    <>
+                                        <Send size={16} />
+                                        Enviar a revisión
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* COLUMNA 2: ENLACES Y ZONA PELIGRO (MANTENER IGUAL) */}
             <div className="space-y-8">

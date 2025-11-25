@@ -39,13 +39,13 @@
 
 ## 7. Notificaciones
 
-- [ ] Crear /admin/notifications/page.tsx.
-- [ ] Crear componente AdminNotifications.
+- [x] Crear /admin/notifications/page.tsx.
+- [x] Crear componente AdminNotifications.
 
 ## 8. Sistema de Soporte
 
-- [ ] Crear /dashboard/support/* rutas.
-- [ ] Crear /admin/chats/* rutas.
+- [x] Crear /dashboard/support/* rutas.
+- [x] Crear /admin/chats/* rutas.
 
 ## 9. API interna
 
@@ -222,18 +222,18 @@
 
 ### **7.1. Notificaciones para admins**
 
-* [ ] Crear: `src/app/admin/notifications/page.tsx`
-* [ ] Mostrar notificaciones para el admin logueado
-* [ ] Marcar notificación como leída
-* [ ] Crear componente global:
+* [x] Crear: `src/app/admin/notifications/page.tsx`
+* [x] Mostrar notificaciones para el admin logueado
+* [x] Marcar notificación como leída
+* [x] Crear componente global:
 
   * `src/components/admin/AdminNotifications.tsx`
 
 ### **7.2. Disparadores internos (a implementar junto al panel)**
 
-* [ ] Nueva solicitud de publicación → notificación Admin
-* [ ] Nuevo reporte creado → notificación Admin
-* [ ] Nuevo mensaje de soporte → notificación Admin
+* [x] Nueva solicitud de publicación → notificación Admin
+* [x] Nuevo reporte creado → notificación Admin
+* [x] Nuevo mensaje de soporte → notificación Admin
 
 ---
 
@@ -241,15 +241,15 @@
 
 ### **8.1. Lado usuario**
 
-* [ ] Crear: `src/app/dashboard/support/page.tsx`
-* [ ] Crear: `src/app/dashboard/support/[chatId]/page.tsx`
-* [ ] Permitir abrir un nuevo chat de soporte
+* [x] Crear: `src/app/dashboard/support/page.tsx`
+* [x] Crear: `src/app/dashboard/support/[chatId]/page.tsx`
+* [x] Permitir abrir un nuevo chat de soporte
 
 ### **8.2. Lado admin**
 
-* [ ] Crear: `src/app/admin/chats/page.tsx`
-* [ ] Crear: `src/app/admin/chats/[chatId]/page.tsx`
-* [ ] Acciones:
+* [x] Crear: `src/app/admin/chats/page.tsx`
+* [x] Crear: `src/app/admin/chats/[chatId]/page.tsx`
+* [x] Acciones:
 
   * Asignarse un chat
   * Enviar mensajes como admin

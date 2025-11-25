@@ -129,7 +129,7 @@ export default function CreateEventButton({ planSlug }: { planSlug: string }) {
                                     <input
                                         name="title"
                                         required
-                                        maxLength={50}
+                                        maxLength={40}
                                         value={title} // Controlado por React
                                         onChange={handleTitleChange} // Filtrado activo
                                         placeholder="Ej: Premios Verano 2025"
@@ -146,7 +146,7 @@ export default function CreateEventButton({ planSlug }: { planSlug: string }) {
                                     <textarea
                                         name="description"
                                         rows={3}
-                                        maxLength={200}
+                                        maxLength={100}
                                         placeholder="¿De qué va esta gala?"
                                         className="w-full bg-black border border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none"
                                     />
@@ -157,6 +157,7 @@ export default function CreateEventButton({ planSlug }: { planSlug: string }) {
                                     <label className="text-xs text-gray-500 uppercase block mb-1">Etiquetas</label>
                                     <input
                                         name="tags"
+                                        maxLength={50}
                                         placeholder="Etiquetas, separadas por comas"
                                         className="w-full bg-black border border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none"
                                     />

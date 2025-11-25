@@ -122,3 +122,14 @@ export async function toggleIpBan(userId: string) {
 
     revalidatePath('/admin/users');
 }
+
+export async function markNotificationRead(notificationId: string) {
+    const session = await checkAdminPermissions(); // Reutiliza tu helper de seguridad
+    
+    await prisma.notification.update({
+        where: { id: notificationId, adminUserId: session.id },
+        data: { isRead: true }
+    });
+    
+    revalidatePath('/admin/notifications');
+}

@@ -151,27 +151,34 @@ export async function requestEventPublication(eventId: string) {
     if (!session?.user) return { error: "No autorizado" };
 
     const event = await prisma.event.findUnique({
-        where: { id: eventId, userId: session.user.id }
+        where: { id: eventId, userId: session.user.id },
     });
 
     if (!event) return { error: "Evento no encontrado" };
 
-    if (event.status === 'PENDING') return { error: "Ya está en revisión." };
-    if (event.status === 'APPROVED') return { error: "El evento ya es público." };
-    
-    if (event.status !== 'DRAFT' && event.status !== 'DENIED') {
+    if (event.status === "PENDING") return { error: "Ya está en revisión." };
+    if (event.status === "APPROVED") return { error: "El evento ya es público." };
+
+    if (event.status !== "DRAFT" && event.status !== "DENIED") {
         return { error: "Estado de evento no válido para solicitud." };
     }
 
-    await prisma.event.update({
+    const updated = await prisma.event.update({
         where: { id: eventId },
-        data: { 
-            status: 'PENDING',
-            reviewReason: null 
-        }
+        data: {
+            status: "PENDING",
+            reviewReason: null,
+        },
+        select: {
+            id: true,
+            status: true,
+            reviewReason: true,
+        },
     });
 
+    // Esto está bien aquí, es servidor:
     revalidatePath(`/dashboard/event/${eventId}`);
-    revalidatePath('/dashboard/requests');
-    return { success: true };
+    revalidatePath("/dashboard/requests");
+
+    return { success: true, event: updated };
 }

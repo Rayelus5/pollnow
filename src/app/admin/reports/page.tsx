@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import { format } from "date-fns";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
 import Link from "next/link";
 import {
     User,
@@ -40,6 +42,8 @@ async function toggleReportReviewStatus(
                     : "Reabierto para revisión",
             },
         });
+
+        revalidatePath("/admin/reports");
     } catch (error) {
         console.error("Error:", error);
     }
@@ -89,6 +93,11 @@ async function banUserAndDenyEvent(
                 details: "Denegado automáticamente al banear al creador.",
             },
         });
+
+        revalidatePath("/admin/reports");
+        revalidatePath(`/admin/users/${userIdToBan}`);
+        revalidatePath(`/admin/events/${eventId}`);
+
     } catch (error) {
         console.error("Error en acción de ban:", error);
     }
