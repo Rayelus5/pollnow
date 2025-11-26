@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clsx } from "clsx";
-import { motion, Variants } from "framer-motion"; // <--- 1. Importamos Framer Motion
+import { motion, Variants } from "framer-motion";
+import { Bouncy } from "ldrs/react";
+import "ldrs/react/Bouncy.css";
+
 
 // Tipos
 type PollData = {
@@ -37,23 +40,23 @@ const containerVariants: Variants = {
 
 // 2. Tarjetas: Entrada agresiva
 const cardVariants: Variants = {
-    hidden: { 
+    hidden: {
         y: 100, // Empieza muy abajo
-        opacity: 0, 
+        opacity: 0,
         scale: 0.8,
         filter: "blur(10px)", // Empieza borroso
     },
-    show: { 
-        y: 0, 
-        opacity: 1, 
+    show: {
+        y: 0,
+        opacity: 1,
         scale: 1,
         filter: "blur(0px)", // Termina nítido
-        transition: { 
-            type: "spring", 
+        transition: {
+            type: "spring",
             stiffness: 200, // Tensión alta = Movimiento rápido/agresivo
             damping: 20,    // Freno para que no rebote demasiado
             mass: 1
-        } 
+        }
     },
 };
 
@@ -68,7 +71,7 @@ export default function VotingForm({
     poll,
     nextPollId,
     initialHasVoted = false,
-    initialSelected = [] ,
+    initialSelected = [],
     eventSlug
 }: {
     poll: PollData,
@@ -98,21 +101,28 @@ export default function VotingForm({
     };
 
     const handleSubmit = async () => {
+        // Evitar doble click
+        if (loading) return;
+
         const doRedirect = () => {
             if (nextPollId) {
                 router.push(`/polls/${nextPollId}`);
             } else {
-                // CAMBIO AQUÍ: Redirigir a la página específica del evento
                 router.push(`/e/${eventSlug}/completed`);
             }
         };
 
+        // 🟦 CASO 1: Ya ha votado → solo navegar, pero mostrando loader
         if (hasVoted) {
+            setLoading(true);
             doRedirect();
             return;
         }
 
+        // 🟥 CASO 2: Aún no ha votado y no ha seleccionado nada
         if (selected.length === 0) return;
+
+        // 🟩 CASO 3: Primer voto → enviar al backend
         setLoading(true);
 
         try {
@@ -125,17 +135,18 @@ export default function VotingForm({
             if (res.ok) {
                 setHasVoted(true);
                 localStorage.setItem(`voted_${poll.id}`, "true");
-                
+
+                // Pequeño delay para que se vea el spinner
                 setTimeout(() => {
-                    doRedirect(); // Usar la función auxiliar
+                    doRedirect();
                 }, 500);
             } else {
                 if (res.status === 403) {
                     alert("Ya has votado en esta categoría.");
                     setHasVoted(true);
                 } else {
-                    const json = await res.json();
-                    alert(json.error || "Error al enviar voto");
+                    const json = await res.json().catch(() => null);
+                    alert(json?.error || "Error al enviar voto");
                 }
                 setLoading(false);
             }
@@ -146,17 +157,18 @@ export default function VotingForm({
         }
     };
 
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-12 pb-32">
 
             {/* Navegación */}
-            <motion.nav 
+            <motion.nav
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
                 className="flex justify-start mb-8"
             >
-                <Link 
+                <Link
                     href={`/e/${eventSlug}`}
                     className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10"
                 >
@@ -168,14 +180,14 @@ export default function VotingForm({
             </motion.nav>
 
             {/* Header Animado */}
-            <motion.header 
+            <motion.header
                 initial="hidden"
                 animate="show"
                 variants={textVariants}
                 className="text-center mb-10 space-y-4"
             >
                 <span className="text-blue-500 text-xs font-bold tracking-[0.3em] uppercase">Categoría</span>
-                <motion.h1 
+                <motion.h1
                     className="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 leading-snug"
                     initial={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
                     animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
@@ -190,7 +202,7 @@ export default function VotingForm({
 
             {/* Feedback Animado */}
             {hasVoted && (
-                <motion.div 
+                <motion.div
                     initial={{ marginBottom: 0, opacity: 0, filter: "blur(10px)", transform: "scale(2)" }}
                     animate={{ marginBottom: 24, opacity: 1, filter: "blur(0px)", transform: "scale(1)" }}
                     className="mb-8 max-w-xl mx-auto overflow-hidden "
@@ -206,7 +218,7 @@ export default function VotingForm({
             )}
 
             {/* --- GRID DE CANDIDATOS CON FRAMER MOTION --- */}
-            <motion.div 
+            <motion.div
                 className={clsx(
                     "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12",
                     hasVoted ? "pointer-events-none" : ""
@@ -228,11 +240,11 @@ export default function VotingForm({
                             disabled={hasVoted}
                             className={clsx(
                                 "group relative h-[350px] rounded-2xl overflow-hidden text-left transition-colors duration-300 cursor-pointer", // Quitamos transition-all de CSS para dejar a Framer trabajar
-                                
+
                                 // Lógica Visual
-                                hasVoted 
-                                    ? (isSelected 
-                                        ? "ring-4 ring-green-500 opacity-100 z-10 cursor-default shadow-[0_0_30px_rgba(34,197,94,0.4)]" 
+                                hasVoted
+                                    ? (isSelected
+                                        ? "ring-4 ring-green-500 opacity-100 z-10 cursor-default shadow-[0_0_30px_rgba(34,197,94,0.4)]"
                                         : "opacity-20 grayscale ring-0 cursor-not-allowed")
                                     : (isSelected
                                         ? "ring-4 ring-blue-500 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] z-10"
@@ -278,7 +290,7 @@ export default function VotingForm({
 
                             {/* Checkmark */}
                             {isSelected && (
-                                <motion.div 
+                                <motion.div
                                     initial={{ scale: 0, rotate: -90 }}
                                     animate={{ scale: 1, rotate: 0 }}
                                     className={clsx(
@@ -289,10 +301,10 @@ export default function VotingForm({
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                                 </motion.div>
                             )}
-                            
+
                             {/* Etiqueta TU VOTO */}
                             {hasVoted && isSelected && (
-                                <motion.div 
+                                <motion.div
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     className="absolute top-4 left-4 bg-green-500 text-black text-xs font-bold px-3 py-1 rounded-full"
@@ -306,7 +318,7 @@ export default function VotingForm({
             </motion.div>
 
             {/* Barra Flotante */}
-            <motion.div 
+            <motion.div
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, type: "spring" }}
@@ -318,19 +330,44 @@ export default function VotingForm({
                     className="pointer-events-auto bg-white text-black px-12 py-4 rounded-full font-bold text-lg shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)] hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:shadow-none transition-all active:scale-95 flex items-center gap-3 cursor-pointer"
                 >
                     {loading ? (
-                        "Procesando..."
+                        // LOADING: solo el spinner
+                        <Bouncy size="40" speed="1.75" color="#000" />
+                    ) : hasVoted ? (
+                        // YA HABÍA VOTADO → continuar / resumen
+                        <>
+                            <span>{nextPollId ? "Continuar Siguiente" : "Ver Resumen"}</span>
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                />
+                            </svg>
+                        </>
                     ) : (
-                        hasVoted ? (
-                            <>
-                                <span>{nextPollId ? "Continuar Siguiente" : "Ver Resumen"}</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                            </>
-                        ) : (
-                            <>
-                                <span>Finalizar Votación</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            </>
-                        )
+                        // PRIMERA VEZ → finalizar votación
+                        <>
+                            <span>Finalizar Votación</span>
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M5 13l4 4L19 7"
+                                />
+                            </svg>
+                        </>
                     )}
                 </button>
             </motion.div>

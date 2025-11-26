@@ -91,10 +91,12 @@ export default function HomeHero({
                 <motion.div variants={itemVariants} className="flex flex-col md:flex-row gap-6 items-center">
                     {!isGalaTime ? (
                         firstPollId ? (
-                            <Link href={`/polls/${firstPollId}`} className="group relative">
+                            <Link onClick={() => setLoading(true)} href={`/polls/${firstPollId}`} className="group relative">
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
                                 <div className="relative px-10 py-4 bg-black rounded-full leading-none flex items-center">
-                                    <span className="text-gray-200 group-hover:text-white transition duration-200 font-bold tracking-wide">COMENZAR VOTACIÓN</span>
+                                    <span className="text-gray-200 group-hover:text-white transition duration-200 font-bold tracking-wide">
+                                        {loading ? <Bouncy color="white" size="40" speed="1.75" /> : "COMENZAR VOTACIÓN"}
+                                    </span>
                                 </div>
                             </Link>
                         ) : (
