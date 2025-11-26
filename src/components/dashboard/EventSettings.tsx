@@ -170,7 +170,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
     };
 
 
-    const shareUrl = `/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
+    const shareUrl = `${origin}/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
 
 
     return (
@@ -406,7 +406,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                 <div className="p-6 border border-red-500/20 bg-red-500/5 rounded-2xl">
                     <div className="flex justify-between items-center">
                         <div>
-                            <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-1"><AlertTriangle size={16} /> Zona de Peligro</h3>
+                            <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-1"><AlertTriangle size={16} /> Eliminar Evento</h3>
                             <p className="text-xs text-red-300/60">Esta acción es irreversible.</p>
                         </div>
                         <button onClick={() => setIsDeleteModalOpen(true)} className="text-xs font-bold text-red-200 bg-red-500/20 border border-red-500/30 px-4 py-3 rounded hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2 cursor-pointer"><Trash2 size={14} /> Eliminar</button>

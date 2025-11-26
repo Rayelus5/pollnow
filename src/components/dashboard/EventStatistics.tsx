@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { BarChart3, TrendingUp, Users, Lock, Eye, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+// import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
 
@@ -212,7 +212,7 @@ export default function EventStatistics({ stats, planSlug }: Props) {
                                         >
                                             <div className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center overflow-hidden border border-white/10">
                                                 {opt.imageUrl ? (
-                                                    <Image src={opt.imageUrl} alt="" width={32} height={32} className="object-cover w-full h-full" />
+                                                    <img src={opt.imageUrl} alt="" width={32} height={32} className="object-cover w-full h-full" />
                                                 ) : (
                                                     <span className="text-xs font-bold">{opt.name[0]}</span>
                                                 )}
@@ -253,7 +253,7 @@ export default function EventStatistics({ stats, planSlug }: Props) {
                                                         <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 cursor-pointer">
                                                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white overflow-hidden">
                                                                 {voter.image ? (
-                                                                    <Image src={voter.image} alt="" width={32} height={32} />
+                                                                    <img src={voter.image} alt="" width={32} height={32} />
                                                                 ) : (
                                                                     voter.name[0]
                                                                 )}

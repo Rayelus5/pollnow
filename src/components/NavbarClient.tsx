@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+// import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LogOut, Menu, X, User, LayoutDashboard, Home, Vote, Sparkles, Info } from "lucide-react";
 import { logoutUser } from "@/app/lib/auth-actions";
@@ -52,7 +52,7 @@ export default function NavbarClient({ user }: NavbarProps) {
                             <Link href="/dashboard/profile" className="flex items-center gap-3 p-1 pr-4 rounded-full hover:bg-white/10 transition-colors group border border-white/10">
                                 <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 relative">
                                     {user.image ? (
-                                        <Image src={user.image} alt="Avatar" fill className="object-cover" />
+                                        <img src={user.image} alt="Avatar" className="object-cover" />
                                     ) : (
                                         <div className="w-full h-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
                                             {user.name?.[0] || "U"}
@@ -132,7 +132,7 @@ export default function NavbarClient({ user }: NavbarProps) {
                                 >
                                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/20 relative shrink-0">
                                         {user.image ? (
-                                            <Image src={user.image} alt="Avatar" fill className="object-cover" />
+                                            <img src={user.image} alt="Avatar" className="object-cover" />
                                         ) : (
                                             <div className="w-full h-full bg-blue-600 flex items-center justify-center text-sm font-bold text-white">
                                                 {user.name?.[0] || "U"}

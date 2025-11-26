@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { updateProfile, changePassword } from "@/app/lib/user-actions";
 import { User, Lock, Save, Camera, UploadCloud } from "lucide-react";
-import Image from "next/image";
+// import Image from "next/image";
 import { signOut } from "next-auth/react";
 
 type UserData = {
@@ -95,7 +95,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                 className="w-32 h-32 rounded-full bg-gray-800 overflow-hidden relative border-4 border-white/10 cursor-pointer group-hover:border-blue-500 transition-colors shadow-xl"
                             >
                                 {previewImage ? (
-                                    <Image src={previewImage} alt="Avatar" fill className="object-cover" />
+                                    <img src={previewImage} alt="Avatar" className="object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-gray-600">
                                         {user.name?.[0] || "U"}

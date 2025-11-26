@@ -86,12 +86,23 @@ export default async function AdminDashboardPage() {
                     </div>
                     <div className="space-y-4">
                         {latestUsers.map(u => (
-                            <div key={u.id} className="flex items-center gap-3 pb-4 border-b border-white/5 last:border-0 last:pb-0">
-                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs text-gray-400">
-                                    {u.name?.[0]}
+                            <div className="flex items-center gap-2">
+
+                                <div className="flex items-center justify-center font-bold text-xs text-gray-400">
+                                    {u.image ? (
+                                        <img src={u.image} alt="" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs text-gray-400" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs text-gray-400">
+                                            {u.name?.[0]}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-200">{u.name}</p>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-sm font-medium text-gray-200">{u.name}</p>
+                                        
+                                        <p className="text-[11px] font-medium text-white/30">(@{u.username})</p>
+                                    </div>
                                     <p className="text-xs text-gray-500">{u.email}</p>
                                 </div>
                                 <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${u.subscriptionStatus === 'active' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
