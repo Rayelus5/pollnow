@@ -5,6 +5,7 @@ import { motion, Variants, AnimatePresence } from "framer-motion";
 import { Trophy, Lock, Palette, ArrowRight, Sparkles, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clsx } from "clsx";
+import LiquidGlass from 'liquid-glass-react'
 import { text } from "stream/consumers";
 import { AwardMockup3D } from "@/components/home/AwardMockup3D";
 import next from "next";
@@ -219,36 +220,269 @@ export default function LandingClient( { session } : { session: any } ) {
                     
                     <motion.div
                         variants={itemVariants}
-                        className="mt-20 relative w-full max-w-5xl aspect-video bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden group z-10"
+                        className="mt-20 relative w-full max-w-5xl aspect-video rounded-3xl border border-white/10 bg-black overflow-hidden z-10 [perspective:1400px]"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10" />
+                        {/* Glow muy suave de fondo */}
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.2),_transparent_55%)] opacity-80" />
+
+                        {/* CAPA DE TARJETAS FONDO (ahora más visibles, con bucle 0 → visible → 0) */}
+                        {[
+                            {
+                                id: "bg-1",
+                                top: "10%",
+                                left: "6%",
+                                rotateY: -18,
+                                rotateX: 8,
+                                depthScale: 0.85,
+                                blur: "blur-[4px]",
+                                maxOpacity: 0.55,
+                                delay: 0,
+                            },
+                            {
+                                id: "bg-2",
+                                top: "65%",
+                                left: "10%",
+                                rotateY: 15,
+                                rotateX: -6,
+                                depthScale: 0.88,
+                                blur: "blur-[5px]",
+                                maxOpacity: 0.5,
+                                delay: 0.8,
+                            },
+                            {
+                                id: "bg-3",
+                                top: "15%",
+                                left: "68%",
+                                rotateY: 18,
+                                rotateX: -5,
+                                depthScale: 0.9,
+                                blur: "blur-[4px]",
+                                maxOpacity: 0.52,
+                                delay: 1.4,
+                            },
+                            {
+                                id: "bg-4",
+                                top: "68%",
+                                left: "70%",
+                                rotateY: -16,
+                                rotateX: 7,
+                                depthScale: 0.87,
+                                blur: "blur-[5px]",
+                                maxOpacity: 0.48,
+                                delay: 2.1,
+                            },
+                        ].map((card) => (
+                            <motion.div
+                                key={card.id}
+                                className={`
+                                    absolute w-60 h-40 rounded-3xl border border-white/10 bg-neutral-900/70 
+                                    shadow-[0_0_35px_rgba(15,23,42,0.9)] overflow-hidden ${card.blur}
+                                `}
+                                style={{ top: card.top, left: card.left }}
+                                initial={{ opacity: 0 }}
+                                animate={{
+                                    opacity: [0, card.maxOpacity, 0],
+                                    y: [0, -10, 0],
+                                    rotateY: [card.rotateY, card.rotateY + 2, card.rotateY],
+                                    rotateX: [card.rotateX, card.rotateX - 2, card.rotateX],
+                                    scale: [card.depthScale, card.depthScale * 0.97, card.depthScale],
+                                }}
+                                transition={{
+                                    duration: 16,
+                                    delay: card.delay,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                }}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-900" />
+                                <div className="relative h-full w-full p-4 flex flex-col justify-between text-[10px] text-gray-300">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-slate-800 border border-white/15 flex items-center justify-center text-[9px] text-gray-200">
+                                            P
+                                        </div>
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-[10px] text-gray-200 font-semibold">
+                                                Evento destacado
+                                            </span>
+                                            <span className="text-[9px] text-gray-500">@pollnow</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="h-2 rounded-full bg-white/15 w-4/5" />
+                                        <div className="h-2 rounded-full bg-white/8 w-3/5" />
+                                    </div>
+                                    <div className="flex items-center justify-between text-[9px] text-gray-400">
+                                        <span>24 nominados · 6 categorías</span>
+                                        <span className="px-2 py-0.5 rounded-full bg-white/5 text-[8px]">
+                                            LIVE
+                                        </span>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+
+                        {/* CAPA DE TARJETAS MEDIO-PLANO (también 0 → visible → 0) */}
+                        {[
+                            {
+                                id: "mid-1",
+                                top: "8%",
+                                left: "28%",
+                                rotateY: -10,
+                                rotateX: 5,
+                                depthScale: 0.98,
+                                delay: 0.4,
+                            },
+                            {
+                                id: "mid-2",
+                                top: "60%",
+                                left: "48%",
+                                rotateY: 9,
+                                rotateX: -4,
+                                depthScale: 1.0,
+                                delay: 1.2,
+                            },
+                        ].map((card) => (
+                            <motion.div
+                                key={card.id}
+                                className="absolute w-64 h-44 rounded-3xl border border-white/15 bg-neutral-900/90 shadow-[0_0_40px_rgba(15,23,42,1)] overflow-hidden"
+                                style={{ top: card.top, left: card.left }}
+                                initial={{ opacity: 0 }}
+                                animate={{
+                                    opacity: [0, 0.9, 0],
+                                    y: [0, -12, 0],
+                                    rotateY: [card.rotateY, card.rotateY - 4, card.rotateY],
+                                    rotateX: [card.rotateX, card.rotateX + 3, card.rotateX],
+                                    scale: [card.depthScale, card.depthScale * 1.03, card.depthScale],
+                                }}
+                                transition={{
+                                    duration: 18,
+                                    delay: card.delay,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                }}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-sky-500/16 via-slate-950 to-purple-500/16" />
+                                <div className="relative h-full w-full p-4 flex flex-col justify-between">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-7 h-7 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center text-[10px] text-gray-100 font-bold">
+                                            P
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] text-gray-300">
+                                            <span className="text-gray-100 font-semibold">
+                                                Premios Comunidad
+                                            </span>
+                                            <span className="w-1 h-1 rounded-full bg-gray-600" />
+                                            <span className="bg-white/8 px-2 py-0.5 rounded-full">
+                                                En curso
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5 text-[10px] text-gray-300">
+                                        <div className="h-2.5 rounded-full bg-white/25 w-3/4" />
+                                        <div className="h-2 rounded-full bg-white/12 w-1/2" />
+                                    </div>
+                                    <div className="mt-3 flex items-center justify-between text-[9px] text-gray-300">
+                                        <div className="flex gap-2">
+                                            <span className="px-2.5 py-1 bg-white/5 rounded-lg border border-white/10">
+                                                18 nominados
+                                            </span>
+                                            <span className="px-2.5 py-1 bg-white/5 rounded-lg border border-white/10">
+                                                4 categorías
+                                            </span>
+                                        </div>
+                                        <div className="w-7 h-7 rounded-full bg-white/8 flex items-center justify-center text-gray-100">
+                                            →
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+
+                        {/* TARJETA PRINCIPAL EN PRIMER PLANO (también 0 → visible → 0) */}
+                        <motion.div
+                            className="absolute left-1/2 top-1/2 w-72 md:w-80 h-48 md:h-52 -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/25 bg-neutral-950/95 shadow-[0_0_60px_rgba(59,130,246,0.8)] overflow-hidden"
+                            initial={{ opacity: 0 }}
+                            animate={{
+                                opacity: [0, 1, 0],
+                                y: [0, -8, 0],
+                                rotateY: [-4, 2, -4],
+                                rotateX: [6, 2, 6],
+                                scale: [1, 1.04, 1],
+                            }}
+                            transition={{
+                                duration: 20,
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                            }}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/22 via-slate-900 to-indigo-500/22" />
+                            <div className="relative h-full w-full p-5 flex flex-col justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-full bg-black/70 border border-white/40 flex items-center justify-center text-[11px] font-bold text-sky-300">
+                                        PN
+                                    </div>
+                                    <div className="flex flex-col gap-0.5">
+                                        <span className="text-[11px] text-gray-100 font-semibold tracking-wide">
+                                            Evento en tendencia
+                                        </span>
+                                        <span className="text-[10px] text-gray-300">
+                                            Miles de votos en tiempo real.
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 space-y-2">
+                                    <div className="h-3 rounded-full bg-white/40 w-4/5" />
+                                    <div className="h-2 rounded-full bg-white/20 w-2/3" />
+                                </div>
+
+                                <div className="mt-4 flex items-center justify-between text-[10px] text-gray-100">
+                                    <div className="flex gap-2">
+                                        <span className="px-2.5 py-1 rounded-full bg-black/50 border border-white/20">
+                                            32 nominados
+                                        </span>
+                                        <span className="px-2.5 py-1 rounded-full bg-black/50 border border-white/20">
+                                            7 categorías
+                                        </span>
+                                    </div>
+                                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                                        Votación abierta
+                                    </span>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* TEXTO CENTRAL /pollnow (0 → visible → 0 en loop) */}
+                        <motion.div
+                            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                            initial={{ opacity: 0 }}
+                            animate={{
+                                opacity: [0.8, 1, 0.8],
+                                scale: [0.96, 1.5, 0.96],
+                            }}
+                            transition={{
+                                duration: 14,
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                            }}
+                        >
+
+                            <span className="text-6xl md:text-8xl font-extrabold tracking-tight text-white/85 drop-shadow-[0_0_35px_rgba(15,23,42,1)] mix-blend-screen">
+                                /pollnow
+                            </span>
+                            
+                        </motion.div>
 
                         
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="relative w-full h-full max-w-2xl py-20 flex flex-col items-center justify-center gap-6">
 
-                                <motion.div
-                                    animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
-                                    transition={{ duration: 4, repeat: Infinity }}
-                                    className="w-24 h-24 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full shadow-[0_0_50px_rgba(59,130,246,0.6)] mb-4"
-                                />
-
-                                <div className="w-3/4 h-4 bg-white/10 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: "0%" }}
-                                        whileInView={{ width: "70%" }}
-                                        transition={{ duration: 1.5, ease: "circOut", delay: 0.5 }}
-                                        className="h-full bg-white/20"
-                                    />
-                                </div>
-                                <div className="w-1/2 h-4 bg-white/5 rounded-full" />
-                            </div>
-                        </div>
-
-                        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black via-black/80 to-transparent" />
+                        {/* Fade inferior sutil */}
+                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/85 to-transparent" />
                     </motion.div>
+
                 </motion.div>
             </section>
+
+            
 
             {/* --- FEATURES SECTION --- */}
             <section className="py-32 bg-neutral-950 border-t border-white/5 relative">
@@ -260,6 +494,7 @@ export default function LandingClient( { session } : { session: any } ) {
                         viewport={{ once: true, margin: "-100px" }}
                         className="grid md:grid-cols-3 gap-8"
                     >
+                        
                         <FeatureCard
                             icon={<Trophy className="text-yellow-400" size={32} />}
                             title="Modo Gala"
@@ -282,7 +517,7 @@ export default function LandingClient( { session } : { session: any } ) {
             {/* --- CTA FINAL --- */}
             <section className="py-32 px-6 text-center relative">
                 <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 to-blue-950/20 pointer-events-none" />
-
+                            
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}

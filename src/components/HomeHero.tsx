@@ -7,6 +7,7 @@ import { Bouncy } from 'ldrs/react'
 import 'ldrs/react/Bouncy.css'
 import Countdown from "@/components/Countdown";
 import ReportButton from "@/components/ReportButton";
+import { House } from "lucide-react";
 
 type Props = {
     firstPollId: string | undefined;
@@ -83,22 +84,30 @@ export default function HomeHero({
                     {title}
                 </motion.h1>
 
-                <motion.p variants={itemVariants} className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 font-light leading-relaxed">
+                <motion.p variants={itemVariants} className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 font-light leading-relaxed overflow-y-auto max-h-[200px] break-words tail-line-clamp-3">
                     {description}
                 </motion.p>
 
                 {/* Buttons & Logic */}
-                <motion.div variants={itemVariants} className="flex flex-col md:flex-row gap-6 items-center">
+                <motion.div variants={itemVariants} className="flex flex-col gap-6 items-center">
                     {!isGalaTime ? (
                         firstPollId ? (
-                            <Link onClick={() => setLoading(true)} href={`/polls/${firstPollId}`} className="group relative">
-                                <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
-                                <div className="relative px-10 py-4 bg-black rounded-full leading-none flex items-center">
-                                    <span className="text-gray-200 group-hover:text-white transition duration-200 font-bold tracking-wide">
-                                        {loading ? <Bouncy color="white" size="40" speed="1.75" /> : "COMENZAR VOTACIÓN"}
-                                    </span>
-                                </div>
-                            </Link>
+                            <>
+                                <Link onClick={() => setLoading(true)} href={`/polls/${firstPollId}`} className="group relative">
+                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-sky-500 to-blue-600 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+                                    <div className="relative px-10 py-4 bg-black rounded-full leading-none flex items-center">
+                                        <span className="text-gray-200 group-hover:text-white transition duration-200 font-bold tracking-wide">
+                                            {loading ? <Bouncy color="white" size="40" speed="1.75" /> : "COMENZAR VOTACIÓN"}
+                                        </span>
+                                    </div>
+                                </Link>
+
+                                <Link href={`/`} className="group relative">
+                                    <div className="px-10 py-3 bg-white/5 border border-white/10 rounded-full text-gray-500 font-medium">
+                                        <House size={20} color="white" className="group-hover:text-white transition duration-200" />
+                                    </div>
+                                </Link>
+                            </>
                         ) : (
                             <div className="px-8 py-4 bg-white/5 border border-white/10 rounded-full text-gray-500 font-medium backdrop-blur-md">
                                 Las urnas están cerradas.
@@ -118,7 +127,10 @@ export default function HomeHero({
                     )}
                 </motion.div>
 
-                <motion.div variants={itemVariants} className="mt-24 border-t border-white/5 pt-8 w-full max-w-md">
+
+
+                <motion.div variants={itemVariants} className="mt-12 border-t border-white/10 pt-8 w-full max-w-md">
+
                     <p className="text-xs text-gray-600 uppercase tracking-[0.3em] mb-4">Countdown to Gala</p>
                     <div className="text-gray-300 opacity-80 hover:opacity-100 transition-opacity">
                         <Countdown targetDate={galaDate} />
