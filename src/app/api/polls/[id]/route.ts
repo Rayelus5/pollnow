@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: Props) {
 
         // 1. Identificar usuario
         const cookieStore = await cookies();
-        const voterId = cookieStore.get('foty_voter_id')?.value;
+        const voterId = cookieStore.get('voter_id')?.value;
 
         const poll = await prisma.poll.findUnique({
             where: { id },
