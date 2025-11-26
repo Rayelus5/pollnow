@@ -23,7 +23,7 @@ type Poll = {
     endAt: Date | null;
     isPublished: boolean;
     votingType: 'SINGLE' | 'MULTIPLE' | 'LIMITED_MULTIPLE';
-    maxChoices: number | null;
+    maxOptions: number | null;
     _count: { votes: number };
     options: { participantId: string }[];
 };
@@ -217,7 +217,7 @@ export default function PollList({
                                                     </div>
                                                     <div className="flex gap-2 text-xs text-gray-400 mt-1 mb-1">
                                                         <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5">
-                                                            {poll.votingType === 'SINGLE' ? 'Voto Único' : poll.votingType === 'MULTIPLE' ? 'Múltiple' : `Máx ${poll.maxChoices} ops.`}
+                                                            {poll.votingType === 'SINGLE' ? 'Voto Único' : poll.votingType === 'MULTIPLE' ? 'Múltiple' : `Máx ${poll.maxOptions} ops.`}
                                                         </span>
                                                     </div>
                                                     <div className="flex gap-4 mt-2 text-[10px] text-gray-500 font-mono">
@@ -279,8 +279,9 @@ export default function PollList({
                                 <input
                                     name="title"
                                     value={title}
+                                    maxLength={100}
                                     onChange={handleTitleChange}
-                                    className="w-full bg-black border border-white/20 rounded p-2 text-white focus:border-amber-500 outline-none"
+                                    className="w-full bg-black border border-white/20 rounded p-2 text-white focus:border-blue-500 outline-none"
                                     required
                                     autoFocus
                                 />
@@ -291,7 +292,8 @@ export default function PollList({
                                     name="description"
                                     defaultValue={editingPoll?.description || ""}
                                     rows={2}
-                                    className="w-full bg-black border border-white/20 rounded p-2 text-white focus:border-amber-500 outline-none"
+                                    maxLength={150}
+                                    className="w-full bg-black border border-white/20 rounded p-2 text-white focus:border-blue-500 outline-none"
                                 />
                             </div>
 
@@ -303,7 +305,7 @@ export default function PollList({
                                         name="votingType"
                                         value={votingType}
                                         onChange={(e) => setVotingType(e.target.value as any)}
-                                        className="w-full bg-neutral-900 border border-white/20 rounded p-2 text-white text-sm focus:border-amber-500 outline-none appearance-none cursor-pointer"
+                                        className="w-full bg-neutral-900 border border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none appearance-none cursor-pointer"
                                     >
                                         <option value="SINGLE">Opción única</option>
                                         <option value="MULTIPLE">Múltiples (Sin límite)</option>
@@ -315,11 +317,11 @@ export default function PollList({
                                     <div className="animate-in fade-in slide-in-from-left-2">
                                         <label className="text-xs text-gray-500 uppercase block mb-2">Máx. Opciones</label>
                                         <input
-                                            name="maxChoices"
+                                            name="maxOptions"
                                             type="number"
                                             min="2"
-                                            defaultValue={editingPoll?.maxChoices || 2}
-                                            className="w-full bg-neutral-900 border border-white/20 rounded p-2 text-white text-sm focus:border-amber-500 outline-none"
+                                            defaultValue={editingPoll?.maxOptions || 2}
+                                            className="w-full bg-neutral-900 border border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
                                             required
                                         />
                                     </div>

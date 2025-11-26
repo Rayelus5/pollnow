@@ -202,7 +202,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                             <p className="text-xs text-gray-400 mt-1">
                                 {isDraft && "El evento es privado. Solicita revisión para que aparezca en el buscador público."}
                                 {isPending && "Los moderadores están revisando tu evento. Te avisaremos pronto."}
-                                {isApproved && "¡Tu evento es público y visible para toda la comunidad!"}
+                                {isApproved && "¡Tu evento ha sido aprobado y puede ser publicado!"}
                                 {isDenied && "Tu solicitud fue denegada. Revisa el motivo abajo."}
                             </p>
                         </div>

@@ -15,7 +15,7 @@ type PollData = {
     title: string;
     description: string | null;
     votingType: string;
-    maxChoices: number | null;
+    maxOptions: number | null;
     options: {
         id: string;
         name: string;
@@ -94,7 +94,7 @@ export default function VotingForm({
             if (selected.includes(id)) {
                 setSelected(selected.filter((s) => s !== id));
             } else {
-                if (poll.maxChoices && selected.length >= poll.maxChoices) return;
+                if (poll.maxOptions && selected.length >= poll.maxOptions) return;
                 setSelected([...selected, id]);
             }
         }

@@ -325,8 +325,8 @@ export default function LandingClient( { session } : { session: any } ) {
                         {[
                             {
                                 id: "mid-1",
-                                top: "8%",
-                                left: "28%",
+                                top: "5%",
+                                left: "10%",
                                 rotateY: -10,
                                 rotateX: 5,
                                 depthScale: 0.98,
@@ -334,8 +334,8 @@ export default function LandingClient( { session } : { session: any } ) {
                             },
                             {
                                 id: "mid-2",
-                                top: "60%",
-                                left: "48%",
+                                top: "70%",
+                                left: "65%",
                                 rotateY: 9,
                                 rotateX: -4,
                                 depthScale: 1.0,
@@ -344,18 +344,19 @@ export default function LandingClient( { session } : { session: any } ) {
                         ].map((card) => (
                             <motion.div
                                 key={card.id}
-                                className="absolute w-64 h-44 rounded-3xl border border-white/15 bg-neutral-900/90 shadow-[0_0_40px_rgba(15,23,42,1)] overflow-hidden"
+                                className="absolute w-64 h-44 rounded-3xl border border-white/15 bg-neutral-900/90 shadow-[0_0_40px_rgba(15,23,42,1)] overflow-hidden z-0"
                                 style={{ top: card.top, left: card.left }}
                                 initial={{ opacity: 0 }}
                                 animate={{
-                                    opacity: [0, 0.9, 0],
-                                    y: [0, -12, 0],
+                                    opacity: [0, 0.8, 0],
+                                    x: [-20, 0, -20],
+                                    y: [-20, -40, 0],
                                     rotateY: [card.rotateY, card.rotateY - 4, card.rotateY],
                                     rotateX: [card.rotateX, card.rotateX + 3, card.rotateX],
                                     scale: [card.depthScale, card.depthScale * 1.03, card.depthScale],
                                 }}
                                 transition={{
-                                    duration: 18,
+                                    duration: 20,
                                     delay: card.delay,
                                     repeat: Infinity,
                                     ease: "easeInOut",
@@ -400,14 +401,14 @@ export default function LandingClient( { session } : { session: any } ) {
 
                         {/* TARJETA PRINCIPAL EN PRIMER PLANO (también 0 → visible → 0) */}
                         <motion.div
-                            className="absolute left-1/2 top-1/2 w-72 md:w-80 h-48 md:h-52 -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/25 bg-neutral-950/95 shadow-[0_0_60px_rgba(59,130,246,0.8)] overflow-hidden"
+                            className="absolute left-1/2 top-1/2 w-72 md:w-80 h-48 md:h-52 -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/25 bg-neutral-950/95 shadow-[0_0_60px_rgba(59,130,246,0.2)] overflow-hidden"
                             initial={{ opacity: 0 }}
                             animate={{
-                                opacity: [0, 1, 0],
+                                opacity: [0, 0.8, 1, 0.8, 0],
                                 y: [0, -8, 0],
-                                rotateY: [-4, 2, -4],
-                                rotateX: [6, 2, 6],
-                                scale: [1, 1.04, 1],
+                                rotateY: [-4, 8, -4],
+                                rotateX: [6, 30, 6],
+                                scale: [1, 1.06, 1],
                             }}
                             transition={{
                                 duration: 20,
@@ -422,7 +423,7 @@ export default function LandingClient( { session } : { session: any } ) {
                                         PN
                                     </div>
                                     <div className="flex flex-col gap-0.5">
-                                        <span className="text-[11px] text-gray-100 font-semibold tracking-wide">
+                                        <span className="text-[11px] text-gray-100 font-semibold tracking-wide text-left">
                                             Evento en tendencia
                                         </span>
                                         <span className="text-[10px] text-gray-300">
