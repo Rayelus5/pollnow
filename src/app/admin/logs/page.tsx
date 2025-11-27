@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
-import { Clock, User, Calendar, Trash2, Ban, CheckCircle, XCircle, FileText, Shield, ListChecks } from "lucide-react";
+import { Clock, User, Calendar, Trash2, Ban, CheckCircle, XCircle, FileText, Shield, ListChecks, Logs } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -41,12 +41,15 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="max-w-7xl mx-auto">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <Shield className="text-blue-500" /> Auditoría y Logs
-                </h1>
-                <p className="text-gray-400 mt-1">Registro inmutable de todas las acciones administrativas.</p>
-            </header>
+            <div className="flex items-center justify-between mb-10">
+                <div>
+                    <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
+                        <Logs size={28} className="text-blue-500" /> 
+                        Auditoría y Logs
+                    </h1>
+                    <p className="text-gray-400 mt-1">Registro inmutable de todas las acciones administrativas.</p>
+                </div>
+            </div>    
 
             <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden">
                 <table className="w-full text-left border-collapse">

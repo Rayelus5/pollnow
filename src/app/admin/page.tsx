@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Users, Calendar, CheckSquare, ArrowRight } from "lucide-react";
+import { Users, Calendar, CheckSquare, ArrowRight, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboardPage() {
     const userCount = await prisma.user.count();
     const eventCount = await prisma.event.count();
+    const reportCount = await prisma.report.count({ where: { isReviewed: false } });
     const pendingReviews = await prisma.event.count({ where: { status: 'PENDING' } });
 
     // Obtener últimos 5 eventos
@@ -25,14 +26,14 @@ export default async function AdminDashboardPage() {
     });
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
             <header className="mb-8">
                 <h1 className="text-3xl font-bold text-white">Panel de Control</h1>
                 <p className="text-gray-400">Resumen de actividad de la plataforma.</p>
             </header>
 
             {/* KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                 <KpiCard
                     title="Usuarios Totales"
                     value={userCount}
@@ -51,6 +52,13 @@ export default async function AdminDashboardPage() {
                     icon={<CheckSquare className="text-amber-500" />}
                     href="/admin/reviews"
                     alert={pendingReviews > 0}
+                />
+                <KpiCard
+                    title="Reportes Pendientes"
+                    value={reportCount}
+                    icon={<ShieldAlert className="text-red-500" />}
+                    href="/admin/reports"
+                    alert={reportCount > 0}
                 />
             </div>
 
@@ -120,7 +128,7 @@ export default async function AdminDashboardPage() {
 
 function KpiCard({ title, value, icon, href, alert }: any) {
     return (
-        <Link href={href} className={`block p-6 bg-neutral-900 border rounded-xl transition-all hover:bg-neutral-800 ${alert ? 'border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-white/10'}`}>
+        <Link href={href} className={`block p-6 bg-neutral-900 border rounded-xl transition-all hover:bg-neutral-800 ${alert ? title == "Pendientes de Revisión" ? 'border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-red-500/50 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-white/10'}`}>
             <div className="flex justify-between items-start mb-4">
                 <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider">{title}</h3>
                 <div className="p-2 bg-white/5 rounded-lg">{icon}</div>

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
-import { ExternalLink, Trash2, Search, Eye, Filter } from "lucide-react";
+import { ExternalLink, Trash2, Search, Eye, Filter, Calendar } from "lucide-react";
 import { deleteEvent } from "@/app/lib/event-actions"; // Reutilizamos la acción de borrado
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,10 @@ export default async function AdminEventsPage({ searchParams }: { searchParams: 
     <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
             <div>
-                <h1 className="text-3xl font-bold text-white">Gestión Global de Eventos</h1>
+                <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
+                    <Calendar size={28} className="text-blue-500" /> 
+                    Gestión de Eventos
+                </h1>
                 <p className="text-gray-400 mt-1">Supervisión y control total de todos los eventos de la plataforma.</p>
             </div>
             

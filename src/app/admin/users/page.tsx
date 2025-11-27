@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
-import { Search, Filter, Eye, ShieldAlert, MoreVertical } from "lucide-react";
+import { Search, Filter, Eye, ShieldAlert, MoreVertical, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +37,10 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
         <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Gestión de Usuarios</h1>
+                    <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
+                    <Users size={28} className="text-blue-500" /> 
+                    Gestión de Usuarios
+                </h1>
                     <p className="text-gray-400 mt-1">Base de datos completa de usuarios registrados.</p>
                 </div>
 

@@ -13,6 +13,9 @@ import {
     Ban,
     XCircle,
     ShieldAlert,
+    CheckSquare,
+    Repeat2,
+    Check,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -80,6 +83,7 @@ async function banUserAndDenyEvent(
             data: {
                 status: "DENIED",
                 reviewReason: "Evento eliminado por violación de términos (Reporte).",
+                isPublic: false,
             },
         });
 
@@ -148,12 +152,19 @@ export default async function AdminReportsPage({
 
     return (
         <div className="max-w-7xl mx-auto">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-white">
-                    Gestión de Reportes ({reports.length})
-                </h1>
-                <p className="text-gray-400">Revisión de incidencias de contenido.</p>
-            </header>
+            <div className="flex items-center justify-between mb-10">
+                <div>
+                    <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
+                        <ShieldAlert size={28} className="text-red-500" /> 
+                        Gestión de Reportes
+                    </h1>
+                    <p className="text-gray-400 mt-1">Revisión de incidencias de contenido.</p>
+                </div>
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${reports.filter(report => report.isReviewed === false).length === 0 ? 'border-green-500/20' : 'border-amber-500/20'}`}>
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: reports.filter(report => report.isReviewed === false).length === 0 ? 'green' : 'amber' }}></div>
+                    <span className={`${reports.filter(report => report.isReviewed === false).length === 0 ? 'text-green-500' : 'text-amber-500'} text-xs font-bold`}>{reports.filter(report => report.isReviewed === false).length} Pendientes</span>
+                </div>
+            </div>
 
             {/* Filtros */}
             <div className="mb-6 flex gap-3">
@@ -210,7 +221,7 @@ export default async function AdminReportsPage({
                             <tr
                                 key={report.id}
                                 className={`transition-colors ${report.isReviewed
-                                        ? "opacity-60 hover:opacity-100 bg-neutral-950/50"
+                                        ? "opacity-40 hover:opacity-100 bg-neutral-950/50"
                                         : "hover:bg-white/5"
                                     }`}
                             >
@@ -295,8 +306,8 @@ export default async function AdminReportsPage({
                                                 !report.isReviewed
                                             )}
                                         >
-                                            <button className="px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300 transition-colors border border-white/10 w-full">
-                                                {report.isReviewed ? "Reabrir" : "Marcar Revisado"}
+                                            <button className="min-w-[150px] px-3 py-2 rounded bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300 transition-colors border border-white/10 w-full flex items-center justify-center gap-2 cursor-pointer">
+                                                {report.isReviewed ? <><Repeat2 size={14} /> Reabrir</> : <><Check size={14} /> Revisado</>}
                                             </button>
                                         </form>
 
@@ -309,8 +320,8 @@ export default async function AdminReportsPage({
                                                     session?.user?.id!
                                                 )}
                                             >
-                                                <button className="px-3 py-1.5 rounded bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors border border-red-500/20 w-full flex items-center justify-center gap-1">
-                                                    <Ban size={12} /> Banear + Borrar
+                                                <button className="min-w-[150px] px-3 py-2 w-full rounded bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors border border-red-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                                                    <Ban size={14} /> Banear
                                                 </button>
                                             </form>
                                         )}

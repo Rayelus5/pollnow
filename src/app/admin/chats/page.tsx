@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { User, MessageCircle } from "lucide-react";
+import { User, MessageCircle, MessageCircleMore } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -16,13 +16,31 @@ export default async function AdminChatsPage() {
     });
 
     return (
-        <div className="max-w-5xl mx-auto">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-white">Soporte a Usuarios</h1>
-                <p className="text-gray-400">Gestiona las consultas y problemas de la comunidad.</p>
-            </header>
+        <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-10">
+                <div>
+                    <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
+                        <MessageCircleMore size={28} className="text-purple-500" /> 
+                        Soporte de Usuarios
+                    </h1>
+                    <p className="text-gray-400 mt-1">Gestiona los chats de soporte para ayudar a los usuarios.</p>
+                </div>
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${chats.length === 0 ? 'border-green-500/20' : 'border-amber-500/20'}`}>
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: chats.length === 0 ? 'green' : 'amber' }}></div>
+                    <span className={`${chats.length === 0 ? 'text-green-500' : 'text-amber-500'} text-xs font-bold`}>{chats.length} Pendientes</span>
+                </div>
+            </div>
 
             <div className="grid gap-4">
+                {chats.length === 0 && 
+                    <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-2xl bg-white/5 text-center">
+                        <div className="text-4xl mb-4 grayscale opacity-50">💬</div>
+                        <h3 className="text-xl font-bold text-white mb-2">¡Todo limpio!</h3>
+                        <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                            No hay chats de soporte pendientes. Buen trabajo manteniendo la comunidad segura.
+                        </p>
+                    </div>
+                }
                 {chats.map(chat => (
                     <Link
                         key={chat.id}
