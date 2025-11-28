@@ -116,7 +116,7 @@ export default async function AdminChatDetailPage({ params }: PageProps) {
     return (
         <main className="min-h-screen bg-black text-white">
             <header className="border-b border-white/10 bg-neutral-900/30">
-                <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div>
                         <div className="text-xs text-gray-400 mb-1">
                             <Link href="/admin/chats" className="hover:text-white">

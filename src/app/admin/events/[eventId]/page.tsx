@@ -3,15 +3,15 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
-import { 
-    ArrowLeft, 
-    ExternalLink, 
-    ShieldCheck, 
-    User, 
-    Calendar, 
-    Lock, 
-    BarChart3, 
-    Settings 
+import {
+    ArrowLeft,
+    ExternalLink,
+    ShieldCheck,
+    User,
+    Calendar,
+    Lock,
+    BarChart3,
+    Settings
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +34,8 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
     if (!event) notFound();
 
     return (
-        <div className="max-w-5xl mx-auto pb-20">
-            
+        <div className="max-w-7xl mx-auto pb-20">
+
             {/* Navegación */}
             <Link href="/admin/events" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white mb-6 transition-colors">
                 <ArrowLeft size={16} /> Volver al listado
@@ -46,9 +46,8 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-4xl font-bold text-white">{event.title}</h1>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                            event.status === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-gray-800 text-gray-400 border-gray-700'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${event.status === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-gray-800 text-gray-400 border-gray-700'
+                            }`}>
                             {event.status}
                         </span>
                     </div>
@@ -59,17 +58,17 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                 </div>
 
                 <div className="flex gap-3">
-                    <Link 
-                        href={`/e/${event.slug}`} 
+                    <Link
+                        href={`/e/${event.slug}`}
                         target="_blank"
                         className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-2 transition-colors"
                     >
                         <ExternalLink size={16} /> Ver Público
                     </Link>
-                    
+
                     {/* EL BOTÓN MÁGICO DE IMPERSONATE */}
-                    <Link 
-                        href={`/dashboard/event/${event.id}`} 
+                    <Link
+                        href={`/dashboard/event/${event.id}`}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-900/20 transition-all hover:scale-105"
                     >
                         <Settings size={16} /> Gestionar como Creador
@@ -78,10 +77,10 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 {/* COLUMNA IZQUIERDA (Info Técnica) */}
                 <div className="lg:col-span-2 space-y-8">
-                    
+
                     {/* Stats Cards */}
                     <div className="grid grid-cols-3 gap-4">
                         <StatCard label="Categorías" value={event.polls.length} icon={<BarChart3 className="text-blue-400" />} />
@@ -106,7 +105,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                                     </div>
                                 </div>
                             ))}
-                             {event.polls.length === 0 && <p className="px-6 py-8 text-center text-gray-500 text-sm">Sin categorías.</p>}
+                            {event.polls.length === 0 && <p className="px-6 py-8 text-center text-gray-500 text-sm">Sin categorías.</p>}
                         </div>
                     </div>
 
@@ -137,7 +136,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
 
                 {/* COLUMNA DERECHA (Usuario y Config) */}
                 <div className="space-y-6">
-                    
+
                     {/* Tarjeta del Creador */}
                     <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
                         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Creador del Evento</h3>
@@ -154,7 +153,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                                 <div className="text-xs text-gray-500">{event.user.email}</div>
                             </div>
                         </div>
-                        <Link 
+                        <Link
                             href={`/admin/users/${event.user.id}`}
                             className="block w-full py-2 text-center bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold text-gray-300 transition-colors"
                         >
@@ -165,7 +164,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                     {/* Tarjeta Técnica */}
                     <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 space-y-4">
                         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Datos Técnicos</h3>
-                        
+
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Creado</span>
                             <span className="text-white">{format(new Date(event.createdAt), 'dd/MM/yyyy')}</span>
@@ -182,12 +181,12 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                             <span className="text-gray-400">Voto Anónimo</span>
                             <span className="text-white">{event.isAnonymousVoting ? 'Sí' : 'No'}</span>
                         </div>
-                        
+
                         <div className="pt-4 mt-4 border-t border-white/5">
-                             <div className="text-xs text-gray-500 mb-1">Access Key (Privada)</div>
-                             <code className="block bg-black/50 p-2 rounded text-[10px] text-gray-400 font-mono break-all">
+                            <div className="text-xs text-gray-500 mb-1">Access Key (Privada)</div>
+                            <code className="block bg-black/50 p-2 rounded text-[10px] text-gray-400 font-mono break-all">
                                 {event.accessKey}
-                             </code>
+                            </code>
                         </div>
                     </div>
 
