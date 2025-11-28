@@ -58,7 +58,7 @@ export default async function EventDashboardPage({ params }: Props) {
             <header className="border-b border-white/10 bg-neutral-900/30">
                 <div className="max-w-7xl mx-auto px-6 py-8 tour-event-header">
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                        <Link href="/dashboard" className="hover:text-white transition-colors">Mis Eventos</Link>
+                        <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
                         <span>/</span>
                         <span>{event.title}</span>
                         {/* Badge de Plan */}

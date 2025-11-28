@@ -12,6 +12,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
+import { BookCheck } from "lucide-react";
 
 type DashboardTabsProps = {
     user: {
@@ -286,15 +287,24 @@ function NotificationsTab({
     return (
         <div className="space-y-4">
             {/* Botón global: marcar todas como leídas */}
-            <div className="flex justify-end">
-                <form action={markAllUserNotificationsRead}>
-                    <button
-                        type="submit"
-                        className="text-xs px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 text-gray-100 border border-white/20 cursor-pointer"
-                    >
-                        Marcar todas como leídas
-                    </button>
-                </form>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold">Mis Notificaciones</h2>
+                    <p className="text-gray-400 text-sm">
+                        Revisa tus notificaciones y actualizaciones.
+                    </p>
+                </div>
+                <div className="flex justify-end">
+                    <form action={markAllUserNotificationsRead}>
+                        
+                        <button
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2 cursor-pointer"
+                        >
+                            <BookCheck size={20} /> Marcar como leído
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <ul className="space-y-3">
@@ -357,15 +367,18 @@ function SupportTab({
 }) {
     return (
         <section className="space-y-6">
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    <h2 className="text-xl font-bold">Soporte</h2>
+                    <h2 className="text-2xl font-bold">Chats de Soporte</h2>
                     <p className="text-gray-400 text-sm">
-                        Habla con el equipo si necesitas ayuda con tus eventos.
+                        Contacta con nosotros si necesitas ayuda.
                     </p>
                 </div>
-                <CreateTicketButton />
+                <div className="flex justify-end">
+                    <CreateTicketButton />
+                </div>
             </div>
+                
 
             {supportChats.length === 0 && (
                 <div className="py-10 text-center text-sm text-gray-500 border border-dashed border-white/10 rounded-2xl">

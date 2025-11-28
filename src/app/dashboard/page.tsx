@@ -38,7 +38,7 @@ export default async function DashboardPage() {
         <main className="min-h-screen bg-black text-white px-6 md:px-12 py-8">
             <div className="max-w-6xl mx-auto">
                 <header className="mb-8">
-                    <h1 className="text-3xl font-bold tracking-tight">Mi Panel</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Panel de control</h1>
                     <p className="text-gray-400 text-sm">
                         Gestiona tu perfil, tus eventos y la comunicación con el equipo.
                     </p>

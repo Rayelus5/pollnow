@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createSupportChat } from "@/app/lib/support-actions";
-import { MessageCircle } from "lucide-react";
+import { MessageCirclePlus } from "lucide-react";
 
 export default function CreateTicketButton() {
     const [isPending, startTransition] = useTransition();
@@ -25,10 +25,10 @@ export default function CreateTicketButton() {
         <button
             onClick={handleClick}
             disabled={isPending}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold disabled:opacity-70 cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2 cursor-pointer disabled:opacity-40"
         >
-            <MessageCircle className="w-4 h-4" />
-            {isPending ? "Creando..." : "Nuevo chat de soporte"}
+            <MessageCirclePlus size={20} />
+            {isPending ? "Creando..." : "Contactar con Soporte"}
         </button>
     );
 }

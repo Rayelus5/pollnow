@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { clsx } from "clsx";
-import Shepherd from "shepherd.js";              // 👈 IMPORT PRINCIPAL
+import Shepherd from "shepherd.js";
 import "shepherd.js/dist/css/shepherd.css";
 
 type EventTabsProps = {
@@ -44,179 +44,224 @@ export default function EventTabs({
     []
   );
 
-  // Pasos de la guía (usan setActiveTab para cambiar de tab)
-  const steps = useMemo(
-    () => [
-      {
-        id: "welcome",
-        attachTo: {
-          element: ".tour-event-header",
-          on: "bottom" as const,
-        },
-        title: "Bienvenido a tu evento ✨",
-        text: [
-          "Aquí gestionas todo: ajustes, nominados, categorías y estadísticas.",
-        ],
-        buttons: [
-          {
-            text: "Saltar",
-            type: "cancel" as const,
-            classes: "shepherd-button-secondary",
-          },
-          {
-            text: "Siguiente",
-            type: "next" as const,
-            classes: "shepherd-button-primary",
-          },
-        ],
-      },
-      {
-        id: "tabs",
-        attachTo: {
-          element: ".tour-event-tabs",
-          on: "bottom" as const,
-        },
-        title: "Pestañas del evento",
-        text: [
-          "Usa estas pestañas para navegar entre configuración, nominados, categorías y estadísticas.",
-        ],
-        buttons: [
-          {
-            text: "Atrás",
-            type: "back" as const,
-            classes: "shepherd-button-secondary",
-          },
-          {
-            text: "Siguiente",
-            type: "next" as const,
-            classes: "shepherd-button-primary",
-          },
-        ],
-      },
-      {
-        id: "settings",
-        beforeShowPromise: () =>
-          new Promise<void>((resolve) => {
-            setActiveTab("settings");
-            setTimeout(() => resolve(), 350);
-          }),
-        attachTo: {
-          element: ".tour-event-settings-card",
-          on: "right" as const,
-        },
-        title: "Configura tu gala",
-        text: [
-          "Aquí defines el nombre del evento, descripción, fecha de la gala y si será público o privado.",
-        ],
-        buttons: [
-          {
-            text: "Atrás",
-            type: "back" as const,
-            classes: "shepherd-button-secondary",
-          },
-          {
-            text: "Siguiente",
-            type: "next" as const,
-            classes: "shepherd-button-primary",
-          },
-        ],
-      },
-      {
-        id: "participants",
-        beforeShowPromise: () =>
-          new Promise<void>((resolve) => {
-            setActiveTab("participants");
-            setTimeout(() => resolve(), 350);
-          }),
-        attachTo: {
-          element: ".tour-participants-section",
-          on: "top" as const,
-        },
-        title: "Añade nominados",
-        text: [
-          "En esta sección gestionas todos los participantes de tu gala. Puedes crear, editar, subir fotos o generarlas con IA.",
-        ],
-        buttons: [
-          {
-            text: "Atrás",
-            type: "back" as const,
-            classes: "shepherd-button-secondary",
-          },
-          {
-            text: "Siguiente",
-            type: "next" as const,
-            classes: "shepherd-button-primary",
-          },
-        ],
-      },
-      {
-        id: "polls",
-        beforeShowPromise: () =>
-          new Promise<void>((resolve) => {
-            setActiveTab("polls");
-            setTimeout(() => resolve(), 350);
-          }),
-        attachTo: {
-          element: ".tour-polls-section",
-          on: "top" as const,
-        },
-        title: "Crea tus categorías",
-        text: [
-          "Aquí creas las categorías de votación (Mejor Actor, Mejor Juego, etc.), eliges el tipo de voto y qué nominados participan.",
-        ],
-        buttons: [
-          {
-            text: "Atrás",
-            type: "back" as const,
-            classes: "shepherd-button-secondary",
-          },
-          {
-            text: "Siguiente",
-            type: "next" as const,
-            classes: "shepherd-button-primary",
-          },
-        ],
-      },
-      {
-        id: "stats",
-        beforeShowPromise: () =>
-          new Promise<void>((resolve) => {
-            setActiveTab("stats");
-            setTimeout(() => resolve(), 350);
-          }),
-        attachTo: {
-          element: ".tour-stats-section",
-          on: "top" as const,
-        },
-        title: "Mira las estadísticas",
-        text: [
-          "Cuando empiecen a votar, aquí verás el rendimiento de cada categoría y, con los planes avanzados, incluso quién ha votado.",
-        ],
-        buttons: [
-          {
-            text: "Atrás",
-            type: "back" as const,
-            classes: "shepherd-button-secondary",
-          },
-          {
-            text: "Cerrar",
-            type: "cancel" as const,
-            classes: "shepherd-button-primary",
-          },
-        ],
-      },
-    ],
-    [setActiveTab]
-  );
-
   const handleStartTour = () => {
-    // Evitar reventar en SSR o si por lo que sea Shepherd no está
     if (typeof window === "undefined" || !Shepherd) return;
 
-    const tour = new Shepherd.Tour({
-      ...tourOptions,
-      steps,
+    const tour = new Shepherd.Tour(tourOptions);
+
+    // 1) WELCOME
+    tour.addStep({
+      id: "welcome",
+      attachTo: {
+        element: ".tour-event-header",
+        on: "bottom" as const,
+      },
+      title: "Bienvenido a tu evento ✨",
+      text: [
+        "Aquí gestionas todo: ajustes, nominados, categorías y estadísticas.",
+      ],
+      buttons: [
+        {
+          text: "Saltar",
+          classes: "shepherd-button-secondary",
+          action() {
+            tour.cancel();
+          },
+        },
+        {
+          text: "Siguiente",
+          classes: "shepherd-button-primary",
+          action() {
+            tour.next();
+          },
+        },
+      ],
     });
+
+    // 2) TABS
+    tour.addStep({
+      id: "tabs",
+      attachTo: {
+        element: ".tour-event-tabs",
+        on: "bottom" as const,
+      },
+      title: "Pestañas del evento",
+      text: [
+        "Usa estas pestañas para navegar entre configuración, nominados, categorías y estadísticas.",
+      ],
+      buttons: [
+        {
+          text: "Atrás",
+          classes: "shepherd-button-secondary",
+          action() {
+            tour.back();
+          },
+        },
+        {
+          text: "Siguiente",
+          classes: "shepherd-button-primary",
+          action() {
+            tour.next();
+          },
+        },
+      ],
+    });
+
+    // 3) SETTINGS
+    tour.addStep({
+      id: "settings",
+      beforeShowPromise: () =>
+        new Promise<void>((resolve) => {
+          setActiveTab("settings");
+          setTimeout(() => resolve(), 350);
+        }),
+      attachTo: {
+        element: ".tour-event-settings-card",
+        on: "right" as const,
+      },
+      title: "Configura tu gala",
+      text: [
+        "Aquí defines el nombre del evento, descripción, fecha de la gala y si será público o privado.",
+      ],
+      buttons: [
+        {
+          text: "Atrás",
+          classes: "shepherd-button-secondary",
+          action() {
+            tour.back();
+          },
+        },
+        {
+          text: "Siguiente",
+          classes: "shepherd-button-primary",
+          action() {
+            tour.next();
+          },
+        },
+      ],
+    });
+
+    // 4) PARTICIPANTS
+    tour.addStep({
+      id: "participants",
+      beforeShowPromise: () =>
+        new Promise<void>((resolve) => {
+          setActiveTab("participants");
+          setTimeout(() => resolve(), 350);
+        }),
+      attachTo: {
+        element: ".tour-participants-section",
+        on: "top" as const,
+      },
+      title: "Añade nominados",
+      text: [
+        "En esta sección gestionas todos los participantes de tu gala. Puedes crear, editar, subir fotos o generarlas con IA.",
+      ],
+      buttons: [
+        {
+          text: "Atrás",
+          classes: "shepherd-button-secondary",
+          action() {
+            tour.back();
+          },
+        },
+        {
+          text: "Siguiente",
+          classes: "shepherd-button-primary",
+          action() {
+            tour.next();
+          },
+        },
+      ],
+    });
+
+    // 5) POLLS
+    tour.addStep({
+      id: "polls",
+      beforeShowPromise: () =>
+        new Promise<void>((resolve) => {
+          setActiveTab("polls");
+          setTimeout(() => resolve(), 350);
+        }),
+      attachTo: {
+        element: ".tour-polls-section",
+        on: "top" as const,
+      },
+      title: "Crea tus categorías",
+      text: [
+        "Aquí creas las categorías de votación (Mejor Actor, Mejor Juego, etc.), eliges el tipo de voto y qué nominados participan.",
+      ],
+      buttons: [
+        {
+          text: "Atrás",
+          classes: "shepherd-button-secondary",
+          action() {
+            tour.back();
+          },
+        },
+        {
+          text: "Siguiente",
+          classes: "shepherd-button-primary",
+          action() {
+            tour.next();
+          },
+        },
+      ],
+    });
+
+    // 6) STATS
+    tour.addStep({
+      id: "stats",
+      beforeShowPromise: () =>
+        new Promise<void>((resolve) => {
+          setActiveTab("stats");
+          setTimeout(() => resolve(), 350);
+        }),
+      attachTo: {
+        element: ".tour-stats-section",
+        on: "top" as const,
+      },
+      title: "Mira las estadísticas",
+      text: [
+        "Cuando empiecen a votar, aquí verás el rendimiento de cada categoría y, con los planes avanzados, incluso quién ha votado.",
+      ],
+      buttons: [
+        {
+          text: "Atrás",
+          classes: "shepherd-button-secondary",
+          action() {
+            tour.back();
+          },
+        },
+        {
+          text: "Cerrar",
+          classes: "shepherd-button-primary",
+          action() {
+            tour.next();
+          },
+        },
+      ],
+    });
+
+    // 7) MENSAJE FINAL — GRACIAS
+    tour.addStep({
+      id: "thanks",
+      title: "¡Gracias por usar la guía! 🎉",
+      text: [
+        "Ya conoces todas las funciones principales de tu evento.",
+        "Puedes repetir esta guía cuando quieras desde el botón 'Guía interactiva'."
+      ],
+      buttons: [
+        {
+          text: "Cerrar",
+          classes: "shepherd-button-primary",
+          action() {
+            tour.cancel();
+          },
+        },
+      ],
+    });
+
 
     tour.start();
   };
