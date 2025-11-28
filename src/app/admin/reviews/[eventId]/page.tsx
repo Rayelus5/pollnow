@@ -41,7 +41,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
     if (!event) notFound();
 
     return (
-        <div className="max-w-5xl mx-auto pb-20">
+        <div className="max-w-7xl mx-auto pb-20">
             
             {/* Header de Navegación */}
             <div className="mb-8">

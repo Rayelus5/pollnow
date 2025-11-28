@@ -47,7 +47,7 @@ export default async function AdminUserDetailPage({
             : "bg-gray-900/30 text-gray-400 border-gray-500/20";
 
     return (
-        <div className="max-w-5xl mx-auto pb-20">
+        <div className="max-w-7xl mx-auto pb-20">
             <Link
                 href="/admin/users"
                 className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-6"
