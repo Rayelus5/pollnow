@@ -32,7 +32,7 @@ const containerVariants: Variants = {
     show: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.08, // Muy rápido entre carta y carta (efecto ráfaga)
+            staggerChildren: 0.08,
             delayChildren: 0.2,
         },
     },
@@ -41,20 +41,20 @@ const containerVariants: Variants = {
 // 2. Tarjetas: Entrada agresiva
 const cardVariants: Variants = {
     hidden: {
-        y: 100, // Empieza muy abajo
+        y: 100,
         opacity: 0,
         scale: 0.8,
-        filter: "blur(10px)", // Empieza borroso
+        filter: "blur(10px)",
     },
     show: {
         y: 0,
         opacity: 1,
         scale: 1,
-        filter: "blur(0px)", // Termina nítido
+        filter: "blur(0px)",
         transition: {
             type: "spring",
-            stiffness: 200, // Tensión alta = Movimiento rápido/agresivo
-            damping: 20,    // Freno para que no rebote demasiado
+            stiffness: 200,
+            damping: 20,
             mass: 1
         }
     },
@@ -65,7 +65,6 @@ const textVariants: Variants = {
     hidden: { opacity: 0, y: -20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 };
-
 
 export default function VotingForm({
     poll,
@@ -101,7 +100,6 @@ export default function VotingForm({
     };
 
     const handleSubmit = async () => {
-        // Evitar doble click
         if (loading) return;
 
         const doRedirect = () => {
@@ -112,17 +110,14 @@ export default function VotingForm({
             }
         };
 
-        // 🟦 CASO 1: Ya ha votado → solo navegar, pero mostrando loader
         if (hasVoted) {
             setLoading(true);
             doRedirect();
             return;
         }
 
-        // 🟥 CASO 2: Aún no ha votado y no ha seleccionado nada
         if (selected.length === 0) return;
 
-        // 🟩 CASO 3: Primer voto → enviar al backend
         setLoading(true);
 
         try {
@@ -136,7 +131,6 @@ export default function VotingForm({
                 setHasVoted(true);
                 localStorage.setItem(`voted_${poll.id}`, "true");
 
-                // Pequeño delay para que se vea el spinner
                 setTimeout(() => {
                     doRedirect();
                 }, 500);
@@ -157,6 +151,16 @@ export default function VotingForm({
         }
     };
 
+    // 🔹 Texto visible para el usuario según el tipo de voto
+    const votingTypeLabel = (() => {
+        if (poll.votingType === "SINGLE") return "Voto único · Solo puedes elegir una opción";
+        if (poll.votingType === "LIMITED_MULTIPLE") {
+            const max = poll.maxOptions ?? 1;
+            return `Voto múltiple (máx. ${max} opción${max > 1 ? "es" : ""})`;
+        }
+        // MULTIPLE o cualquier otro valor
+        return "Voto múltiple (sin límite de opciones)";
+    })();
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12 pb-32">
@@ -198,6 +202,17 @@ export default function VotingForm({
                 {poll.description && (
                     <p className="text-gray-400 text-lg max-w-2xl mx-auto font-light">{poll.description}</p>
                 )}
+
+                {/* 🔹 Etiqueta tipo de voto visible para el usuario */}
+                <div className="flex justify-center mt-2">
+                    <span
+                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] uppercase tracking-wide ${poll.votingType === "SINGLE" ? "bg-green-500/10 text-green-500 border-green-500/20" :
+                            poll.votingType === "MULTIPLE" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                            "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"}`}
+                    >
+                        {votingTypeLabel}
+                    </span>
+                </div>
             </motion.header>
 
             {/* Feedback Animado */}
@@ -233,15 +248,13 @@ export default function VotingForm({
                     return (
                         <motion.button
                             key={opt.id}
-                            variants={cardVariants} // Aplicamos la animación individual agresiva
-                            whileHover={{ scale: hasVoted ? 1 : 1.03 }} // Hover effect
-                            whileTap={{ scale: hasVoted ? 1 : 0.97 }}   // Click effect
+                            variants={cardVariants}
+                            whileHover={{ scale: hasVoted ? 1 : 1.03 }}
+                            whileTap={{ scale: hasVoted ? 1 : 0.97 }}
                             onClick={() => handleSelect(opt.id)}
                             disabled={hasVoted}
                             className={clsx(
-                                "group relative h-[350px] rounded-2xl overflow-hidden text-left transition-colors duration-300 cursor-pointer", // Quitamos transition-all de CSS para dejar a Framer trabajar
-
-                                // Lógica Visual
+                                "group relative h-[350px] rounded-2xl overflow-hidden text-left transition-colors duration-300 cursor-pointer",
                                 hasVoted
                                     ? (isSelected
                                         ? "ring-4 ring-green-500 opacity-100 z-10 cursor-default shadow-[0_0_30px_rgba(34,197,94,0.4)]"
@@ -330,10 +343,8 @@ export default function VotingForm({
                     className="pointer-events-auto bg-white text-black px-12 py-4 rounded-full font-bold text-lg shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)] hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:shadow-none transition-all active:scale-95 flex items-center gap-3 cursor-pointer"
                 >
                     {loading ? (
-                        // LOADING: solo el spinner
                         <Bouncy size="40" speed="1.75" color="#000" />
                     ) : hasVoted ? (
-                        // YA HABÍA VOTADO → continuar / resumen
                         <>
                             <span>{nextPollId ? "Continuar Siguiente" : "Ver Resumen"}</span>
                             <svg
@@ -351,7 +362,6 @@ export default function VotingForm({
                             </svg>
                         </>
                     ) : (
-                        // PRIMERA VEZ → finalizar votación
                         <>
                             <span>Finalizar Votación</span>
                             <svg
