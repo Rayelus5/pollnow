@@ -60,7 +60,11 @@ export default auth(async (req) => {
         }
 
         // B. Segundo: ¿Tiene el rol adecuado?
-        if (isLoggedIn && userRole === 'ADMIN' && nextUrl.pathname.startsWith('/admin')) {
+        if (
+            isLoggedIn &&
+            (userRole === 'ADMIN' || userRole === 'MODERATOR') &&
+            nextUrl.pathname.startsWith('/admin')
+        ) {
             return NextResponse.next();
         }
 

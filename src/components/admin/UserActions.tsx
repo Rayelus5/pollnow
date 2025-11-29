@@ -437,7 +437,7 @@ export default function UserActions({ user }: { user: User }) {
             {/* ZONA DE PELIGRO */}
             <div className="bg-red-950/10 border border-red-500/20 rounded-xl p-6 space-y-4">
                 <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
-                    <ShieldAlert size={16} /> Zona de Riesgo
+                    <ShieldAlert size={16} /> BANEAR Y ELIMINAR
                 </h3>
 
                 <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
@@ -452,7 +452,7 @@ export default function UserActions({ user }: { user: User }) {
                     <button
                         onClick={handleBanToggle}
                         disabled={loading}
-                        className={`px-4 py-1.5 rounded text-xs font-bold transition-colors ${
+                        className={`px-4 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${
                             user.ipBan
                                 ? "bg-green-600 text-white hover:bg-green-500"
                                 : "bg-red-600 text-white hover:bg-red-500"
@@ -465,7 +465,7 @@ export default function UserActions({ user }: { user: User }) {
                 <button
                     onClick={handleDelete}
                     disabled={loading}
-                    className="w-full py-3 text-xs font-bold text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 text-xs font-bold text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                     {loading ? (
                         <Bouncy size="45" speed="1.75" color="red" />

@@ -32,7 +32,7 @@ export default async function AdminLayout({
         <>
             <div className="hidden min-h-screen bg-black text-gray-100 lg:flex font-sans selection:bg-red-900/30">
                 {/* SIDEBAR FIJA */}
-                <aside className="w-64 bg-neutral-900 border-r border-white/10 flex flex-col fixed h-full z-50">
+                <aside className="w-64 lg:w-80 bg-neutral-900 border-r border-white/10 flex flex-col fixed h-full z-50">
                     <div className="p-6 border-b border-white/10">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
@@ -54,7 +54,7 @@ export default async function AdminLayout({
                         <NavLink href="/admin/users" icon={<Users size={18} />} label="Usuarios" />
                         <NavLink href="/admin/events" icon={<Calendar size={18} />} label="Eventos" />
                         
-                        <div className="mt-4 absolute top-0 left-50 bg-neutral-900/50 backdrop-blur-50 p-2 rounded-full border border-white/20">
+                        <div className="mt-4 absolute top-0 left-50 lg:left-65 bg-neutral-900/50 backdrop-blur-50 p-2 rounded-full border border-white/20">
                             <AdminNotifications />
                         </div>
                     </nav>
