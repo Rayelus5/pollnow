@@ -10,6 +10,7 @@ import ParticipantList from "@/components/dashboard/ParticipantList";
 import PollList from "@/components/dashboard/PollList";
 import EventStatistics from "@/components/dashboard/EventStatistics";
 import { Folders, UsersRound } from "lucide-react";
+import clsx from "clsx";
 
 type Props = {
     params: Promise<{ id: string }>;
@@ -66,13 +67,22 @@ export default async function EventDashboardPage({ params }: Props) {
                             Dashboard
                         </Link>
                         <span>/</span>
-                        <span>{event.title}</span>
+                        <span className="truncate w-50">{event.title}</span>
                         {/* Badge de Plan (del usuario logueado) */}
-                        <span className="ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-white/10 text-gray-400">
+                        <span
+                            className={clsx(
+                                "ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                                plan.name.toUpperCase() === "PREMIUM"
+                                    ? "bg-indigo-500/10 text-indigo-400"
+                                    : plan.name.toUpperCase() === "UNLIMITED"
+                                    ? "bg-purple-500/10 text-purple-400"
+                                    : "bg-white/10 text-gray-400"
+                            )}
+                        >
                             Plan {plan.name}
                         </span>
                     </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tight">
+                    <h1 className="text-4xl font-bold text-white tracking-tight truncate ">
                         {event.title}
                     </h1>
                 </div>

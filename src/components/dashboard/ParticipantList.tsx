@@ -26,7 +26,7 @@ type Participant = {
 function SaveButton() {
     const { pending } = useFormStatus();
     return (
-        <button type="submit" disabled={pending} className="p-4 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30 cursor-pointer flex items-center justify-center min-w-[50px]">
+        <button type="submit" disabled={pending} className="p-5 sm:p-7 bg-green-500/20 text-green-500 rounded hover:bg-green-500/30 cursor-pointer flex items-center justify-center w-full sm:w-auto">
             {pending ? <Bouncy size="20" speed="1.75" color="#22c55e" /> : <Save size={20} />}
         </button>
     );
@@ -129,7 +129,7 @@ function ParticipantForm({
                 <div className="relative group shrink-0">
                     <div
                         onClick={() => fileInputRef.current?.click()}
-                        className={`rounded-full flex items-center justify-center overflow-hidden border-2 border-blue-500/30 cursor-pointer hover:border-blue-500 transition-all bg-gray-900 ${isEditMode ? 'w-12 h-12' : 'w-16 h-16'}`}
+                        className={`rounded-full flex items-center justify-center overflow-hidden border-2 border-blue-500/30 cursor-pointer hover:border-blue-500 transition-all bg-gray-900 w-19 h-19`}
                     >
                         {isGenerating ? (
                             <Quantum size={isEditMode ? "30" : "45"} speed="1.75" color="white" />
@@ -211,11 +211,11 @@ function ParticipantForm({
                 </div>
             </div>
 
-            <div className={`flex gap-2 ${isEditMode ? '' : 'justify-end border-t border-white/5 pt-3'}`}>
+            <div className={`flex gap-2 ${isEditMode ? 'w-full sm:w-auto' : 'justify-end border-t border-white/5 pt-3'}`}>
                 {isEditMode ? (
                     <>
                         <SaveButton />
-                        <button type="button" onClick={onCancel} className="p-4 bg-gray-800 text-gray-400 rounded hover:bg-gray-700 cursor-pointer"><X size={20} /></button>
+                        <button type="button" onClick={onCancel} className="p-5 sm:p-7 w-full sm:w-auto flex items-center justify-center bg-gray-800 text-gray-400 rounded hover:bg-gray-700 cursor-pointer"><X size={20} /></button>
                     </>
                 ) : (
                     <>

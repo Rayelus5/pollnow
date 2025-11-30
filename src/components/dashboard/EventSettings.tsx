@@ -368,7 +368,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
 
             {/* COLUMNA 2: ENLACES Y ZONA PELIGRO (MANTENER IGUAL) */}
             <div className="space-y-8">
-                <div className="p-6 border border-blue-500/20 bg-blue-500/5 rounded-2xl space-y-4">
+                <div className="p-6 border border-blue-500/20 bg-blue-500/5 rounded-xl space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
                             {currentEvent.isPublic ? '🌍 Enlace Público' : '🔒 Enlace Privado (Con Clave)'}
@@ -403,7 +403,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     </div>
                 </div>
 
-                <div className="p-6 border border-red-500/20 bg-red-500/5 rounded-2xl">
+                <div className="p-6 border border-red-500/20 bg-red-500/5 rounded-xl">
                     <div className="flex justify-between items-center">
                         <div>
                             <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-1"><AlertTriangle size={16} /> Eliminar Evento</h3>

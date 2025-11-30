@@ -97,9 +97,8 @@ export async function authenticateCredentials(prevState: string | undefined, for
     }
 
     // cerrar sesión primero antes de iniciar sesión (solo cerrar sesión si ya tiene sesión iniciada)
-    if (sessionStorage.getItem('next-auth.session-token')) {
-        await signOut();
-    }
+    await signOut();
+
 
     try {
         // VERIFICACIÓN PREVIA: ¿Es cuenta de Google?
@@ -138,9 +137,8 @@ export async function authenticateCredentials(prevState: string | undefined, for
 export async function authenticateGoogle() {
     try {
         // cerrar sesión primero antes de iniciar sesión (solo cerrar sesión si ya tiene sesión iniciada)
-        if (sessionStorage.getItem('next-auth.session-token')) {
-            await signOut();
-        }
+        await signOut();
+        
         await signIn('google', { redirectTo: "/dashboard/profile" });
     } catch (error) {
         if (error instanceof AuthError) {
