@@ -15,7 +15,7 @@ export default function LoginForm() {
                     Email
                 </label>
                 <input
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     id="email"
                     type="email"
                     name="email"
@@ -29,7 +29,7 @@ export default function LoginForm() {
                     Contraseña
                 </label>
                 <input
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     id="password"
                     type="password"
                     name="password"

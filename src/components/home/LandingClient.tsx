@@ -65,12 +65,22 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-    hidden: { y: 30, opacity: 0, filter: "blur(5px)" },
+    hidden: { y: 30, opacity: 0, filter: "blur(8px)" },
     visible: {
         y: 0,
         opacity: 1,
         filter: "blur(0px)",
         transition: { duration: 0.8, ease: "easeOut" },
+    },
+};
+
+const itemFeatureVariants: Variants = {
+    hidden: { y: 30, opacity: 0, filter: "blur(5px)" },
+    visible: {
+        y: 0,
+        opacity: 1,
+        filter: "blur(0px)",
+        transition: { duration: 0.4, ease: "easeOut" },
     },
 };
 
@@ -218,14 +228,14 @@ export default function LandingClient( { session } : { session: any } ) {
                     </motion.div> */}
 
                     
-                    <motion.div
+                    {/* <motion.div
                         variants={itemVariants}
-                        className="hidden lg:flex mt-20 relative w-full max-w-5xl aspect-video rounded-3xl border border-white/10 bg-black overflow-hidden z-10 [perspective:1400px]"
+                        className="hidden lg:flex mt-20 relative w-full max-w-5xl aspect-video rounded-3xl border-2 border-white/20 bg-black overflow-hidden z-10 [perspective:1400px]"
                     >
-                        {/* Glow muy suave de fondo */}
+                        
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.2),_transparent_55%)] opacity-80" />
 
-                        {/* CAPA DE TARJETAS FONDO (ahora más visibles, con bucle 0 → visible → 0) */}
+                        
                         {[
                             {
                                 id: "bg-1",
@@ -321,7 +331,7 @@ export default function LandingClient( { session } : { session: any } ) {
                             </motion.div>
                         ))}
 
-                        {/* CAPA DE TARJETAS MEDIO-PLANO (también 0 → visible → 0) */}
+                        
                         {[
                             {
                                 id: "mid-1",
@@ -399,7 +409,7 @@ export default function LandingClient( { session } : { session: any } ) {
                             </motion.div>
                         ))}
 
-                        {/* TARJETA PRINCIPAL EN PRIMER PLANO (también 0 → visible → 0) */}
+                        
                         <motion.div
                             className="absolute left-1/2 top-1/2 w-72 md:w-80 h-48 md:h-52 -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/25 bg-neutral-950/95 shadow-[0_0_60px_rgba(59,130,246,0.2)] overflow-hidden"
                             initial={{ opacity: 0 }}
@@ -453,7 +463,7 @@ export default function LandingClient( { session } : { session: any } ) {
                             </div>
                         </motion.div>
 
-                        {/* TEXTO CENTRAL /pollnow (0 → visible → 0 en loop) */}
+                        
                         <motion.div
                             className="absolute inset-0 flex items-center justify-center pointer-events-none"
                             initial={{ opacity: 0 }}
@@ -476,9 +486,10 @@ export default function LandingClient( { session } : { session: any } ) {
 
                         
 
-                        {/* Fade inferior sutil */}
+                        
                         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/85 to-transparent" />
                     </motion.div>
+                    */}
 
                 </motion.div>
             </section>
@@ -550,9 +561,9 @@ export default function LandingClient( { session } : { session: any } ) {
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
     return (
         <motion.div
-            variants={itemVariants}
+            variants={itemFeatureVariants}
             whileHover={{ y: -10 }}
-            className="p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 group cursor-pointer"
+            className="p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-500/30 hover:bg-white/10 transition-colors duration-300 group cursor-pointer"
         >
             <div className="mb-6 p-4 bg-black/50 rounded-2xl w-fit border border-white/5 group-hover:border-white/20 transition-colors">
                 {icon}

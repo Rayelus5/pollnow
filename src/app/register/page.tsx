@@ -19,7 +19,7 @@ export default async function RegisterPage() {
             <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="w-full max-w-md p-8 relative z-10">
+            <div className="w-full max-w-xl p-8 relative z-10">
 
                 {/* Header Card */}
                 <div className="text-center mb-10">
@@ -34,7 +34,7 @@ export default async function RegisterPage() {
                 </div>
 
                 {/* Formulario */}
-                <div className="bg-neutral-900/50 border border-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl hover:border-blue-500/30 hover:shadow-blue-400/20 hover:shadow-[0_0_100px] transition-all duration-500">
+                <div className="bg-neutral-900/50 border-2 border-white/20 backdrop-blur-xl p-8 rounded-3xl shadow-2xl hover:border-blue-500/30 hover:shadow-blue-400/20 hover:shadow-[0_0_100px] transition-all duration-500">
                     <RegisterForm />
 
                     {/* Separador (para futuro Google Login) */}

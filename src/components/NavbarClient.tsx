@@ -23,19 +23,19 @@ export default function NavbarClient({ user }: NavbarProps) {
     const closeMenu = () => setIsMobileMenuOpen(false);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/10">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/20">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
                 {/* --- LOGO --- */}
                 <Link href="/" className="flex items-center gap-2 group z-50" onClick={closeMenu}>
-                    <div className="w-8 h-8 border border-white/20 bg-gradient-to-br from-gray-700 to-black rounded-lg flex items-center justify-center font-bold text-black group-hover:scale-110 transition-transform">
+                    <div className="w-10 h-10 border border-white/20 bg-gradient-to-br from-gray-700 to-black rounded-lg flex items-center justify-center font-bold text-black group-hover:scale-105 transition-transform">
                         <img src="./logo.webp" alt="" />
                     </div>
-                    <span className="font-bold text-lg tracking-tight text-white">POLLNOW</span>
+                    <span className="font-bold text-2xl tracking-tight text-white">POLLNOW</span>
                 </Link>
 
                 {/* --- MENÚ DESKTOP (Hidden on Mobile) --- */}
-                <div className="hidden md:flex items-center gap-8">
+                <div className="hidden lg:flex items-center gap-8">
                     <NavLink href="/" active={pathname === "/"}>Home</NavLink>
                     <NavLink href="/polls" active={pathname.startsWith("/polls")}>Events</NavLink>
                     <NavLink href="/dashboard" active={pathname.startsWith("/dashboard")}>Dashboard</NavLink>
@@ -46,10 +46,10 @@ export default function NavbarClient({ user }: NavbarProps) {
                 </div>
 
                 {/* --- ZONA USUARIO DESKTOP --- */}
-                <div className="hidden md:flex items-center gap-4">
+                <div className="hidden lg:flex items-center gap-4">
                     {user ? (
                         <div className="flex items-center gap-3">
-                            <Link href="/dashboard?tab=profile" className="flex items-center gap-3 p-1 pr-4 rounded-full hover:bg-white/10 transition-colors group border border-white/10">
+                            <Link href="/dashboard?tab=profile" className="flex items-center gap-3 p-1 pr-4 rounded-full hover:bg-white/10 transition-colors group border border-white/20">
                                 <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 relative">
                                     {user.image ? (
                                         <img src={user.image} alt="Avatar" className="object-cover" />
@@ -59,7 +59,7 @@ export default function NavbarClient({ user }: NavbarProps) {
                                         </div>
                                     )}
                                 </div>
-                                <span className="text-sm font-medium text-gray-200 group-hover:text-white max-w-[100px] truncate">
+                                <span className="text-md font-medium text-gray-200 group-hover:text-white max-w-[150px] truncate">
                                     {user.name || "Usuario"}
                                 </span>
                             </Link>
@@ -88,7 +88,7 @@ export default function NavbarClient({ user }: NavbarProps) {
                 </div>
 
                 {/* --- BOTÓN MENÚ MÓVIL --- */}
-                <div className="md:hidden flex items-center z-50">
+                <div className="lg:hidden flex items-center z-50">
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         className="p-2 text-gray-300 hover:text-white transition-colors"
@@ -107,7 +107,7 @@ export default function NavbarClient({ user }: NavbarProps) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-16 left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/10 p-6 md:hidden shadow-2xl flex flex-col gap-4 h-[calc(100vh-64px)] overflow-y-auto"
+                        className="absolute top-16 left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/20 p-6 lg:hidden shadow-2xl flex flex-col gap-4 h-[calc(100vh-64px)] overflow-y-auto"
                     >
                         {/* Enlaces de Navegación */}
                         <div className="flex flex-col space-y-2">
@@ -128,7 +128,7 @@ export default function NavbarClient({ user }: NavbarProps) {
                                 <Link
                                     href="/dashboard?tab=profile"
                                     onClick={closeMenu}
-                                    className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                                    className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/20 hover:bg-white/10 transition-colors"
                                 >
                                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/20 relative shrink-0">
                                         {user.image ? (
@@ -184,7 +184,7 @@ function NavLink({ href, children, active }: { href: string, children: React.Rea
         <Link
             href={href}
             className={clsx(
-                "text-sm font-medium transition-colors relative group",
+                "text-md font-medium transition-colors relative group",
                 active ? "text-white" : "text-gray-400 hover:text-white"
             )}
         >

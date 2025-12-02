@@ -57,7 +57,7 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
             <Link
                 href={`/e/${event.slug}`}
                 onClick={handleClick}
-                className={`group relative flex flex-col h-full bg-neutral-900/40 border border-white/5 rounded-3xl overflow-hidden hover:border-blue-500/40 transition-colors duration-500 ${
+                className={`group relative flex flex-col h-full bg-neutral-900/40 border-2 border-white/15 rounded-3xl overflow-hidden hover:border-blue-500/40 transition-colors duration-500 ${
                     loading ? "opacity-80 pointer-events-none" : ""
                 }`}
             >
@@ -135,7 +135,7 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
                         </div>
 
                         {/* Tags y Botón Flecha / Loader */}
-                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                        <div className="flex items-center justify-between pt-4 border-t border-white/10">
                             <div className="flex flex-wrap gap-2">
                                 {event.tags.slice(0, 2).map((tag) => (
                                     <span
@@ -152,7 +152,7 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
                                 )}
                             </div>
 
-                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 transform group-hover:scale-110 group-hover:-rotate-45">
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 transform group-hover:scale-110 group-hover:-rotate-45">
                                 {loading ? (
                                     // Default values shown
                                     <LineSpinner
@@ -163,7 +163,7 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
                                     />
                                     
                                 ) : (
-                                    <ArrowRight size={14} />
+                                    <ArrowRight size={18} />
                                 )}
                             </div>
                         </div>

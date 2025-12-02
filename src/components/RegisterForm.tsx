@@ -46,7 +46,7 @@ export default function RegisterForm() {
                     maxLength={20}
                     title="Solo letras minúsculas (a-z), sin espacios ni símbolos."
                     // --------------------------
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     onChange={(e) => {
                         // Forzar minúsculas visualmente mientras escribe
                         e.target.value = e.target.value.toLowerCase().replace(/[^a-z]/g, '');
@@ -66,7 +66,7 @@ export default function RegisterForm() {
                     type="email"
                     placeholder="tu@email.com"
                     required
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 />
             </div>
 
@@ -80,7 +80,7 @@ export default function RegisterForm() {
                     placeholder="Mínimo 6 caracteres"
                     required
                     minLength={6}
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 />
             </div>
 

@@ -172,7 +172,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
 
             <div className="space-y-8">
                 {/* TARJETA 1: PERFIL PÚBLICO */}
-                <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-8">
+                <div className="bg-neutral-900/50 border-2 border-white/15 rounded-2xl p-8">
                     <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                         <User className="text-blue-500" size={20} /> Perfil Público
                     </h2>
@@ -279,9 +279,9 @@ export default function ProfileForm({ user }: { user: UserData }) {
                         <div className="pt-4 flex justify-end">
                             <button
                                 disabled={loading}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-blue-900/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-lg font-bold text-lg flex gap-2 disabled:opacity-50 shadow-lg shadow-blue-900/20 transition-all hover:scale-102 active:scale-95 cursor-pointer w-full items-center justify-center"
                             >
-                                <Save size={16} /> {loading ? "Guardando..." : "Guardar Perfil"}
+                                <Save size={20} /> {loading ? "Guardando..." : "Guardar Perfil"}
                             </button>
                         </div>
                     </form>
@@ -289,14 +289,14 @@ export default function ProfileForm({ user }: { user: UserData }) {
 
                 {/* TARJETA 2: SEGURIDAD */}
                 {user.hasPassword && (
-                    <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-8">
+                    <div className="bg-neutral-900/50 border-2 border-white/15 rounded-2xl p-8">
                         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                            <Lock className="text-amber-500" size={20} /> Seguridad
+                            <Lock className="text-blue-500" size={20} /> Seguridad
                         </h2>
 
                         <form
                             action={(fd) => handleAction(changePassword, fd)}
-                            className="space-y-6"
+                            className="space-y-4"
                         >
                             <div>
                                 <label className="block text-xs uppercase text-gray-500 mb-2">
@@ -309,7 +309,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                 />
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                            <div className="grid md:grid-cols-2 gap-6 pt-4 ">
                                 <div>
                                     <label className="block text-xs uppercase text-gray-500 mb-2">
                                         Contraseña Actual
@@ -318,7 +318,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                         type="password"
                                         name="currentPassword"
                                         required
-                                        className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none"
+                                        className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
                                     />
                                 </div>
                                 <div>
@@ -330,7 +330,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                         name="newPassword"
                                         required
                                         minLength={6}
-                                        className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-amber-500 outline-none"
+                                        className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
                                     />
                                 </div>
                             </div>
@@ -338,7 +338,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                             <div className="pt-4 flex justify-end">
                                 <button
                                     disabled={loading}
-                                    className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2 disabled:opacity-50 transition-colors cursor-pointer"
+                                    className="bg-white/10 hover:bg-white/20 text-white p-4 rounded-lg font-bold text-lg flex gap-2 disabled:opacity-50 transition-colors cursor-pointer w-full items-center justify-center"
                                 >
                                     Actualizar Contraseña
                                 </button>

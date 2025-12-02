@@ -23,7 +23,7 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
         : null;
 
     return (
-        <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-8 relative overflow-hidden">
+        <div className="bg-neutral-900/50 border-2 border-white/15 rounded-2xl p-8 relative overflow-hidden">
 
             {!isFree && (
                 <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20" />
@@ -47,7 +47,7 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                     )}
                 </div>
 
-                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-black/40 p-6 rounded-xl border border-white/5 backdrop-blur-sm">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-black/40 p-8 rounded-xl border border-white/10 backdrop-blur-sm">
                     <div className="flex-1 w-full">
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Tu Plan Actual</p>
                         <div className="flex items-baseline gap-3">

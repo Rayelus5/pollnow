@@ -153,8 +153,8 @@ export default function AboutPage() {
                         {/* Card 1 */}
                         <RoadmapCard
                             icon={<Smartphone className="text-blue-400" />}
-                            title="App Móvil Nativa"
-                            desc="Llevando la experiencia a iOS y Android con notificaciones push en tiempo real."
+                            title="Nuevos Modos de Evento"
+                            desc="Crea diferentes estilos y mecánicas de eventos. Tierlists, Preguntas y Respuestas tipo test, modo Dibujo... "
                             status="En Diseño"
                             colSpan="md:col-span-2"
                         />
@@ -193,7 +193,7 @@ export default function AboutPage() {
                         whileInView="visible"
                         viewport={{ once: true }}
                         variants={staggerContainer}
-                        className="bg-neutral-900/50 border border-white/10 p-8 md:p-12 rounded-3xl backdrop-blur-xl shadow-2xl"
+                        className="bg-neutral-900/50 border-2 border-white/15 p-8 md:p-12 rounded-3xl backdrop-blur-xl shadow-2xl"
                     >
                         <motion.div variants={fadeInUp} className="text-center mb-10">
                             <div className="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-500">
@@ -210,23 +210,23 @@ export default function AboutPage() {
                                 value="https://pollnow.es/thanks"
                             />
 
-                            <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid md:grid-cols-2 gap-4 pb-4">
                                 <div className="space-y-2">
                                     <label htmlFor="name" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Nombre</label>
-                                    <input name="name" id="name" type="text" placeholder="Tu nombre" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
+                                    <input required name="name" id="name" type="text" placeholder="Tu nombre" className="w-full bg-black/50 border-2 border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
                                 </div>
                                 <div className="space-y-2">
                                     <label htmlFor="email" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email</label>
-                                    <input name="email" id="email" type="email" placeholder="tu@email.com" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
+                                    <input required name="email" id="email" type="email" placeholder="tu@email.com" className="w-full bg-black/50 border-2 border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors" />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <label htmlFor="msg" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Mensaje</label>
-                                <textarea name="msg" id="msg" rows={4} placeholder="¿En qué estás pensando?" className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors"></textarea>
+                                <textarea required name="msg" id="msg" rows={4} placeholder="¿En qué estás pensando?" className="w-full bg-black/50 border-2 border-white/10 rounded-xl p-4 text-white focus:border-blue-500 focus:outline-none transition-colors"></textarea>
                             </div>
 
-                            <button className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-transform active:scale-[0.98] flex items-center justify-center gap-2 mt-4">
+                            <button className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-transform active:scale-[0.98] flex items-center justify-center gap-2 mt-6 cursor-pointer">
                                 Enviar Mensaje <ArrowRight size={18} />
                             </button>
                         </motion.form>
@@ -247,7 +247,7 @@ function RoadmapCard({ icon, title, desc, status, colSpan = "" }: any) {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             whileHover={{ y: -5 }}
-            className={`p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 ${colSpan} flex flex-col justify-between`}
+            className={`p-8 rounded-3xl bg-white/5 border border-white/15 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 ${colSpan} flex flex-col justify-between`}
         >
             <div>
                 <div className="flex justify-between items-start mb-6">

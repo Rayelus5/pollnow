@@ -40,7 +40,7 @@ export default function DashboardEventCard({ event }: DashboardEventCardProps) {
     return (
         <div
             onClick={handleClick}
-            className="relative group bg-neutral-900/50 border border-white/10 rounded-2xl p-6 hover:border-blue-500/50 hover:bg-neutral-900 transition-all cursor-pointer overflow-hidden"
+            className="relative group bg-neutral-900/50 border-2 border-white/15 rounded-2xl p-6 hover:border-blue-500/50 hover:bg-neutral-900 transition-all cursor-pointer overflow-hidden"
         >
             {/* Contenido normal */}
             <div className={clsx(isNavigating && "opacity-40")}>
@@ -82,7 +82,7 @@ export default function DashboardEventCard({ event }: DashboardEventCardProps) {
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-start gap-4 text-xs text-gray-500 font-mono border-t border-white/5 pt-4">
+                    <div className="flex items-center justify-start gap-4 text-xs text-gray-500 font-mono border-t border-white/10 pt-4">
                         <div className="flex items-center gap-1">
                             <span className="text-white font-bold">{event._count.polls}</span>{" "}
                             Categorías
