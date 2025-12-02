@@ -519,7 +519,7 @@ export default function LandingClient( { session } : { session: any } ) {
                         />
                         <FeatureCard
                             icon={<Palette className="text-purple-400" size={32} />}
-                            title="Diseño Épico"
+                            title="Diseño Premium"
                             desc="Una interfaz oscura, limpia y animada con Framer Motion que hará que tu evento parezca una producción de TV."
                         />
                     </motion.div>

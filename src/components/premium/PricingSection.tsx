@@ -71,7 +71,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="mb-20"
             >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/20 border border-indigo-500/40 mb-6 backdrop-blur-sm">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/20 border border-indigo-600/40 mb-6 backdrop-blur-sm">
                     <Sparkles size={12} className="text-indigo-400" />
                     <span className="text-xs font-bold text-indigo-300 tracking-widest uppercase">Upgrade your party</span>
                 </div>
@@ -103,14 +103,14 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                             variants={cardVariants}
                             onMouseEnter={() => setHoveredIndex(index)}
                             className={clsx(
-                                "cursor-pointer relative p-8 rounded-[2rem] flex flex-col transition-all duration-500 ease-out border max-h-[700px]",
+                                "cursor-pointer relative p-8 rounded-[2rem] flex flex-col transition-transform duration-500 ease-out border-2 max-h-[700px]",
                                 // Estilos base vs Highlight
                                 plan.highlight
-                                    ? "bg-neutral-900 border-indigo-500/50 shadow-[0_0_40px_-10px_rgba(59,130,246,0.15)]"
-                                    : "bg-black border-white/10",
+                                    ? "bg-neutral-900 border-indigo-600/50 shadow-[0_0_40px_-10px_rgba(59,130,246,0.15)]"
+                                    : "bg-black border-white/20",
                                 // Efecto Focus / Blur
                                 isBlur ? "scale-95 opacity-40 blur-[2px] grayscale-[0.5]" : "scale-100 opacity-100",
-                                isHovered && "scale-[1.03] border-indigo-400 shadow-[0_0_60px_-10px_rgba(59,130,246,0.3)] z-10 bg-neutral-900"
+                                isHovered && "scale-[1.03] border-indigo-400 z-10 bg-neutral-900"
                             )}
                         >
                             {/* Badge de "Popular" */}
@@ -140,7 +140,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                     <li key={i} className="flex items-start gap-3 text-sm text-gray-300">
                                         <div className={clsx(
                                             "mt-0.5 p-1 rounded-full",
-                                            plan.highlight ? "bg-indigo-500/20 text-indigo-400" : "bg-white/10 text-gray-500"
+                                            plan.highlight ? "bg-indigo-600/20 text-indigo-400" : "bg-white/10 text-gray-500"
                                         )}>
                                             <Check size={10} strokeWidth={3} />
                                         </div>
@@ -181,15 +181,15 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 animate="visible"
                 className="mt-10 w-full"
             >
-                <div className="relative overflow-hidden rounded-[2rem] border border-indigo-500/40 bg-gradient-to-r from-indigo-900/60 via-black to-purple-900/70 p-[1px] ">
+                <div className="relative overflow-hidden rounded-[2rem] border border-indigo-600/40 bg-gradient-to-r from-indigo-900/60 via-black to-indigo-400/70 p-[1px] cursor-pointer hover:scale-102 transition-all duration-300 ">
                     <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 px-8 py-12 md:py-20 bg-black/80 rounded-[2rem]">
                         {/* Glow decorativo */}
-                        <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl" />
-                        <div className="pointer-events-none absolute right-0 bottom-0 h-40 w-40 rounded-full bg-purple-500/10 blur-3xl" />
+                        <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-indigo-600/20 blur-3xl" />
+                        <div className="pointer-events-none absolute right-0 bottom-0 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl" />
 
                         {/* Texto principal */}
                         <div className="relative text-left max-w-2xl">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/40 border border-indigo-500/40 mb-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/40 border border-indigo-600/40 mb-4">
                                 <Sparkles size={12} className="text-indigo-300" />
                                 <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-indigo-200">
                                     Para empresas y grandes creadores
@@ -206,25 +206,25 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
 
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mt-8 text-gray-300">
                                 <li className="flex items-center gap-2">
-                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
                                     Eventos y categorías ilimitadas
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
                                     Límites de participantes a medida
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
                                     Integraciones y features custom
                                 </li>
                                 <li className="flex items-center gap-2">
-                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                    <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
                                     Soporte prioritario 1:1
