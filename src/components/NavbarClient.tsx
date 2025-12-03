@@ -29,7 +29,7 @@ export default function NavbarClient({ user }: NavbarProps) {
                 {/* --- LOGO --- */}
                 <Link href="/" className="flex items-center gap-2 group z-50" onClick={closeMenu}>
                     <div className="w-10 h-10 border border-white/20 bg-gradient-to-br from-gray-700 to-black rounded-lg flex items-center justify-center font-bold text-black group-hover:scale-105 transition-transform">
-                        <img src="./logo.webp" alt="" />
+                        <img src="/logo.webp" alt="" />
                     </div>
                     <span className="font-bold text-2xl tracking-tight text-white">POLLNOW</span>
                 </Link>
