@@ -12,7 +12,7 @@
 
 ---
 
-<img width="1326" height="825" alt="canvas" src="https://github.com/user-attachments/assets/ce95504b-f41e-4054-9d02-6ab8f617a595" />
+<img width="1194" height="744" alt="canvas" src="https://github.com/user-attachments/assets/be3269ce-fd39-4e25-94c8-9d7b5a512435" />
 
 ---
 
