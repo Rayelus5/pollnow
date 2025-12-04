@@ -47,7 +47,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
 
     // 👇 Para admins, nunca se considera "free" (no hay paywall ni mock)
     const isFree = !isAdminViewer && planSlug === "free";
-    const isPlus = planSlug === "plus" || isAdminViewer;
+    const isPlus = planSlug === "plus" || planSlug === "unlimited" || isAdminViewer;
 
     const [selectedPoll, setSelectedPoll] = useState<PollDetail | null>(null);
     const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);

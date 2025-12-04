@@ -175,8 +175,14 @@ export default function PollList({
                             )}
                             {planSlug !== 'plus' && (
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="flex items-center gap-2 text-purple-300"><Crown size={12} /> Unlimited</span>
+                                    <span className="flex items-center gap-2 text-purple-300"><Crown size={12} /> Plus</span>
                                     <span className="font-mono text-white">{PLANS.PLUS.limits.pollsPerEvent} categorías</span>
+                                </div>
+                            )}
+                            {planSlug !== 'unlimited' && (
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="flex items-center gap-2 text-purple-300"><Crown size={12} /> Unlimited</span>
+                                    <span className="font-mono text-white">{PLANS.UNLIMITED.limits.pollsPerEvent} categorías</span>
                                 </div>
                             )}
                         </div>

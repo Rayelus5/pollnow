@@ -347,8 +347,14 @@ export default function ParticipantList({
                             )}
                             {planSlug !== 'plus' && (
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="flex items-center gap-2 text-purple-300"><Crown size={12} /> Unlimited</span>
+                                    <span className="flex items-center gap-2 text-purple-300"><Crown size={12} /> Plus</span>
                                     <span className="font-mono text-white">{PLANS.PLUS.limits.participantsPerEvent} participantes</span>
+                                </div>
+                            )}
+                            {planSlug !== 'unlimited' && (
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="flex items-center gap-2 text-purple-300"><Crown size={12} /> Unlimited</span>
+                                    <span className="font-mono text-white">{PLANS.UNLIMITED.limits.participantsPerEvent} participantes</span>
                                 </div>
                             )}
                         </div>

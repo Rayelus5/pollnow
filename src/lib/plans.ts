@@ -21,12 +21,23 @@ export const PLANS = {
         priceId: "price_1SVz0lAnnRNk3k0PSEZ15Dr0", // Pon aquí el ID real de Stripe cuando lo crees
     },
     PLUS: {
-        name: "Unlimited",
+        name: "Plus",
         slug: "plus",
-        quota: 10, // Infinito a efectos prácticos
+        quota: 10,
         limits: {
             pollsPerEvent: 15,
             participantsPerEvent: 50
+        },
+        price: 8.99,
+        priceId: "price_1SaXNoAnnRNk3k0PGxLLYwOd",
+    },
+    UNLIMITED: {
+        name: "Unlimited",
+        slug: "unlimited",
+        quota: 20,
+        limits: {
+            pollsPerEvent: 30,
+            participantsPerEvent: 100
         },
         price: 12.99,
         priceId: "price_1SVz24AnnRNk3k0PvSjAEVQA",
@@ -38,6 +49,7 @@ export function getPlanFromUser(user: { subscriptionStatus: string | null; strip
     if (user.subscriptionStatus !== 'active') return PLANS.FREE;
 
     // Si es activa, miramos qué precio está pagando
+    if (user.stripePriceId === PLANS.UNLIMITED.priceId) return PLANS.UNLIMITED;
     if (user.stripePriceId === PLANS.PLUS.priceId) return PLANS.PLUS;
     if (user.stripePriceId === PLANS.PREMIUM.priceId) return PLANS.PREMIUM;
 

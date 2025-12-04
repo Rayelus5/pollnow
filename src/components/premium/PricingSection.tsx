@@ -25,18 +25,27 @@ const PRICING_DATA = [
         price: "4.99€",
         period: "/mes",
         description: "Para grupos de amigos activos.",
-        features: ["5 Eventos Activos", "10 Categorías máximo por evento", "30 Participantes máximo por evento", "Generación de imágenes con IA","Estadísticas básicas", "Soporte prioritario", "Todo lo de Free"],
+        features: ["5 Eventos Activos", "10 Categorías máximo por evento", "30 Participantes máximo por evento", "Generación de imágenes con IA", "Estadísticas básicas", "Todo lo de Free"],
         priceId: PLANS.PREMIUM.priceId,
         highlight: true
     },
     {
         key: 'plus',
+        title: "Plus",
+        price: "8.99€",
+        period: "/mes",
+        description: "Para organizadores de eventos serios.",
+        features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Participantes máximo por evento", "Generación de imágenes con IA", "Soporte prioritario", "Estadísticas Avanzadas", "Sin publicidad"],
+        priceId: PLANS.PLUS.priceId
+    },
+    {
+        key: 'unlimited',
         title: "Unlimited",
         price: "12.99€",
         period: "/mes",
         description: "Para organizadores de eventos serios.",
-        features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Participantes máximo por evento", "Desactivación de voto anónimo", "Estadísticas Avanzadas", "Sin publicidad", "Todo lo de Premium"],
-        priceId: PLANS.PLUS.priceId
+        features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Participantes máximo por evento", "Desactivación de voto anónimo", "Estadísticas Avanzadas", "Sin publicidad", "Todo lo de Plus"],
+        priceId: PLANS.UNLIMITED.priceId
     },
 ];
 
@@ -90,12 +99,13 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 initial="hidden"
                 animate="visible"
                 className="grid md:grid-cols-3 gap-6 relative"
-                onMouseLeave={() => setHoveredIndex(null)} // Reset al salir del grid
+                onMouseLeave={() => setHoveredIndex(null)}
             >
                 {PRICING_DATA.map((plan, index) => {
                     const isCurrent = currentPlanSlug === plan.key;
                     const isHovered = hoveredIndex === index;
                     const isBlur = hoveredIndex !== null && hoveredIndex !== index;
+                    const isLastItem = index === PRICING_DATA.length - 1;
 
                     return (
                         <motion.div
@@ -103,12 +113,14 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                             variants={cardVariants}
                             onMouseEnter={() => setHoveredIndex(index)}
                             className={clsx(
-                                "cursor-pointer relative p-8 rounded-[2rem] flex flex-col transition-transform duration-500 ease-out border-2 max-h-[700px]",
-                                // Estilos base vs Highlight
+                                // CAMBIO 1: Padding responsive (p-5 en movil, p-8 en desktop)
+                                "cursor-pointer relative p-5 md:p-8 rounded-[2rem] flex flex-col transition-transform duration-500 ease-out border-2 max-h-[700px]",
+
+                                isLastItem ? "md:col-span-3" : "md:col-span-1",
+
                                 plan.highlight
                                     ? "bg-neutral-900 border-indigo-600/50 shadow-[0_0_40px_-10px_rgba(59,130,246,0.15)]"
                                     : "bg-black border-white/20",
-                                // Efecto Focus / Blur
                                 isBlur ? "scale-95 opacity-40 blur-[2px] grayscale-[0.5]" : "scale-100 opacity-100",
                                 isHovered && "scale-[1.03] border-indigo-400 z-10 bg-neutral-900"
                             )}
@@ -125,8 +137,8 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                 <h3 className={clsx("text-xl font-bold mb-2", plan.highlight ? "text-white" : "text-gray-300")}>
                                     {plan.title}
                                 </h3>
-                                <div className="flex items-baseline justify-center gap-1">
-                                    <span className={clsx("text-5xl font-black tracking-tight", plan.highlight ? "text-indigo-300" : "text-gray-200")}>
+                                <div className="flex items-baseline justify-center gap-1 flex-wrap"> {/* flex-wrap por seguridad */}
+                                    <span className={clsx("text-4xl md:text-5xl font-black tracking-tight", plan.highlight ? "text-indigo-300" : "text-gray-200")}>
                                         {plan.price}
                                     </span>
                                     {plan.period && <span className="text-sm text-gray-500 font-medium">{plan.period}</span>}
@@ -135,16 +147,22 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                             </div>
 
                             {/* Lista de Features */}
-                            <ul className="space-y-4 mb-8 flex-1 text-left">
+                            <ul className={clsx(
+                                "space-y-4 mb-8 flex-1",
+                                // CAMBIO 2: w-full y max-w-[700px] en lugar de ancho fijo
+                                isLastItem
+                                    ? "grid grid-cols-1 lg:text-center text-left md:m-auto pb-10 max-w-[700px]"
+                                    : "text-left"
+                            )}>
                                 {plan.features.map((f, i) => (
                                     <li key={i} className="flex items-start gap-3 text-sm text-gray-300">
                                         <div className={clsx(
-                                            "mt-0.5 p-1 rounded-full",
+                                            "mt-0.5 p-1 rounded-full flex-shrink-0", // flex-shrink-0 evita que el icono se aplaste
                                             plan.highlight ? "bg-indigo-600/20 text-indigo-400" : "bg-white/10 text-gray-500"
                                         )}>
                                             <Check size={10} strokeWidth={3} />
                                         </div>
-                                        {f}
+                                        <span className="text-left">{f}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -273,7 +291,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 </div>
             </motion.div>
 
-            
+
 
             <motion.p
                 initial={{ opacity: 0 }}

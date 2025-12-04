@@ -65,7 +65,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
 
 
     const router = useRouter();
-    const isPlus = planSlug === 'plus';
+    const isUnlimited = planSlug === 'unlimited';
 
     // 👇 NUEVO: lógica de estado de moderación
     const isApproved = currentEvent.status === "APPROVED";
@@ -94,7 +94,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
 
 
     const handleFormSubmit = async (formData: FormData) => {
-        if (!isPlus) {
+        if (!isUnlimited) {
             if (currentEvent.isAnonymousVoting) {
                 formData.set('isAnonymousVoting', 'on');
             } else {
@@ -308,19 +308,19 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                             
                         </div>
                     </div>
-                    <div className={`p-4 rounded-lg border transition-colors ${isPlus ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-70'}`}>
+                    <div className={`p-4 rounded-lg border transition-colors ${isUnlimited ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-70'}`}>
                         <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
-                                <label htmlFor="isAnonymous" className={`font-bold text-sm ${isPlus ? 'cursor-pointer text-white' : 'text-gray-400'}`}>Votación Anónima</label>
-                                {!isPlus && <span className="px-2 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded uppercase">Plus Only</span>}
+                                <label htmlFor="isAnonymous" className={`font-bold text-sm ${isUnlimited ? 'cursor-pointer text-white' : 'text-gray-400'}`}>Votación Anónima</label>
+                                {!isUnlimited && <span className="px-2 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded uppercase">Plus Only</span>}
                             </div>
                             <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="isAnonymousVoting" id="isAnonymous" checked={currentEvent.isAnonymousVoting} onChange={(e) => { if (isPlus) setCurrentEvent({ ...currentEvent, isAnonymousVoting: e.target.checked }); }} disabled={!isPlus} className="toggle-checkbox absolute block w-12 h-8 rounded-full bg-white border-4 appearance-none cursor-pointer disabled:cursor-not-allowed z-10 opacity-0 inset-0" />
-                                <div className={`block overflow-hidden h-6 rounded-full transition-colors duration-300 ${currentEvent.isAnonymousVoting ? (isPlus ? 'bg-purple-600' : 'bg-gray-600') : 'bg-gray-700'}`}></div>
+                                <input type="checkbox" name="isAnonymousVoting" id="isAnonymous" checked={currentEvent.isAnonymousVoting} onChange={(e) => { if (isUnlimited) setCurrentEvent({ ...currentEvent, isAnonymousVoting: e.target.checked }); }} disabled={!isUnlimited} className="toggle-checkbox absolute block w-12 h-8 rounded-full bg-white border-4 appearance-none cursor-pointer disabled:cursor-not-allowed z-10 opacity-0 inset-0" />
+                                <div className={`block overflow-hidden h-6 rounded-full transition-colors duration-300 ${currentEvent.isAnonymousVoting ? (isUnlimited ? 'bg-purple-600' : 'bg-gray-600') : 'bg-gray-700'}`}></div>
                                 <div className={`absolute left-0 top-0 bottom-0 w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 pointer-events-none ${currentEvent.isAnonymousVoting ? 'translate-x-6' : 'translate-x-0'}`}></div>
                             </div>
                         </div>
-                        <p className="text-xs text-gray-500 leading-relaxed">{isPlus ? "Si desactivas esto, podrás ver la identidad de los votantes en las estadísticas avanzadas." : "Por defecto, los votos son 100% anónimos. Actualiza a Premium+ para rastrear votantes."}</p>
+                        <p className="text-xs text-gray-500 leading-relaxed">{isUnlimited ? "Si desactivas esto, podrás ver la identidad de los votantes en las estadísticas avanzadas." : "Por defecto, los votos son 100% anónimos. Actualiza a Premium+ para rastrear votantes."}</p>
                     </div>
 
                     <div className="pt-2 flex justify-end">

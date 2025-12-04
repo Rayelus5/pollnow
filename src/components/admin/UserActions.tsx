@@ -21,6 +21,7 @@ import "ldrs/react/Bouncy.css";
 import { useRouter } from "next/navigation";
 
 const PREMIUM_PRICE_ID = "price_1SVz0lAnnRNk3k0PSEZ15Dr0";
+const PLUS_PRICE_ID = "price_1SaXNoAnnRNk3k0PGxLLYwOd";
 const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
 
 type User = {
@@ -48,8 +49,9 @@ type ProfileState = {
 
 function getPlanKeyFromProfile(profile: {
     stripePriceId: string | null;
-}): "free" | "premium" | "unlimited" {
+}): "free" | "premium" | "plus" | "unlimited" {
     if (profile.stripePriceId === PREMIUM_PRICE_ID) return "premium";
+    if (profile.stripePriceId === PLUS_PRICE_ID) return "plus";
     if (profile.stripePriceId === UNLIMITED_PRICE_ID) return "unlimited";
     return "free";
 }
@@ -253,12 +255,15 @@ export default function UserActions({ user }: { user: User }) {
                                 const value = e.target.value as
                                     | "free"
                                     | "premium"
+                                    | "plus"
                                     | "unlimited";
 
                                 setProfile((p) => {
                                     let stripePriceId: string | null = null;
                                     if (value === "premium")
                                         stripePriceId = PREMIUM_PRICE_ID;
+                                    if (value === "plus")
+                                        stripePriceId = PLUS_PRICE_ID;
                                     if (value === "unlimited")
                                         stripePriceId = UNLIMITED_PRICE_ID;
 
@@ -276,6 +281,7 @@ export default function UserActions({ user }: { user: User }) {
                         >
                             <option value="free">Free</option>
                             <option value="premium">Premium</option>
+                            <option value="plus">Plus</option>
                             <option value="unlimited">Unlimited</option>
                         </select>
                     </div>

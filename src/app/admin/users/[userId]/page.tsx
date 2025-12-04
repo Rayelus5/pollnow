@@ -9,6 +9,7 @@ import UserActions from "@/components/admin/UserActions";
 export const dynamic = "force-dynamic";
 
 const PREMIUM_PRICE_ID = "price_1SVz0lAnnRNk3k0PSEZ15Dr0";
+const PLUS_PRICE_ID = "price_1SaXNoAnnRNk3k0PGxLLYwOd";
 const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
 
 export default async function AdminUserDetailPage({
@@ -31,9 +32,10 @@ export default async function AdminUserDetailPage({
     // --- Derivamos plan a partir de stripePriceId ---
     let planLabel = "Free";
     if (user.stripePriceId === PREMIUM_PRICE_ID) planLabel = "Premium";
+    else if (user.stripePriceId === PLUS_PRICE_ID) planLabel = "Plus";
     else if (user.stripePriceId === UNLIMITED_PRICE_ID) planLabel = "Unlimited";
 
-    const isPaidPlan = planLabel === "Premium" || planLabel === "Unlimited";
+    const isPaidPlan = planLabel === "Premium" || planLabel === "Plus" || planLabel === "Unlimited";
 
     const planBadgeClasses = isPaidPlan
         ? "bg-emerald-900/30 text-emerald-400 border-emerald-500/20"

@@ -25,7 +25,7 @@ export default async function ResultsPage({ params }: Props) {
     });
 
     const plan = await getCurrentUserPlan();
-    const showAds = plan.slug === "free" || plan.slug === "premium"; // solo UNLIMITED NO ven anuncios
+    const showAds = plan.slug === "free" || plan.slug === "premium"; // PLUS y UNLIMITED no ven anuncios
 
     if (!poll) return (
         <div className="min-h-screen bg-black flex items-center justify-center text-gray-500">
