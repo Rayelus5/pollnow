@@ -243,7 +243,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                 plan.highlight
                                     ? "bg-neutral-900 border-indigo-600/50 shadow-[0_0_40px_-10px_rgba(59,130,246,0.15)]"
                                     : "bg-black border-white/20",
-                                isBlur ? "scale-95 opacity-40 blur-[2px] grayscale-[0.5]" : "scale-100 opacity-100",
+                                isBlur ? "scale-95 opacity-40 blur-[1px] grayscale-[0.5]" : "scale-100 opacity-100",
                                 isHovered && "scale-[1.03] border-indigo-400 z-10 bg-neutral-900"
                             )}
                         >
