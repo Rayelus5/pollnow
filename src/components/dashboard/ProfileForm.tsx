@@ -78,7 +78,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
         let value = e.target.value.toLowerCase();
 
         // Solo minúsculas y guion bajo
-        value = value.replace(/[^a-z_]/g, "");
+        value = value.replace(/[^a-z0-9_]/g, "");
 
         // Máx 20 caracteres
         if (value.length > 20) {
@@ -135,6 +135,50 @@ export default function ProfileForm({ user }: { user: UserData }) {
         setLoading(false);
     }
 
+    // computed flag: ¿hay cambios respecto al user original?
+    const hasChanged = (
+        name.trim() !== (user.name ?? "").trim() ||
+        username.trim() !== (user.username ?? "").trim() ||
+        // previewImage puede ser URL o base64; si es distinto, lo consideramos cambio
+        (previewImage || "") !== (user.image || "")
+    );
+
+    // submit handler: construimos FormData solo con campos cambiados
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (loading) return;
+        if (!hasChanged) {
+            pushToast("No hay cambios para guardar.", "error");
+            return;
+        }
+
+        setLoading(true);
+
+        const fd = new FormData();
+
+        // Añadimos solo lo que cambió
+        if (name.trim() !== (user.name ?? "").trim()) fd.set("name", name.trim());
+        if (username.trim() !== (user.username ?? "").trim()) fd.set("username", username.trim());
+        // Si previewImage difiere del original, lo enviamos (puede ser URL o base64)
+        if ((previewImage || "") !== (user.image || "")) fd.set("image", previewImage || "");
+
+        try {
+            // updateProfile es un server action importado en tu archivo
+            const res = await updateProfile(fd);
+
+            if (res?.error) {
+                pushToast(res.error, "error");
+            } else if (res?.success) {
+                pushToast(res.success, "success");
+            }
+        } catch (err) {
+            console.error(err);
+            pushToast("Error al actualizar perfil.", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <>
             {/* TOASTS FLOTANTES */}
@@ -178,7 +222,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                     </h2>
 
                     <form
-                        action={(fd) => handleAction(updateProfile, fd)}
+                        onSubmit={handleSubmit}
                         className="space-y-6"
                     >
                         {/* ZONA DE AVATAR INTERACTIVA */}
@@ -278,7 +322,8 @@ export default function ProfileForm({ user }: { user: UserData }) {
 
                         <div className="pt-4 flex justify-end">
                             <button
-                                disabled={loading}
+                                type="submit"
+                                disabled={loading || !hasChanged}
                                 className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-lg font-bold text-lg flex gap-2 disabled:opacity-50 shadow-lg shadow-blue-900/20 transition-all hover:scale-102 active:scale-95 cursor-pointer w-full items-center justify-center"
                             >
                                 <Save size={20} /> {loading ? "Guardando..." : "Guardar Perfil"}

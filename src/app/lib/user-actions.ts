@@ -5,41 +5,42 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 
+// lib/user-actions.ts (reemplaza la función updateProfile por esta versión)
 export async function updateProfile(formData: FormData) {
     const session = await auth();
     if (!session?.user?.id) return { error: "No autorizado" };
 
-    // Valores crudos
-    const rawName = (formData.get("name") as string | null)?.trim() ?? "";
-    const rawUsername = (formData.get("username") as string | null)?.trim() ?? "";
-    const image = formData.get("image") as string | null;
+    // Recuperamos el usuario actual desde DB (fuente de verdad, evita inconsistencias con session)
+    const currentUser = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (!currentUser) return { error: "Usuario no encontrado." };
 
-    // Normalizar username a minúsculas
-    const username = rawUsername.toLowerCase();
+    // Valores crudos provenientes del form (pueden no existir si el cliente no los envió)
+    const rawName = (formData.get("name") as string | null)?.trim() ?? null;
+    const rawUsername = (formData.get("username") as string | null)?.trim() ?? null;
+    const rawImage = (formData.get("image") as string | null) ?? null;
+
+    // Resolvemos: si el form NO envía el campo, usamos el valor actual en DB
+    // Esto permite enviar *solo* los campos que cambian desde el cliente.
+    const name = rawName !== null ? rawName : (currentUser.name ?? "");
+    const username = rawUsername !== null ? rawUsername.toLowerCase() : (currentUser.username ?? "");
+    const image = rawImage !== null ? rawImage : currentUser.image;
 
     // === VALIDACIONES USERNAME (@) ===
-    // - solo minúsculas y _
-    // - longitud máxima 20
     if (!username) {
         return { error: "El nombre de usuario (@) es obligatorio." };
     }
 
-    if (username.length > 20) {
-        return { error: "El nombre de usuario (@) no puede tener más de 20 caracteres." };
+    if (username.length > 25) {
+        return { error: "El nombre de usuario (@) no puede tener más de 25 caracteres." };
     }
 
-    if (!/^[a-z_]+$/.test(username)) {
+    if (!/^[a-z0-9_]+$/.test(username)) {
         return {
             error: "El nombre de usuario (@) solo puede contener letras minúsculas (a-z) y guiones bajos (_).",
         };
     }
 
     // === VALIDACIONES NAME (nombre en pantalla) ===
-    // - permite letras (cualquier idioma) y espacios
-    // - sin símbolos ni números
-    // - longitud máxima 25
-    const name = rawName;
-
     if (!name) {
         return { error: "El nombre en pantalla es obligatorio." };
     }
@@ -48,24 +49,24 @@ export async function updateProfile(formData: FormData) {
         return { error: "El nombre en pantalla no puede tener más de 25 caracteres." };
     }
 
-    // \p{L} = cualquier letra unicode, \s = espacios
     if (!/^[\p{L}\s]+$/u.test(name)) {
         return {
             error: "El nombre en pantalla solo puede contener letras y espacios (sin símbolos ni números).",
         };
     }
 
-    // === USERNAME ÚNICO (si cambia) ===
-    if (username !== session.user.username) {
+    // === USERNAME ÚNICO (si cambia respecto a la DB) ===
+    if (username !== currentUser.username) {
         const existing = await prisma.user.findUnique({ where: { username } });
-        if (existing) {
+        // If found and it's NOT the current user -> error
+        if (existing && existing.id !== currentUser.id) {
             return { error: "Este nombre de usuario (@) ya está en uso." };
         }
     }
 
-    // Actualizar usuario
+    // Finalmente actualizamos con los valores resueltos.
     await prisma.user.update({
-        where: { id: session.user.id },
+        where: { id: currentUser.id },
         data: {
             name,
             username,
@@ -76,6 +77,7 @@ export async function updateProfile(formData: FormData) {
     revalidatePath("/dashboard/profile");
     return { success: "Perfil actualizado correctamente." };
 }
+
 
 
 export async function changePassword(formData: FormData) {

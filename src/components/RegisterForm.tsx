@@ -42,18 +42,18 @@ export default function RegisterForm() {
                     placeholder="ej: ray"
                     required
                     // --- RESTRICCIONES HTML ---
-                    pattern="[a-z]+"
-                    maxLength={20}
-                    title="Solo letras minúsculas (a-z), sin espacios ni símbolos."
+                    pattern="[a-z0-9_]+"
+                    maxLength={25}
+                    title="Solo letras minúsculas (a-z) y números, sin espacios ni símbolos."
                     // --------------------------
                     className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     onChange={(e) => {
                         // Forzar minúsculas visualmente mientras escribe
-                        e.target.value = e.target.value.toLowerCase().replace(/[^a-z]/g, '');
+                        e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
                     }}
                 />
                 <p className="text-[10px] text-gray-500 ml-1">
-                    Máx 25 caracteres. Solo letras minúsculas (a-z).
+                    Máx 25 caracteres. Solo letras minúsculas (a-z) y números.
                 </p>
             </div>
 
