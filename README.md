@@ -1,6 +1,5 @@
 # Pollnow
 
-> Internal codename: `friend_of_the_year (FOTY)`  
 > Oficial final product name: **POLLNOW**
 
 <!-- ![Next](https://img.shields.io/badge/-Next.js-20232a?logo=nextdotjs&logoColor=white) -->
@@ -499,6 +498,8 @@ This repository is intended as a **complete, production-style reference** for a 
 
 ---
 
-Last update: 30/11/2025
+Last update: 8/1/2026
 
 > Made with ♥️ by Rayelus
+> <br>
+> <a href="https://pollnow.es">Pollnow</a> © 2025 by <a href="https://rayelus.com">Raimundo Palma</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
