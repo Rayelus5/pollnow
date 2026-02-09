@@ -82,7 +82,7 @@ const itemFeatureVariants: Variants = {
         y: 0,
         opacity: 1,
         filter: "blur(0px)",
-        transition: { duration: 0.4, ease: "easeOut" },
+        transition: { duration: 0.3, ease: "easeInOut" },
     },
 };
 
@@ -110,6 +110,17 @@ export default function LandingClient( { session, showAds=true } : { session: an
     const specificIndexes = [4]; // Indexes específicos
     const currentTitle = specificIndexes.includes(index) ? TITLES[1] : TITLES[0];
     const currentWord = WORDS[index];
+
+    const [showPopup, setShowPopup] = useState(false);
+
+    useEffect(() => {
+        // en 3 segundos se muestra el anuncio
+        const timer = setTimeout(() => {
+            setShowPopup(true);
+        }, 3000);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     return (
         <div className="relative overflow-hidden bg-neutral-950">
@@ -217,314 +228,9 @@ export default function LandingClient( { session, showAds=true } : { session: an
                         </Link>
                     </motion.div>
 
-                    {/* MOCKUP VISUAL 3D */}
-
-                    {/* <motion.div
-                        variants={itemVariants}
-                        className="mt-20 relative w-full max-w-5xl aspect-video bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl overflow-hidden group z-10"
-                    >
-                        <Link href={"/dashboard"}>
-                            <AwardMockup3D />
-                        </Link>
-                        
-                    </motion.div> */}
-
                     
-                    {/* <motion.div
-                        variants={itemVariants}
-                        className="hidden lg:flex mt-20 relative w-full max-w-5xl aspect-video rounded-3xl border-2 border-white/20 bg-black overflow-hidden z-10 [perspective:1400px]"
-                    >
-                        
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(14,165,233,0.2),_transparent_55%)] opacity-80" />
-
-                        
-                        {[
-                            {
-                                id: "bg-1",
-                                top: "10%",
-                                left: "6%",
-                                rotateY: -18,
-                                rotateX: 8,
-                                depthScale: 0.85,
-                                blur: "blur-[4px]",
-                                maxOpacity: 0.55,
-                                delay: 0,
-                            },
-                            {
-                                id: "bg-2",
-                                top: "65%",
-                                left: "10%",
-                                rotateY: 15,
-                                rotateX: -6,
-                                depthScale: 0.88,
-                                blur: "blur-[5px]",
-                                maxOpacity: 0.5,
-                                delay: 0.8,
-                            },
-                            {
-                                id: "bg-3",
-                                top: "15%",
-                                left: "68%",
-                                rotateY: 18,
-                                rotateX: -5,
-                                depthScale: 0.9,
-                                blur: "blur-[4px]",
-                                maxOpacity: 0.52,
-                                delay: 1.4,
-                            },
-                            {
-                                id: "bg-4",
-                                top: "68%",
-                                left: "70%",
-                                rotateY: -16,
-                                rotateX: 7,
-                                depthScale: 0.87,
-                                blur: "blur-[5px]",
-                                maxOpacity: 0.48,
-                                delay: 2.1,
-                            },
-                        ].map((card) => (
-                            <motion.div
-                                key={card.id}
-                                className={`
-                                    absolute w-60 h-40 rounded-3xl border border-white/10 bg-neutral-900/70 
-                                    shadow-[0_0_35px_rgba(15,23,42,0.9)] overflow-hidden ${card.blur}
-                                `}
-                                style={{ top: card.top, left: card.left }}
-                                initial={{ opacity: 0 }}
-                                animate={{
-                                    opacity: [0, card.maxOpacity, 0],
-                                    y: [0, -10, 0],
-                                    rotateY: [card.rotateY, card.rotateY + 2, card.rotateY],
-                                    rotateX: [card.rotateX, card.rotateX - 2, card.rotateX],
-                                    scale: [card.depthScale, card.depthScale * 0.97, card.depthScale],
-                                }}
-                                transition={{
-                                    duration: 16,
-                                    delay: card.delay,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                }}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-black to-slate-900" />
-                                <div className="relative h-full w-full p-4 flex flex-col justify-between text-[10px] text-gray-300">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-slate-800 border border-white/15 flex items-center justify-center text-[9px] text-gray-200">
-                                            P
-                                        </div>
-                                        <div className="flex flex-col gap-0.5">
-                                            <span className="text-[10px] text-gray-200 font-semibold">
-                                                Evento destacado
-                                            </span>
-                                            <span className="text-[9px] text-gray-500">@pollnow</span>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <div className="h-2 rounded-full bg-white/15 w-4/5" />
-                                        <div className="h-2 rounded-full bg-white/8 w-3/5" />
-                                    </div>
-                                    <div className="flex items-center justify-between text-[9px] text-gray-400">
-                                        <span>24 nominados · 6 categorías</span>
-                                        <span className="px-2 py-0.5 rounded-full bg-white/5 text-[8px]">
-                                            LIVE
-                                        </span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-
-                        
-                        {[
-                            {
-                                id: "mid-1",
-                                top: "5%",
-                                left: "10%",
-                                rotateY: -10,
-                                rotateX: 5,
-                                depthScale: 0.98,
-                                delay: 0.4,
-                            },
-                            {
-                                id: "mid-2",
-                                top: "70%",
-                                left: "65%",
-                                rotateY: 9,
-                                rotateX: -4,
-                                depthScale: 1.0,
-                                delay: 1.2,
-                            },
-                        ].map((card) => (
-                            <motion.div
-                                key={card.id}
-                                className="absolute w-64 h-44 rounded-3xl border border-white/15 bg-neutral-900/90 shadow-[0_0_40px_rgba(15,23,42,1)] overflow-hidden z-0"
-                                style={{ top: card.top, left: card.left }}
-                                initial={{ opacity: 0 }}
-                                animate={{
-                                    opacity: [0, 0.8, 0],
-                                    x: [-20, 0, -20],
-                                    y: [-20, -40, 0],
-                                    rotateY: [card.rotateY, card.rotateY - 4, card.rotateY],
-                                    rotateX: [card.rotateX, card.rotateX + 3, card.rotateX],
-                                    scale: [card.depthScale, card.depthScale * 1.03, card.depthScale],
-                                }}
-                                transition={{
-                                    duration: 20,
-                                    delay: card.delay,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                }}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-sky-500/16 via-slate-950 to-purple-500/16" />
-                                <div className="relative h-full w-full p-4 flex flex-col justify-between">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-7 h-7 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center text-[10px] text-gray-100 font-bold">
-                                            P
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px] text-gray-300">
-                                            <span className="text-gray-100 font-semibold">
-                                                Premios Comunidad
-                                            </span>
-                                            <span className="w-1 h-1 rounded-full bg-gray-600" />
-                                            <span className="bg-white/8 px-2 py-0.5 rounded-full">
-                                                En curso
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1.5 text-[10px] text-gray-300">
-                                        <div className="h-2.5 rounded-full bg-white/25 w-3/4" />
-                                        <div className="h-2 rounded-full bg-white/12 w-1/2" />
-                                    </div>
-                                    <div className="mt-3 flex items-center justify-between text-[9px] text-gray-300">
-                                        <div className="flex gap-2">
-                                            <span className="px-2.5 py-1 bg-white/5 rounded-lg border border-white/10">
-                                                18 nominados
-                                            </span>
-                                            <span className="px-2.5 py-1 bg-white/5 rounded-lg border border-white/10">
-                                                4 categorías
-                                            </span>
-                                        </div>
-                                        <div className="w-7 h-7 rounded-full bg-white/8 flex items-center justify-center text-gray-100">
-                                            →
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-
-                        
-                        <motion.div
-                            className="absolute left-1/2 top-1/2 w-72 md:w-80 h-48 md:h-52 -translate-x-1/2 -translate-y-1/2 rounded-3xl border border-white/25 bg-neutral-950/95 shadow-[0_0_60px_rgba(59,130,246,0.2)] overflow-hidden"
-                            initial={{ opacity: 0 }}
-                            animate={{
-                                opacity: [0, 0.8, 1, 0.8, 0],
-                                y: [0, -8, 0],
-                                rotateY: [-4, 8, -4],
-                                rotateX: [6, 30, 6],
-                                scale: [1, 1.06, 1],
-                            }}
-                            transition={{
-                                duration: 20,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                            }}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/22 via-slate-900 to-indigo-500/22" />
-                            <div className="relative h-full w-full p-5 flex flex-col justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-black/70 border border-white/40 flex items-center justify-center text-[11px] font-bold text-sky-300">
-                                        PN
-                                    </div>
-                                    <div className="flex flex-col gap-0.5">
-                                        <span className="text-[11px] text-gray-100 font-semibold tracking-wide text-left">
-                                            Evento en tendencia
-                                        </span>
-                                        <span className="text-[10px] text-gray-300">
-                                            Miles de votos en tiempo real.
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 space-y-2">
-                                    <div className="h-3 rounded-full bg-white/40 w-4/5" />
-                                    <div className="h-2 rounded-full bg-white/20 w-2/3" />
-                                </div>
-
-                                <div className="mt-4 flex items-center justify-between text-[10px] text-gray-100">
-                                    <div className="flex gap-2">
-                                        <span className="px-2.5 py-1 rounded-full bg-black/50 border border-white/20">
-                                            32 nominados
-                                        </span>
-                                        <span className="px-2.5 py-1 rounded-full bg-black/50 border border-white/20">
-                                            7 categorías
-                                        </span>
-                                    </div>
-                                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                                        Votación abierta
-                                    </span>
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        
-                        <motion.div
-                            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                            initial={{ opacity: 0 }}
-                            animate={{
-                                opacity: [0.8, 1, 0.8],
-                                scale: [0.96, 1.5, 0.96],
-                            }}
-                            transition={{
-                                duration: 14,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                            }}
-                        >
-
-                            <span className="text-6xl md:text-8xl font-extrabold tracking-tight text-white/85 drop-shadow-[0_0_35px_rgba(15,23,42,1)] mix-blend-screen">
-                                /pollnow
-                            </span>
-                            
-                        </motion.div>
-
-                        
-
-                        
-                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/85 to-transparent" />
-                    </motion.div>
-                    */}
-                    {showAds ? (
-                        <motion.div
-                            className="hidden lg:flex mt-36 relative w-full max-w-7xl rounded-3xl border-2 border-white/20 bg-black overflow-hidden z-10 [perspective:1400px]"
-                            variants={{
-                                visible: { scale: 1, opacity: 1 },
-                                hidden: { scale: 0.96, opacity: 0 },
-                            }}
-                            transition={{ duration: 0.8, ease: "easeInOut" }}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true }}
-                        >
-                            <CustomAdBanner />
-                        </motion.div>
-                        ) : (
-                            <motion.div
-                                className="hidden lg:flex mt-36 relative w-full max-w-7xl rounded-3xl border-2 border-white/20 bg-black overflow-hidden z-10 [perspective:1400px]"
-                                variants={{
-                                    visible: { scale: 1, opacity: 1 },
-                                    hidden: { scale: 0.96, opacity: 0 },
-                                }}
-                                transition={{ duration: 0.8, ease: "easeInOut" }}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true }}
-                            >
-                                <CustomPollnowBanner />
-                            </motion.div>
-                    )}       
                 </motion.div>
             </section>
-
-            
 
             {/* --- FEATURES SECTION --- */}
             <section className="py-10 bg-neutral-950 relative">
@@ -555,6 +261,54 @@ export default function LandingClient( { session, showAds=true } : { session: an
                     </motion.div>
                 </div>
             </section>
+
+            {/* --- NUEVA SECCIÓN DE LOGOS --- */}
+            <LogoGrid />
+
+            {/* --- POPUP DE PUBLICIDAD --- */}
+            <AnimatePresence>
+                {showPopup && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-10">
+                        {/* Backdrop: Fondo oscurecido */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowPopup(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                        />
+
+                        {/* Contenedor del Anuncio */}
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            className="relative w-full max-w-5xl z-10"
+                        >
+                            {/* Botón de Cerrar (X) arriba a la izquierda */}
+                            <button
+                                onClick={() => setShowPopup(false)}
+                                className="absolute -top-12 left-0 text-white/70 hover:text-white transition-colors flex items-center gap-2 group cursor-pointer"
+                            >
+                                <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-all">
+                                    <Plus className="rotate-45" size={24} /> 
+                                </div>
+                                <span className="text-sm font-medium tracking-wide">Cerrar</span>
+                            </button>
+
+                            {/* Banner */}
+                            <div className="relative rounded-3xl border border-white/20 bg-black overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] shadow-blue-500/20">
+                                {showAds ? (
+                                    <CustomAdBanner />
+                                ) : (
+                                    <CustomPollnowBanner />
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* --- CTA FINAL --- */}
             <section className="py-32 px-6 text-center relative">
@@ -602,4 +356,58 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
             <p className="text-gray-400 leading-relaxed">{desc}</p>
         </motion.div>
     )
+}
+
+// Subcomponente para la sección de logos
+function LogoGrid() {
+    const companies = [
+        { name: "Empresa 1", logo: "/logos/rayelus_logo.webp" }, // Sustituir por tus rutas
+        { name: "Empresa 2", logo: "/logos/chaotic-loom_logo.webp" },
+        { name: "Empresa 3", logo: "/logos/tcg-shop-finder_logo.webp" },
+        { name: "Empresa 4", logo: "/logos/arandor_logo.webp" },
+        { name: "Empresa 5", logo: "https://placehold.co/800x200" },
+        { name: "Empresa 6", logo: "https://placehold.co/800x200" },
+    ];
+
+    return (
+        <section className="py-40 px-6 relative overflow-hidden">
+            <div className="max-w-7xl mx-auto">
+                <motion.p 
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="text-center text-gray-500 text-sm font-medium uppercase tracking-[0.2em] mb-12"
+                >
+                    Empresas que confían en nosotros
+                </motion.p>
+                
+                <motion.div 
+                    variants={featureContainerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 items-center"
+                >
+                    {companies.map((company, i) => (
+                        <motion.div
+                            key={i}
+                            variants={itemFeatureVariants}
+                            whileHover={{ scale: 1.2, filter: "brightness(1.1)" }}
+                            className="flex justify-center items-center py-8 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-transform duration-200 cursor-pointer"
+                        >
+                            {/* Aquí puedes usar el componente <Image /> de Next.js */}
+                            <img 
+                                src={company.logo} 
+                                alt={company.name} 
+                                className="h-8 md:h-15 w-auto object-contain"
+                            />
+                        </motion.div>
+                    ))}
+                </motion.div>
+            </div>
+            
+            {/* Adorno visual: línea sutil debajo */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
+        </section>
+    );
 }
