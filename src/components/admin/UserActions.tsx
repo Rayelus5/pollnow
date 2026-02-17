@@ -20,8 +20,8 @@ import { Bouncy } from "ldrs/react";
 import "ldrs/react/Bouncy.css";
 import { useRouter } from "next/navigation";
 
-const PREMIUM_PRICE_ID = "price_1SVz0lAnnRNk3k0PSEZ15Dr0";
-const PLUS_PRICE_ID = "price_1SaXNoAnnRNk3k0PGxLLYwOd";
+const PREMIUM_PRICE_ID = "price_1T1tQSAnnRNk3k0PKQVAbjnb";
+const PLUS_PRICE_ID = "price_1T1tRmAnnRNk3k0PLPBcN1Pk";
 const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
 
 type User = {

@@ -17,8 +17,8 @@ export const PLANS = {
             pollsPerEvent: 10,
             participantsPerEvent: 30
         },
-        price: 4.99,
-        priceId: "price_1SVz0lAnnRNk3k0PSEZ15Dr0", // Pon aquí el ID real de Stripe cuando lo crees
+        price: 2.99,
+        priceId: "price_1T1tQSAnnRNk3k0PKQVAbjnb",
     },
     PLUS: {
         name: "Plus",
@@ -29,7 +29,7 @@ export const PLANS = {
             participantsPerEvent: 50
         },
         price: 8.99,
-        priceId: "price_1SaXNoAnnRNk3k0PGxLLYwOd",
+        priceId: "price_1T1tRmAnnRNk3k0PLPBcN1Pk",
     },
     UNLIMITED: {
         name: "Unlimited",

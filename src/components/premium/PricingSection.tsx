@@ -22,7 +22,7 @@ const PRICING_DATA = [
     {
         key: 'premium',
         title: "Premium",
-        price: "4.99€",
+        price: "2.99€",
         period: "/mes",
         description: "Para grupos de amigos activos.",
         features: ["5 Eventos Activos", "10 Categorías máximo por evento", "30 Participantes máximo por evento", "Generación de imágenes con IA", "Estadísticas básicas", "Todo lo de Free"],
@@ -32,7 +32,7 @@ const PRICING_DATA = [
     {
         key: 'plus',
         title: "Plus",
-        price: "8.99€",
+        price: "5.99€",
         period: "/mes",
         description: "Para disfrutar de eventos sin anuncios.",
         features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Participantes máximo por evento", "Generación de imágenes con IA", "Soporte prioritario", "Estadísticas Avanzadas", "Sin publicidad"],
