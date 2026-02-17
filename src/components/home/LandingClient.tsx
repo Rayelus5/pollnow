@@ -136,13 +136,46 @@ export default function LandingClient({ session, showAds = true }: { session: an
             {/* --- HERO SECTION --- */}
             <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 max-w-7xl mx-auto flex flex-col items-center text-center z-10">
 
-                {/* Fondo Ambiental Hero */}
-                <motion.div
-                    animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.1, 1] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/20 rounded-[100%] blur-[120px] pointer-events-none -z-10"
-                    style={{ willChange: "transform" }}
-                />
+                {/* Fondo Ambiental Hero (Optimizado "Aurora Effect") */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+                    {/* Blob 1: Azul Profundo (Base) */}
+                    <motion.div
+                        animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.3, 0.4, 0.3],
+                            x: [0, 50, 0],
+                            y: [0, 30, 0]
+                        }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-700/20 rounded-full blur-[100px]"
+                        style={{ willChange: "transform, opacity" }}
+                    />
+
+                    {/* Blob 2: Violeta/Rosa (Acento) */}
+                    <motion.div
+                        animate={{
+                            scale: [1, 1.1, 1],
+                            opacity: [0.2, 0.3, 0.2],
+                            x: [0, -30, 0],
+                            y: [0, 50, 0]
+                        }}
+                        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                        className="absolute top-[10%] right-[20%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]"
+                        style={{ willChange: "transform, opacity" }}
+                    />
+
+                    {/* Blob 3: Cyan (Brillo sutil) */}
+                    <motion.div
+                        animate={{
+                            scale: [1, 1.3, 1],
+                            opacity: [0.1, 0.2, 0.1],
+                            rotate: [0, 45, 0]
+                        }}
+                        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                        className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px]"
+                        style={{ willChange: "transform, opacity" }}
+                    />
+                </div>
 
                 <motion.div
                     variants={containerVariants}
@@ -199,6 +232,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                                                 "w-[120%] h-[150%] rounded-[100%] blur-[90px] opacity-40 bg-gradient-to-r",
                                                 currentWord.shadow
                                             )}
+                                            style={{ willChange: "transform, opacity" }}
                                         />
                                     </AnimatePresence>
                                 </div>
