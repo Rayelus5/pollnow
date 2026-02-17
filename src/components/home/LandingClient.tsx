@@ -10,8 +10,16 @@ import { clsx } from "clsx";
 // import { AwardMockup3D } from "@/components/home/AwardMockup3D";
 // import next from "next";
 // import { is } from "date-fns/locale";
-import { CustomAdBanner } from "../ads/CustomAdBanner";
-import { CustomPollnowBanner } from "../ads/CustomPollnowBanner";
+import dynamic from "next/dynamic";
+
+const CustomAdBanner = dynamic(() => import("../ads/CustomAdBanner").then(mod => mod.CustomAdBanner), {
+    ssr: false,
+    loading: () => <div className="h-[250px] w-full bg-neutral-900/50 animate-pulse rounded-3xl" />
+});
+const CustomPollnowBanner = dynamic(() => import("../ads/CustomPollnowBanner").then(mod => mod.CustomPollnowBanner), {
+    ssr: false,
+    loading: () => <div className="h-[250px] w-full bg-neutral-900/50 animate-pulse rounded-3xl" />
+});
 
 // --- DATOS DE ANIMACIÓN DEL TÍTULO ---
 const WORDS = [
@@ -93,7 +101,7 @@ const featureContainerVariants: Variants = {
     }
 };
 
-export default function LandingClient( { session, showAds=true } : { session: any, showAds?: boolean } ) {
+export default function LandingClient({ session, showAds = true }: { session: any, showAds?: boolean }) {
     const [index, setIndex] = useState(0);
 
     const loggedIn = session?.user?.id ? true : false;
@@ -133,6 +141,7 @@ export default function LandingClient( { session, showAds=true } : { session: an
                     animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.1, 1] }}
                     transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-600/20 rounded-[100%] blur-[120px] pointer-events-none -z-10"
+                    style={{ willChange: "transform" }}
                 />
 
                 <motion.div
@@ -228,7 +237,7 @@ export default function LandingClient( { session, showAds=true } : { session: an
                         </Link>
                     </motion.div>
 
-                    
+
                 </motion.div>
             </section>
 
@@ -242,7 +251,7 @@ export default function LandingClient( { session, showAds=true } : { session: an
                         viewport={{ once: true, margin: "-100px" }}
                         className="grid md:grid-cols-3 gap-8"
                     >
-                        
+
                         <FeatureCard
                             icon={<Trophy className="text-yellow-400" size={32} />}
                             title="Modo Gala"
@@ -270,7 +279,7 @@ export default function LandingClient( { session, showAds=true } : { session: an
                 {showPopup && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-10">
                         {/* Backdrop: Fondo oscurecido */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -292,7 +301,7 @@ export default function LandingClient( { session, showAds=true } : { session: an
                                 className="absolute -top-12 left-0 text-white/70 hover:text-white transition-colors flex items-center gap-2 group cursor-pointer"
                             >
                                 <div className="bg-white/10 p-2 rounded-full group-hover:bg-white/20 transition-all">
-                                    <Plus className="rotate-45" size={24} /> 
+                                    <Plus className="rotate-45" size={24} />
                                 </div>
                                 <span className="text-sm font-medium tracking-wide">Cerrar</span>
                             </button>
@@ -313,7 +322,7 @@ export default function LandingClient( { session, showAds=true } : { session: an
             {/* --- CTA FINAL --- */}
             <section className="py-32 px-6 text-center relative">
                 <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 to-blue-950/20 pointer-events-none" />
-                            
+
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -331,7 +340,7 @@ export default function LandingClient( { session, showAds=true } : { session: an
                         Crear Cuenta Gratis
                         <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                     </Link>
-                    
+
                 </motion.div>
 
                 <div className="absolute top-80 inset-0 bg-[radial-gradient(farthest-side,rgba(150,150,255,0.7),rgba(100,100,200,0.1))] blur-[100px] pointer-events-none" />
@@ -372,7 +381,7 @@ function LogoGrid() {
     return (
         <section className="py-40 px-6 relative overflow-hidden">
             <div className="max-w-7xl mx-auto">
-                <motion.p 
+                <motion.p
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
@@ -380,8 +389,8 @@ function LogoGrid() {
                 >
                     Empresas que confían en nosotros
                 </motion.p>
-                
-                <motion.div 
+
+                <motion.div
                     variants={featureContainerVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -396,16 +405,18 @@ function LogoGrid() {
                             className="flex justify-center items-center py-8 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-transform duration-200 cursor-pointer"
                         >
                             {/* Aquí puedes usar el componente <Image /> de Next.js */}
-                            <img 
-                                src={company.logo} 
-                                alt={company.name} 
+                            <img
+                                src={company.logo}
+                                alt={company.name}
+                                loading="lazy"
+                                decoding="async"
                                 className="h-8 md:h-15 w-auto object-contain"
                             />
                         </motion.div>
                     ))}
                 </motion.div>
             </div>
-            
+
             {/* Adorno visual: línea sutil debajo */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-linear-to-r from-transparent via-white/10 to-transparent" />
         </section>

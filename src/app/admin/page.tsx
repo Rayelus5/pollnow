@@ -7,23 +7,28 @@ import { es } from "date-fns/locale";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-    const userCount = await prisma.user.count();
-    const eventCount = await prisma.event.count();
-    const reportCount = await prisma.report.count({ where: { isReviewed: false } });
-    const pendingReviews = await prisma.event.count({ where: { status: 'PENDING' } });
-
-    // Obtener últimos 5 eventos
-    const latestEvents = await prisma.event.findMany({
-        take: 6,
-        orderBy: { createdAt: 'desc' },
-        include: { user: true }
-    });
-
-    // Obtener últimos 5 usuarios
-    const latestUsers = await prisma.user.findMany({
-        take: 6,
-        orderBy: { createdAt: 'desc' }
-    });
+    const [
+        userCount,
+        eventCount,
+        reportCount,
+        pendingReviews,
+        latestEvents,
+        latestUsers
+    ] = await Promise.all([
+        prisma.user.count(),
+        prisma.event.count(),
+        prisma.report.count({ where: { isReviewed: false } }),
+        prisma.event.count({ where: { status: 'PENDING' } }),
+        prisma.event.findMany({
+            take: 6,
+            orderBy: { createdAt: 'desc' },
+            include: { user: true }
+        }),
+        prisma.user.findMany({
+            take: 6,
+            orderBy: { createdAt: 'desc' }
+        })
+    ]);
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -106,31 +111,31 @@ export default async function AdminDashboardPage() {
                         {latestUsers.map(u => (
                             <Link key={u.id} href={`/admin/users/${u.id}`} className="flex items-center gap-2 justify-between p-3 border border-white/5 rounded-xl hover:bg-neutral-950 transition-colors duration-400 hover:border-white/10 group min-h-18 max-h-18">
 
-                                    <div className="flex items-center justify-center font-bold text-xs text-gray-400">
-                                        {u.image ? (
-                                            <img src={u.image} alt="" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs text-gray-400" />
-                                        ) : (
-                                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs text-gray-400">
-                                                {u.name?.[0]}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-sm font-medium text-gray-200">{u.name}</p>
-
-                                            ·
-
-                                            <p className="text-[11px] font-medium text-white/30">(@{u.username})</p>
+                                <div className="flex items-center justify-center font-bold text-xs text-gray-400">
+                                    {u.image ? (
+                                        <img src={u.image} alt="" className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs text-gray-400" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs text-gray-400">
+                                            {u.name?.[0]}
                                         </div>
-                                        <p className="text-xs text-gray-500">{u.email}</p>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm font-medium text-gray-200">{u.name}</p>
+
+                                        ·
+
+                                        <p className="text-[11px] font-medium text-white/30">(@{u.username})</p>
                                     </div>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${u.subscriptionStatus === 'active' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
-                                        {u.subscriptionStatus === 'active' ? 'PREMIUM' : 'FREE'}
-                                    </span>
-                                    <div className="p-2 bg-white/5 rounded-lg group-hover:bg-blue-600 transition-colors duration-400">
-                                        <ArrowUpRight size={16} />
-                                    </div>
+                                    <p className="text-xs text-gray-500">{u.email}</p>
+                                </div>
+                                <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${u.subscriptionStatus === 'active' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                                    {u.subscriptionStatus === 'active' ? 'PREMIUM' : 'FREE'}
+                                </span>
+                                <div className="p-2 bg-white/5 rounded-lg group-hover:bg-blue-600 transition-colors duration-400">
+                                    <ArrowUpRight size={16} />
+                                </div>
                             </Link>
                         ))}
                     </div>
