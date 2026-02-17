@@ -3,13 +3,12 @@ import { auth } from "@/auth";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 
-export default async function AdminNotifications() {
-    const session = await auth();
-    if (!session?.user) return null;
+export default async function AdminNotifications({ userId }: { userId: string }) {
+    if (!userId) return null;
 
     const unreadCount = await prisma.notification.count({
         where: {
-            adminUserId: session.user.id,
+            adminUserId: userId,
             isRead: false
         }
     });

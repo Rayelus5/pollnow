@@ -152,6 +152,7 @@ model Event {
     @@index([userId])
     @@index([slug])
     @@index([status])
+    @@index([createdAt])
 }
 
 model Participant {
@@ -166,6 +167,7 @@ model Participant {
     event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
     @@index([eventId])
+    @@index([createdAt])
 }
 
 model Poll {
@@ -215,6 +217,7 @@ model Vote {
 
     @@unique([pollId, voterHash])
     @@index([userId])
+    @@index([createdAt])
 }
 
 model VoteOption {
@@ -251,6 +254,8 @@ model Report {
     @@index([eventId])
     @@index([reporterId])
     @@index([isReviewed])
+    @@index([createdAt])
+    @@index([isReviewed, createdAt])
 }
 
 // NUEVO: Historial de acciones tomadas por el admin/moderador
@@ -272,6 +277,8 @@ model ModerationLog {
     @@index([adminId])
     @@index([targetId])
     @@index([eventId])
+    @@index([createdAt])
+    @@index([actionType])
 }
 
 
@@ -287,6 +294,8 @@ model Notification {
     admin User @relation(fields: [adminUserId], references: [id])
 
     @@index([adminUserId])
+    @@index([isRead])
+    @@index([createdAt])
 }
 
 model SupportChat {
@@ -301,6 +310,8 @@ model SupportChat {
     messages  ChatMessage[]
 
     @@index([userId])
+    @@index([isClosed])
+    @@index([lastMessageAt])
 }
 
 model ChatMessage {

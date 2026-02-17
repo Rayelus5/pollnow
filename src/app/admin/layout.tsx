@@ -48,14 +48,14 @@ export default async function AdminLayout({
                         <NavLink href="/admin/reports" icon={<ShieldAlert size={18} />} label="Reportes" />
                         <NavLink href="/admin/chats" icon={<MessageCircleMore size={18} />} label="Chats" />
                         <NavLink href="/admin/logs" icon={<Logs size={18} />} label="Logs" />
-                        
+
 
                         <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-600 uppercase tracking-wider">Datos</div>
                         <NavLink href="/admin/users" icon={<Users size={18} />} label="Usuarios" />
                         <NavLink href="/admin/events" icon={<Calendar size={18} />} label="Eventos" />
-                        
+
                         <div className="mt-4 absolute top-0 left-50 2xl:left-65 bg-neutral-900/50 backdrop-blur-50 p-2 rounded-full border border-white/20">
-                            <AdminNotifications />
+                            <AdminNotifications userId={session?.user?.id} />
                         </div>
                     </nav>
 
@@ -91,8 +91,8 @@ function NavLink({ href, icon, label, highlight }: any) {
         <Link
             href={href}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${highlight
-                    ? "text-amber-400 hover:bg-amber-400/10 hover:text-amber-300"
-                    : "text-gray-400 hover:bg-white/5 hover:text-white"
+                ? "text-amber-400 hover:bg-amber-400/10 hover:text-amber-300"
+                : "text-gray-400 hover:bg-white/5 hover:text-white"
                 }`}
         >
             {icon}
