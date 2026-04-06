@@ -44,7 +44,9 @@ export default function RootLayout({
               <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacidad</Link>
               <Link href="/legal/cookies" className="hover:text-white transition-colors">Cookies</Link>
             </div>
-            <p>Copyright © {new Date().getFullYear()} POLLNOW. Creado por Rayelus.</p>
+            <p className="mb-5">Copyright © {new Date().getFullYear()} POLLNOW. Creado por Rayelus.</p>
+
+            <Link href="/credits" className="text-zinc-600 hover:text-blue-400 transition-colors">-  Agradecimientos -</Link>
           </footer>
         )}
 

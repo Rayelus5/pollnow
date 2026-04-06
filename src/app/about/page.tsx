@@ -187,6 +187,13 @@ export default function AboutPage() {
             </section>
 
 
+            {/* --- 3.5 CRÉDITOS (enlace discreto) --- */}
+            {/* <div className="text-center pb-4">
+                <Link href="/credits" className="text-xs text-gray-700 hover:text-gray-500 transition-colors">
+                    Agradecimientos
+                </Link>
+            </div> */}
+
             {/* --- 4. CONTACTO --- */}
             <section id="contact" className="py-24 px-6 border-t-2 border-white/5 bg-gradient-to-b from-black to-blue-950/20">
                 <div className="max-w-3xl mx-auto">
