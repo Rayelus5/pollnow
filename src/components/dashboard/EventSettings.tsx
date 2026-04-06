@@ -169,7 +169,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
     };
 
 
-    const shareUrl = `${origin}/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
+    const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL}/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ''}`;
 
 
     return (

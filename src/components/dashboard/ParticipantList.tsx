@@ -69,6 +69,7 @@ function ParticipantForm({
     const [name, setName] = useState(initialName);
     const [image, setImage] = useState(initialImage);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [aiError, setAiError] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,18 +101,22 @@ function ParticipantForm({
         try {
             const seed = Math.floor(Math.random() * 10000);
             const prompt = `Ultra-realistic photographic depiction of ${name}. Professional lighting, high-detail textures, sharp focus, natural colors, minimalistic background, clean composition. 8k resolution.`;
-            const url = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=512&height=512&seed=${seed}&model=flux`;
 
-            const img = new window.Image();
-            img.src = url;
-            img.onload = () => {
-                setImage(url);
-                setIsGenerating(false);
-            };
-            img.onerror = () => {
-                setIsGenerating(false);
-            }
+            const res = await fetch("/api/generate-image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt, seed }),
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const { imageUrl } = await res.json();
+            setImage(imageUrl);
         } catch (error) {
+            console.error("Error generando imagen:", error);
+            setAiError(true);
+            setTimeout(() => setAiError(false), 4000);
+        } finally {
             setIsGenerating(false);
         }
     };
@@ -197,6 +202,13 @@ function ParticipantForm({
                             </Link>
                         )}
                     </div>
+
+                    {aiError && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border-2 border-red-500/30 text-red-400 text-xs animate-in fade-in slide-in-from-top-1 duration-200">
+                            <X size={12} className="shrink-0" />
+                            <span>La generación con IA no está disponible ahora mismo. Inténtalo de nuevo más tarde.</span>
+                        </div>
+                    )}
 
                     <div className="relative">
                         <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 w-3 h-3" />
