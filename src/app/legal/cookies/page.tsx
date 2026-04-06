@@ -46,28 +46,27 @@ export default function CookiesPage() {
                                 navegador para evitar que se vote múltiples veces en la misma categoría. No
                                 contiene datos personales.
                                 <br />
-                                <em className="text-xs text-gray-500">
-                                    Duración: Indefinido.
-                                </em>
-                                
+                                <em className="text-xs text-gray-500">Duración: Indefinido.</em>
                             </li>
                             <li>
                                 <strong>selected_[poll.id]:</strong> Esta cookie es fundamental para nuestro
                                 sistema de votación anónima. Asigna un identificador único a tu selección. No
                                 contiene datos personales.
                                 <br />
-                                <em className="text-xs text-gray-500">
-                                    Duración: Indefinido.
-                                </em>
-                                
+                                <em className="text-xs text-gray-500">Duración: Indefinido.</em>
                             </li>
                             <li>
                                 <strong>authjs.session-token:</strong> Se utiliza para mantener tu sesión
                                 iniciada de forma segura si eres un usuario registrado.
                                 <br />
-                                <em className="text-xs text-gray-500">
-                                    Duración: Sesión / Persistente.
-                                </em>
+                                <em className="text-xs text-gray-500">Duración: Sesión / Persistente.</em>
+                            </li>
+                            <li>
+                                <strong>cookie_preferences:</strong> Almacena las preferencias de cookies
+                                que el usuario ha establecido mediante el panel de consentimiento, de modo que
+                                no sea necesario volver a solicitarlas en cada visita. No contiene datos personales.
+                                <br />
+                                <em className="text-xs text-gray-500">Duración: 1 año.</em>
                             </li>
                         </ul>
                     </div>
@@ -90,10 +89,20 @@ export default function CookiesPage() {
             <section className="mt-10 space-y-4">
                 <h3>Gestión de Cookies</h3>
                 <p>
-                    Dado que solo utilizamos cookies esenciales para el funcionamiento del servicio
-                    (Login y Votación), su aceptación es necesaria para utilizar POLLNOW. Puedes
-                    bloquearlas en la configuración de tu navegador, pero es probable que la plataforma
-                    deje de funcionar correctamente (ej: no podrás votar ni entrar en tu cuenta).
+                    Al visitar POLLNOW por primera vez, aparecerá un panel de consentimiento en la parte
+                    inferior de la pantalla donde podrás elegir qué categorías de cookies aceptas. Puedes
+                    aceptar todas, solo las esenciales, o personalizar tus preferencias activando o
+                    desactivando cada categoría de forma individual.
+                </p>
+                <p>
+                    Las cookies esenciales no pueden desactivarse ya que son imprescindibles para el
+                    correcto funcionamiento de la plataforma (votación, inicio de sesión). Puedes
+                    bloquearlas desde la configuración de tu navegador, aunque es probable que la
+                    plataforma deje de funcionar correctamente.
+                </p>
+                <p>
+                    Tus preferencias se guardan en la cookie <strong>cookie_preferences</strong> durante
+                    un año. Para modificarlas, borra las cookies de tu navegador o contacta con nosotros.
                 </p>
             </section>
         </LegalLayout>

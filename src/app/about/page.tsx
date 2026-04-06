@@ -77,13 +77,13 @@ export default function AboutPage() {
                         {/* Imagen / Tarjeta */}
                         <div className="relative group">
                             <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-sky-600 rounded-3xl opacity-20 group-hover:opacity-40 blur-xl transition-opacity duration-500" />
-                            <div className="relative aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 bg-neutral-900">
+                            <div className="relative aspect-square md:aspect-[4/5] rounded-4xl overflow-hidden border border-white/10 bg-neutral-900">
                                 {/* REEMPLAZA ESTA URL CON TU FOTO REAL */}
                                 <Image
                                     src="/rayelus-img.jpg"
                                     alt="Rayelus Image"
                                     fill
-                                    className="object-cover transition-all duration-700 group-hover:scale-105 grayscale hover:grayscale-50"
+                                    className="object-cover transition-all duration-700 group-hover:scale-105 grayscale hover:grayscale-30"
                                 />
 
                                 <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black via-black/80 to-transparent">
@@ -108,7 +108,7 @@ export default function AboutPage() {
 
                             <div className="flex flex-wrap gap-4 pt-4">
                                 <a
-                                    href="https://rayelus.com/portfolio"
+                                    href="https://dev.rayelus.com/"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="px-6 py-3 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-colors flex items-center gap-2"
@@ -163,14 +163,14 @@ export default function AboutPage() {
                             icon={<Zap className="text-yellow-400" />}
                             title="Modo Live"
                             desc="Votaciones en directo a través de WebSockets durante la gala."
-                            status="Q3 2025"
+                            status="2027"
                         />
                         {/* Card 3 */}
                         <RoadmapCard
                             icon={<Map className="text-purple-400" />}
                             title="Eventos Locales"
                             desc="Descubre galas públicas cerca de tu ubicación."
-                            status="Planeado"
+                            status="Concepto"
                         />
                         {/* Card 4 */}
                         <RoadmapCard

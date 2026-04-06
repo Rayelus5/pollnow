@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { MAINTENANCE_MODE } from "@/lib/config";
 import ChatBot from "@/components/ia/ChatBot";
+import CookieConsent from "@/components/CookieConsent";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,6 +34,7 @@ export default function RootLayout({
         </div>
 
         <ChatBot />
+        <CookieConsent />
 
         {/* FOOTER (solo si no está en mantenimiento) */}
         {showUI && (
@@ -42,7 +44,7 @@ export default function RootLayout({
               <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacidad</Link>
               <Link href="/legal/cookies" className="hover:text-white transition-colors">Cookies</Link>
             </div>
-            <p>Copyright © 2025 POLLNOW. Creado por Rayelus.</p>
+            <p>Copyright © {new Date().getFullYear()} POLLNOW. Creado por Rayelus.</p>
           </footer>
         )}
 

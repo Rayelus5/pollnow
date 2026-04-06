@@ -21,7 +21,7 @@ export default function SearchFilters() {
     }, 300);
 
     return (
-        <div className="w-full max-w-md relative">
+        <div className="w-full max-w-lg mx-auto relative">
             <input
                 onChange={(e) => handleSearch(e.target.value)}
                 defaultValue={searchParams.get('q')?.toString()}
