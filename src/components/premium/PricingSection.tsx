@@ -87,7 +87,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 </div>
 
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6">
-                    Elige tu nivel <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600">Premium</span>
+                    Actualiza a <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600">Premium</span>
                 </h1>
                 <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
                     Desbloquea todo el potencial de POLLNOW. Crea más eventos, invita a más amigos y gestiona múltiples galas simultáneamente.

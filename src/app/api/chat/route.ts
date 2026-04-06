@@ -4,20 +4,20 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Definimos un tipo para los mensajes del chat
 interface ChatMessage {
-    role: "user" | "assistant" | "system";
-    content: string;
+  role: "user" | "assistant" | "system";
+  content: string;
 }
 
 export async function POST(req: Request) {
-    try {
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error("GEMINI_API_KEY no está configurada.");
-        }
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY no está configurada.");
+    }
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const { messages }: { messages: ChatMessage[] } = await req.json();
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const { messages }: { messages: ChatMessage[] } = await req.json();
 
-        const initialSystemPrompt = `
+    const initialSystemPrompt = `
 Eres Pollnow AI, un asistente de inteligencia artificial especializado exclusivamente en la aplicación web Pollnow.
 
 Tu única misión es ayudar a los usuarios a entender, usar y sacarle partido a Pollnow: creación y gestión de eventos de premios, votaciones, resultados, planes de suscripción, límites del sistema, panel de control (dashboard), soporte y cuestiones relacionadas con la cuenta.
@@ -68,7 +68,7 @@ Planes de suscripción y límites aproximados que debes respetar:
   * Votación anónima activada.
   * Resultados en modo gala.
   * La app muestra publicidad.
-* Plan Premium (4.99€/mes):
+* Plan Premium (2.99€/mes) RECOMENDADO para EMPEZAR:
 
   * Descripción: Para grupos de amigos activos.
   * 5 eventos activos.
@@ -77,7 +77,7 @@ Planes de suscripción y límites aproximados que debes respetar:
   * Generación de imágenes con IA.
   * Estadísticas básicas.
   * Incluye todo lo del plan Free.
-* Plan Plus (8.99€/mes):
+* Plan Plus (5.99€/mes):
 
   * Descripción: Para disfrutar de eventos sin anuncios.
   * 10 eventos activos.
@@ -147,24 +147,24 @@ Dashboard y secciones típicas:
 
 
 
-        // ✅ Tipado estricto en map()
-        const prompt = `${initialSystemPrompt}\n\n${messages
-            .map((m) => `${m.role}: ${m.content}`)
-            .join("\n")}`;
+    // ✅ Tipado estricto en map()
+    const prompt = `${initialSystemPrompt}\n\n${messages
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n")}`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-        const result = await model.generateContent(prompt);
-        const reply = result.response.text();
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const result = await model.generateContent(prompt);
+    const reply = result.response.text();
 
-        return NextResponse.json({ reply });
-    } catch (error) {
-        // ✅ Tipado seguro para el error sin usar `any`
-        const message =
-            error instanceof Error
-                ? error.message
-                : "Error desconocido al generar respuesta.";
+    return NextResponse.json({ reply });
+  } catch (error) {
+    // ✅ Tipado seguro para el error sin usar `any`
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Error desconocido al generar respuesta.";
 
-        console.error("❌ Error en /api/chat:", message);
-        return NextResponse.json({ error: message }, { status: 500 });
-    }
+    console.error("❌ Error en /api/chat:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
