@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import CreateEventButton from "@/components/dashboard/CreateEventButton";
 import CreateTicketButton from "@/components/dashboard/CreateTicketButton";
@@ -86,9 +86,12 @@ export default function DashboardTabs({
         { id: "profile", label: "Mi Cuenta" },
     ];
 
+    // Nuevos hooks para manejar la URL
     const searchParams = useSearchParams();
-    const initialTab = (searchParams.get("tab") as TabId) || "events";
+    const router = useRouter();
+    const pathname = usePathname();
 
+    const initialTab = (searchParams.get("tab") as TabId) || "events";
     const [activeTab, setActiveTab] = useState<TabId>(initialTab);
 
     // Pagination state per tab
@@ -96,6 +99,7 @@ export default function DashboardTabs({
     const [notificationsPage, setNotificationsPage] = useState(1);
     const [supportPage, setSupportPage] = useState(1);
 
+    // Sincronizar URL hacia el estado local (por ejemplo, si el usuario navega hacia atrás)
     useEffect(() => {
         const tab = searchParams.get("tab");
         if (tab && tab !== activeTab) {
@@ -103,12 +107,25 @@ export default function DashboardTabs({
         }
     }, [searchParams]);
 
-    // When tab changes reset its page to 1 (so user sees first page of that tab)
+    // Resetear la paginación al cambiar de tab
     useEffect(() => {
         setEventsPage(1);
         setNotificationsPage(1);
         setSupportPage(1);
     }, [activeTab]);
+
+    // NUEVA FUNCIÓN: Maneja el clic en la pestaña y actualiza la URL
+    const handleTabChange = (tabId: TabId) => {
+        setActiveTab(tabId); // Actualiza la UI instantáneamente
+
+        // Construye la nueva URL
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", tabId);
+
+        // Actualiza la URL en el navegador sin hacer scroll
+        // Puedes cambiar 'replace' por 'push' si quieres que cada tab genere historial de navegación
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     return (
         <div>
@@ -117,7 +134,8 @@ export default function DashboardTabs({
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        // Usamos la nueva función en el onClick
+                        onClick={() => handleTabChange(tab.id)}
                         className={clsx(
                             "relative px-5 py-3 text-sm font-bold transition-colors whitespace-nowrap cursor-pointer",
                             activeTab === tab.id
@@ -247,7 +265,7 @@ function EventsTab({
                     <div className="col-span-full py-16 border border-dashed border-white/10 rounded-2xl text-center">
                         <p className="text-gray-500 mb-2">No tienes eventos activos.</p>
                         <p className="text-sm text-gray-600">
-                            ¡Crea el primero para empezar la fiesta!
+                            ¡Crea el primero para empezar la gala!
                         </p>
                     </div>
                 )}
