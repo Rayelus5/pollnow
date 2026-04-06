@@ -4,14 +4,26 @@ import { motion } from "framer-motion";
 import SearchFilters from "@/components/polls/SearchFilters";
 import PublicEventCard from "@/components/polls/PublicEventCard";
 
-type EventData = any; // Usamos el tipo inferido del componente Card para simplificar aquí
+type EventData = {
+    id: string;
+    slug: string;
+    title: string;
+    description: string | null;
+    createdAt: string;
+    tags: string[];
+    _count: { participants: number; polls: number };
+    user: { name: string; username: string; image: string | null };
+    likeCount: number;
+    voteScore: number;
+    hasLiked: boolean;
+    userVote: 1 | -1 | null;
+};
 
-// Variantes del contenedor principal
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
-        transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+        transition: { staggerChildren: 0.08, delayChildren: 0.15 }
     }
 };
 
@@ -24,7 +36,17 @@ const headerVariants = {
     }
 };
 
-export default function ExploreClient({ events }: { events: EventData[] }) {
+export default function ExploreClient({
+    events,
+    isLoggedIn,
+    currentSort,
+    currentTag,
+}: {
+    events: EventData[];
+    isLoggedIn: boolean;
+    currentSort: string;
+    currentTag: string;
+}) {
     return (
         <div className="max-w-7xl mx-auto relative z-10">
 
@@ -33,7 +55,7 @@ export default function ExploreClient({ events }: { events: EventData[] }) {
                 variants={headerVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-col items-center text-center mb-20 space-y-8"
+                className="flex flex-col items-center text-center mb-16 space-y-8"
             >
                 <div className="space-y-4">
                     <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40">
@@ -45,25 +67,28 @@ export default function ExploreClient({ events }: { events: EventData[] }) {
                     </p>
                 </div>
 
-                <div className="w-full max-w-lg">
-                    <SearchFilters />
+                <div className="w-full max-w-2xl">
+                    <SearchFilters currentSort={currentSort} currentTag={currentTag} />
                 </div>
             </motion.div>
 
             {/* GRID RESULTADOS */}
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-                {events.map((event) => (
-                    <PublicEventCard key={event.id} event={event} />
-                ))}
-            </motion.div>
-
-            {/* EMPTY STATE ANIMADO */}
-            {events.length === 0 && (
+            {events.length > 0 ? (
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    {events.map((event) => (
+                        <PublicEventCard
+                            key={event.id}
+                            event={event}
+                            isLoggedIn={isLoggedIn}
+                        />
+                    ))}
+                </motion.div>
+            ) : (
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}

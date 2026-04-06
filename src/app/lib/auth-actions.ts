@@ -116,7 +116,7 @@ export async function authenticateCredentials(prevState: string | undefined, for
         await signIn('credentials', {
             email,
             password,
-            redirectTo: "/dashboard/profile"
+            redirectTo: "/polls"
         });
 
     } catch (error) {
@@ -139,7 +139,7 @@ export async function authenticateGoogle() {
         // cerrar sesión primero antes de iniciar sesión (solo cerrar sesión si ya tiene sesión iniciada)
         // await signOut();
 
-        await signIn('google', { redirectTo: "/dashboard/profile" });
+        await signIn('google', { redirectTo: "/polls" });
     } catch (error) {
         if (error instanceof AuthError) {
             return 'Error al conectar con Google.';

@@ -71,6 +71,8 @@ model User {
     chatMessages         ChatMessage[]     @relation(name: "UserChatMessages")
     moderationLogs       ModerationLog[]   @relation(name: "AdminActions")
     reports              Report[]          @relation(name: "UserReports")
+    eventLikes           EventLike[]
+    eventVotes           EventVote[]
 }
 
 model Account {
@@ -148,6 +150,8 @@ model Event {
     polls          Poll[]
     reports        Report[]
     moderationLogs ModerationLog[]
+    likes          EventLike[]
+    eventVotes     EventVote[]
 
     @@index([userId])
     @@index([slug])
@@ -325,4 +329,37 @@ model ChatMessage {
     sender    User        @relation(name: "UserChatMessages", fields: [senderId], references: [id]) // Relación con el User
 
     @@index([chatId])
+}
+
+// ===================================
+// LIKES Y VOTOS DE EVENTOS
+// ===================================
+
+model EventLike {
+    id        String   @id @default(uuid())
+    eventId   String
+    userId    String
+    createdAt DateTime @default(now())
+
+    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([eventId, userId])
+    @@index([eventId])
+    @@index([userId])
+}
+
+model EventVote {
+    id        String   @id @default(uuid())
+    eventId   String
+    userId    String
+    value     Int      // 1 = upvote, -1 = downvote
+    createdAt DateTime @default(now())
+
+    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([eventId, userId])
+    @@index([eventId])
+    @@index([userId])
 }

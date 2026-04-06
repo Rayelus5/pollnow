@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Bouncy } from "ldrs/react";
 import "ldrs/react/Bouncy.css";
 import { Plus, X } from "lucide-react";
+import TagsInput from "@/components/ui/TagsInput";
 
 type CreateEventButtonProps = {
     planSlug: string;
@@ -29,6 +30,7 @@ export default function CreateEventButton({
     const [loadingPremium, setLoadingPremium] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
     const [title, setTitle] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
 
     const router = useRouter();
 
@@ -54,6 +56,7 @@ export default function CreateEventButton({
             setIsQuotaExceeded(false);
             setIsOpen(false);
             setTitle("");
+            setTags([]);
             router.push(`/dashboard/event/${res.eventId}`);
         } else {
             if (res?.error && res.error.toLowerCase().includes("límite")) {
@@ -72,6 +75,7 @@ export default function CreateEventButton({
         setIsOpen(false);
         setIsQuotaExceeded(false);
         setServerError(null);
+        setTags([]);
     };
 
     return (
@@ -178,16 +182,12 @@ export default function CreateEventButton({
                                         <label className="text-xs text-gray-500 uppercase block mb-1">
                                             Etiquetas
                                         </label>
-                                        <input
-                                            name="tags"
-                                            maxLength={50}
-                                            placeholder="Etiquetas separadas por comas (ej: cine, amigos, verano)"
-                                            className="w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none"
+                                        <TagsInput
+                                            value={tags}
+                                            onChange={setTags}
                                             disabled={isSubmitting}
+                                            name="tags"
                                         />
-                                        <p className="text-[10px] text-gray-600 mt-1">
-                                            Úsalas para encontrar tu evento más fácilmente.
-                                        </p>
                                     </div>
 
                                     {/* Error del servidor */}

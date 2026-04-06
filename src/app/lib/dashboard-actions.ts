@@ -73,7 +73,7 @@ export async function createEvent(formData: FormData) {
       data: {
         title,
         description,
-        tags: tagsRaw ? tagsRaw.split(",").map((t) => t.trim()) : [],
+        tags: tagsRaw ? tagsRaw.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean) : [],
         slug,
         userId: session.user.id,
         isPublic: false,
