@@ -63,7 +63,11 @@ export default async function PollPage({ params }: Props) {
     });
 
     const formattedPoll = {
-        ...poll,
+        id: poll.id,
+        title: poll.title,
+        description: poll.description,
+        votingType: poll.votingType,
+        maxOptions: poll.maxOptions,
         options: poll.options.map(opt => ({
             id: opt.id,
             name: opt.participant.name,

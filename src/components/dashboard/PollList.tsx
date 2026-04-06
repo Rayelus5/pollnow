@@ -6,7 +6,7 @@ import { createEventPoll, updateEventPoll, deleteEventPoll, reorderEventPolls } 
 import {
     GripVertical, Pencil, Trash2, X, Plus, Search,
     Lock, Star, Crown, AlertCircle, ListChecks, Check,
-    Vote, Hash,
+    Vote, Hash, Users, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { useFormStatus } from "react-dom";
@@ -35,15 +35,19 @@ type Poll = {
     options: { participantId: string }[];
 };
 
+const PAGE_SIZE = 10;
+const MIN_NOMINEES = 2;
+
 // ─── Submit button ────────────────────────────────────────────────────────────
 
-function ModalSubmitButton({ isCreating }: { isCreating: boolean }) {
+function ModalSubmitButton({ isCreating, disabled: extraDisabled }: { isCreating: boolean; disabled?: boolean }) {
     const { pending } = useFormStatus();
+    const isDisabled = pending || extraDisabled;
     return (
         <button
             type="submit"
-            disabled={pending}
-            className="flex-1 h-11 bg-white text-black rounded-xl font-bold text-sm hover:bg-gray-100 cursor-pointer flex justify-center items-center transition-colors disabled:opacity-50"
+            disabled={isDisabled}
+            className="flex-1 h-11 bg-white text-black rounded-xl font-bold text-sm hover:bg-gray-100 cursor-pointer flex justify-center items-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
             {pending
                 ? <Bouncy size="20" speed="1.75" color="black" />
@@ -102,6 +106,7 @@ export default function PollList({
     const [isCreating, setIsCreating] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
 
     const [title, setTitle] = useState("");
     const [votingType, setVotingType] = useState<Poll["votingType"]>("SINGLE");
@@ -119,6 +124,7 @@ export default function PollList({
         } else {
             setTitle("");
             setVotingType("SINGLE");
+            setSelectedParticipantIds([]);
             setIsCreating(true);
         }
     };
@@ -126,12 +132,14 @@ export default function PollList({
     const openEdit = (poll: Poll) => {
         setTitle(poll.title);
         setVotingType(poll.votingType);
+        setSelectedParticipantIds(poll.options.map(o => o.participantId));
         setEditingPoll(poll);
     };
 
     const closeModal = () => {
         setEditingPoll(null);
         setIsCreating(false);
+        setSelectedParticipantIds([]);
     };
 
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,6 +160,7 @@ export default function PollList({
     };
 
     const modalOpen = editingPoll !== null || isCreating;
+    const submitDisabled = selectedParticipantIds.length < MIN_NOMINEES;
 
     return (
         <>
@@ -305,7 +314,10 @@ export default function PollList({
                                                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                                         <VotingBadge type={poll.votingType} maxOptions={poll.maxOptions} />
                                                         <span className="text-[10px] font-mono text-gray-600">
-                                                            {poll._count.votes} votos
+                                                            {poll.options.length} nominados
+                                                        </span>
+                                                        <span className="text-[10px] font-mono text-gray-600">
+                                                            · {poll._count.votes} votos
                                                         </span>
                                                         {dateString && (
                                                             <span className="text-[10px] font-mono text-gray-600">
@@ -358,7 +370,7 @@ export default function PollList({
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.97, opacity: 0, y: 8 }}
                             transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                            className="relative bg-zinc-950 border-2 border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+                            className="relative bg-zinc-950 border-2 border-white/10 rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto shadow-2xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Top accent line */}
@@ -497,12 +509,43 @@ export default function PollList({
 
                                 {/* Nominados */}
                                 <div className="space-y-2 pt-1 border-t-2 border-white/5">
-                                    <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block pt-4">
-                                        Nominados
-                                    </label>
+                                    <div className="flex items-center justify-between pt-4">
+                                        <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Users size={11} />
+                                            Nominados
+                                        </label>
+                                        <AnimatePresence mode="wait">
+                                            {selectedParticipantIds.length > 0 ? (
+                                                <motion.span
+                                                    key="count"
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.8 }}
+                                                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full border-2 ${
+                                                        selectedParticipantIds.length >= MIN_NOMINEES
+                                                            ? "text-blue-400 bg-blue-500/10 border-blue-500/20"
+                                                            : "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                                                    }`}
+                                                >
+                                                    {selectedParticipantIds.length} / {allParticipants.length} seleccionados
+                                                </motion.span>
+                                            ) : (
+                                                <motion.span
+                                                    key="empty"
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    className="text-[10px] text-gray-600 font-mono"
+                                                >
+                                                    {allParticipants.length} disponibles
+                                                </motion.span>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                     <ParticipantSelector
                                         allParticipants={allParticipants}
-                                        editingPoll={editingPoll}
+                                        selectedIds={selectedParticipantIds}
+                                        onSelectionChange={setSelectedParticipantIds}
                                     />
                                 </div>
 
@@ -515,7 +558,7 @@ export default function PollList({
                                     >
                                         Cancelar
                                     </button>
-                                    <ModalSubmitButton isCreating={isCreating} />
+                                    <ModalSubmitButton isCreating={isCreating} disabled={submitDisabled} />
                                 </div>
                             </form>
                         </motion.div>
@@ -530,52 +573,97 @@ export default function PollList({
 
 function ParticipantSelector({
     allParticipants,
-    editingPoll,
+    selectedIds,
+    onSelectionChange,
 }: {
     allParticipants: Participant[];
-    editingPoll: Poll | null;
+    selectedIds: string[];
+    onSelectionChange: (ids: string[]) => void;
 }) {
     const [filter, setFilter] = useState("");
-    const [selectedIds, setSelectedIds] = useState<string[]>(() =>
-        editingPoll ? editingPoll.options.map(o => o.participantId) : []
-    );
+    const [page, setPage] = useState(0);
+
+    // Reset to page 0 when filter changes
+    useEffect(() => { setPage(0); }, [filter]);
 
     const filtered = allParticipants.filter(p =>
         p.name.toLowerCase().includes(filter.toLowerCase())
     );
 
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const currentPageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
     const toggle = (id: string) => {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        onSelectionChange(
+            selectedIds.includes(id)
+                ? selectedIds.filter(x => x !== id)
+                : [...selectedIds, id]
         );
     };
 
-    const selectedCount = selectedIds.length;
+    const allSelected = allParticipants.length > 0 &&
+        allParticipants.every(p => selectedIds.includes(p.id));
+
+    const toggleSelectAll = () => {
+        onSelectionChange(allSelected ? [] : allParticipants.map(p => p.id));
+    };
+
+    // No participants at all
+    if (allParticipants.length === 0) {
+        return (
+            <div className="flex flex-col items-center gap-2 py-8 text-center border-2 border-dashed border-white/8 rounded-xl">
+                <Users size={24} className="text-gray-700" />
+                <p className="text-xs text-gray-600">
+                    Aún no hay nominados en este evento.
+                </p>
+                <p className="text-[11px] text-gray-700">
+                    Añade participantes primero desde la sección de Nominados.
+                </p>
+            </div>
+        );
+    }
 
     return (
-        <>
-            {/* Search + count */}
+        <div className="space-y-2">
+            {/* Search + Select All */}
             <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-600 w-3 h-3" />
                     <input
                         type="text"
                         placeholder="Filtrar nominados..."
-                        className="w-full bg-black border-2 border-white/10 rounded-lg text-xs py-2 pl-8 pr-3 text-white focus:border-blue-500 outline-none transition-colors"
+                        value={filter}
                         onChange={(e) => setFilter(e.target.value)}
+                        className="w-full bg-black border-2 border-white/10 rounded-lg text-xs py-2 pl-8 pr-3 text-white focus:border-blue-500 outline-none transition-colors"
                         onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                     />
                 </div>
-                {selectedCount > 0 && (
-                    <span className="text-[10px] text-blue-400 bg-blue-500/10 border-2 border-blue-500/20 rounded-full px-2 py-0.5 font-mono shrink-0">
-                        {selectedCount} sel.
-                    </span>
-                )}
+                <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-2 rounded-lg border-2 shrink-0 transition-all cursor-pointer whitespace-nowrap ${
+                        allSelected
+                            ? "border-blue-500/50 bg-blue-500/10 text-blue-400 hover:bg-blue-500/15"
+                            : "border-white/10 bg-white/3 text-gray-400 hover:border-white/20 hover:text-gray-200"
+                    }`}
+                >
+                    {allSelected ? (
+                        <>
+                            <X size={10} />
+                            Quitar todos
+                        </>
+                    ) : (
+                        <>
+                            <Check size={10} />
+                            Selec. todos
+                        </>
+                    )}
+                </button>
             </div>
 
-            {/* Grid */}
-            <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto pr-1">
-                {filtered.map(p => {
+            {/* Grid of participants */}
+            <div className="grid grid-cols-2 gap-1.5 min-h-[9rem]">
+                {currentPageItems.map(p => {
                     const isSelected = selectedIds.includes(p.id);
                     return (
                         <button
@@ -600,13 +688,66 @@ function ParticipantSelector({
                     );
                 })}
                 {filtered.length === 0 && (
-                    <p className="text-xs text-gray-600 col-span-2 text-center py-3">Sin resultados.</p>
+                    <div className="col-span-2 flex flex-col items-center gap-1.5 py-6 text-center">
+                        <Search size={16} className="text-gray-700" />
+                        <p className="text-xs text-gray-600">Sin resultados para «{filter}»</p>
+                    </div>
                 )}
             </div>
 
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-0.5">
+                    <button
+                        type="button"
+                        onClick={() => setPage(p => Math.max(0, p - 1))}
+                        disabled={page === 0}
+                        className="flex items-center gap-1 text-[10px] px-2.5 py-1.5 rounded-lg border-2 border-white/10 text-gray-500 hover:text-gray-200 hover:border-white/20 disabled:opacity-25 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                        <ChevronLeft size={11} /> Anterior
+                    </button>
+                    <span className="text-[10px] text-gray-600 font-mono">
+                        Página {page + 1} de {totalPages}
+                        <span className="text-gray-700 ml-1">· {filtered.length} resultados</span>
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={page === totalPages - 1}
+                        className="flex items-center gap-1 text-[10px] px-2.5 py-1.5 rounded-lg border-2 border-white/10 text-gray-500 hover:text-gray-200 hover:border-white/20 disabled:opacity-25 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                        Siguiente <ChevronRight size={11} />
+                    </button>
+                </div>
+            )}
+
+            {/* Validation message */}
+            <AnimatePresence>
+                {selectedIds.length < MIN_NOMINEES && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.15 }}
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 text-[11px] font-medium ${
+                            selectedIds.length === 0
+                                ? "border-white/8 bg-white/3 text-gray-500"
+                                : "border-amber-500/30 bg-amber-500/8 text-amber-400"
+                        }`}
+                    >
+                        <AlertCircle size={12} className="shrink-0" />
+                        {selectedIds.length === 0
+                            ? `Selecciona al menos ${MIN_NOMINEES} nominados para poder crear la categoría.`
+                            : `Falta ${MIN_NOMINEES - selectedIds.length} nominado${MIN_NOMINEES - selectedIds.length > 1 ? "s" : ""} más para continuar.`
+                        }
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Hidden inputs for form submission */}
             {selectedIds.map(id => (
                 <input key={id} type="hidden" name="participantIds" value={id} />
             ))}
-        </>
+        </div>
     );
 }
