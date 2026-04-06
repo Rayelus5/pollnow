@@ -555,7 +555,7 @@ export default function ParticipantList({
     const [searchQuery, setSearchQuery] = useState("");
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 6; // nominados por página
 
     const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
     const currentLimit = PLANS[planKey]?.limits?.participantsPerEvent || 12;
