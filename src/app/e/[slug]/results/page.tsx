@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import GlobalResultsClient from "@/components/GlobalResultsClient";
-import { auth } from "@/auth";
 import { getCurrentUserPlan } from "@/lib/user-plan";
 
 
@@ -13,9 +12,6 @@ export const dynamic = "force-dynamic";
 
 export default async function EventGalaPage({ params }: Props) {
     const { slug } = await params;
-
-    const session = await auth();
-    if (!session?.user) return null;
 
     // 1. Buscar el evento y sus encuestas
     const event = await prisma.event.findUnique({

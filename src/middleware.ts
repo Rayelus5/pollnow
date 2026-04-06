@@ -81,7 +81,8 @@ export default auth(async (req) => {
     // ---------------------------------------------------------
     // 3. PROTECCIÓN DE RUTAS DE USUARIO (Dashboard, etc)
     // ---------------------------------------------------------
-    const protectedUserPaths = ['/dashboard', '/results', '/polls', '/e', '/premium', '/admin'];
+    // /e y /polls son accesibles sin cuenta (votación anónima en eventos públicos)
+    const protectedUserPaths = ['/dashboard', '/results', '/premium', '/admin'];
     
     // Verificamos si la ruta actual empieza por alguna de las protegidas
     const isProtectedPath = protectedUserPaths.some(path => nextUrl.pathname.startsWith(path));

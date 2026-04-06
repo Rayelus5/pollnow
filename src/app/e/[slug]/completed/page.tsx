@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import CompletedView from "@/components/CompletedView";
-import { auth } from "@/auth";
 import { getCurrentUserPlan } from "@/lib/user-plan";
 
 type Props = {
@@ -12,9 +11,6 @@ export const dynamic = "force-dynamic";
 
 export default async function EventCompletedPage({ params }: Props) {
     const { slug } = await params;
-
-    const session = await auth();
-    if (!session?.user) return null;
 
     // Buscar evento para obtener su fecha
     const event = await prisma.event.findUnique({

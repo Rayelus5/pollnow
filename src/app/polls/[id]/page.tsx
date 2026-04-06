@@ -11,7 +11,7 @@ type Props = {
 export default async function PollPage({ params }: Props) {
     const { id } = await params;
     const cookieStore = await cookies();
-    const voterId = cookieStore.get('foty_voter_id')?.value;
+    const voterId = cookieStore.get('voter_id')?.value;
 
     // 1. Buscar encuesta actual y su evento
     const poll = await prisma.poll.findUnique({
