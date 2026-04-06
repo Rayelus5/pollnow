@@ -1,4 +1,4 @@
-# Pollnow | v1.5
+# Pollnow | v2.0
 > https://www.pollnow.es/
 
 <!-- ![Next](https://img.shields.io/badge/-Next.js-20232a?logo=nextdotjs&logoColor=white) -->
@@ -24,15 +24,15 @@ The application combines:
 - A **multi-tenant user dashboard** for event owners,
 - A **moderation-oriented admin panel**,
 - A **subscription system** based on Stripe, and
-- Supporting modules for **support tickets**, **notifications**, and **analytics**.
+- Supporting modules for **support tickets**, **notifications**, **analytics**, and **AI-powered features**.
 
-The goal of this project is not just to “make something work”, but to explore how a modern SaaS-style system can be built with:
+The goal of this project is not just to "make something work", but to explore how a modern SaaS-style system can be built with:
 
 - **React Server Components + Server Actions**
 - **Prisma with a non-trivial relational schema**
 - **NextAuth with custom flows (email verification, Google, password reset)**
 - **Stripe billing & webhooks**
-- **Production-oriented patterns** (middleware, modular server actions, strict validation).
+- **Production-oriented patterns** (middleware, modular server actions, strict validation, API rate limiting).
 
 ---
 
@@ -47,6 +47,7 @@ The application revolves around **events** (award ceremonies, competitions, poll
   - Has a subscription status (free / premium tiers)
   - Can authenticate via credentials or Google
   - Receives notifications and support messages
+  - Can like and vote on public events
 
 - **Event**
   - Represents a specific awards ceremony / poll session
@@ -55,16 +56,19 @@ The application revolves around **events** (award ceremonies, competitions, poll
     - Voting mode (anonymous vs identified)
     - Gala date and result visibility
     - Status (`DRAFT`, `PENDING`, `APPROVED`, `DENIED`)
+    - Tags (searchable, normalized to lowercase, pill-based input with autocomplete)
+  - Tracks community engagement via **likes** (`EventLike`) and **ratings** (`EventVote`, upvote/downvote)
 
 - **Participant**
   - A nominee / candidate that can be reused across polls in the same event
 
 - **Poll**
-  - A category inside an event (e.g. “Best Movie”, “Best Streamer”)
+  - A category inside an event (e.g. "Best Movie", "Best Streamer")
   - Associated with:
     - Order (for linear voting flow)
     - Options
     - Optional max options / selection rules
+    - Minimum 2 nominees required before a category can be saved
 
 - **Option**
   - Link between a `Participant` and a `Poll`
@@ -77,6 +81,15 @@ The application revolves around **events** (award ceremonies, competitions, poll
     - Timestamps
     - Optional `userId` when the voter's identity is known
     - An associated **voter hash** for anonymous / device-bound tracking
+
+- **EventLike**
+  - Heart/like reaction tied to a `User` and an `Event`
+  - Unique per user per event (toggle behaviour)
+
+- **EventVote**
+  - Community rating tied to a `User` and an `Event`
+  - `value` field: `1` (upvote) or `-1` (downvote)
+  - Unique per user per event; same value toggles it off
 
 - **SupportChat / SupportMessage**
   - Used for in-app support ticketing between users and admins
@@ -100,7 +113,7 @@ POLLNOW is structured around **Next.js App Router** and uses a combination of:
 - **Server Components** for data-fetching routes,
 - **Client Components** for interactive UI,
 - **Server Actions** for mutations and business logic,
-- **API Routes** for Stripe webhooks and legacy-style endpoints.
+- **API Routes** for Stripe webhooks, voting, and engagement endpoints.
 
 High-level view:
 
@@ -108,7 +121,7 @@ High-level view:
 Client (React/Tailwind)  ➡️  Next.js App Router
                          ➡️  Server Components & Actions
                          ➡️  Prisma (PostgreSQL)
-                         ➡️  External services (Stripe, email provider)
+                         ➡️  External services (Stripe, Resend, Gemini AI, Pollinations AI)
 ```
 
 ### Key Architectural Choices
@@ -123,7 +136,8 @@ Client (React/Tailwind)  ➡️  Next.js App Router
 
   * Protect admin routes
   * Enforce auth in certain sections
-  * Potentially handle maintenance mode and public/private logic.
+  * Assign a `voter_id` cookie to every visitor for anonymous vote tracking
+* **Rate Limiting** (`src/lib/rate-limit.ts`) is applied to all API routes using a sliding-window in-memory strategy (see §10 below).
 
 ---
 
@@ -168,6 +182,7 @@ The dashboard provides:
 * **Events tab**
 
   * Create event (`CreateEventButton` + `dashboard-actions.ts`)
+    * Tag input uses the pill-based `TagsInput` component with live autocomplete from the API
   * List events (`DashboardEventCard`)
   * Per-event link into `/dashboard/event/[id]`
 
@@ -175,10 +190,14 @@ The dashboard provides:
 
   * `EventTabs` wraps:
 
-    * `EventSettings` (configuration, gala date, visibility, anonymous voting)
-    * `ParticipantList` (add/edit/remove participants)
-    * `PollList` (categories, drag & drop ordering, max options)
-    * `EventStatistics` (aggregated stats, breakdown by category, premium gating)
+    * `EventSettings` — configuration, gala date, visibility, anonymous voting, and **editable tags** via `TagsInput`
+    * `ParticipantList` — add/edit/remove participants
+    * `PollList` — categories with:
+      * Drag & drop reordering
+      * Paginated participant selector (10 per page)
+      * "Select All" / "Remove All" across all pages
+      * Minimum 2 nominees enforced before saving
+    * `EventStatistics` — aggregated stats, breakdown by category, premium gating, and **engagement KPIs** (likes, upvotes/downvotes, net score)
 
 * **Notifications & Support**
 
@@ -196,14 +215,14 @@ All writes are performed via server actions invoked from forms and interactive c
 Public event access is organized under:
 
 * `src/app/e/[slug]/page.tsx`        → Voting entry for a specific event
-* `src/app/e/[slug]/completed/page.tsx` → Post-voting “thank you” page
-* `src/app/e/[slug]/results/page.tsx`   → Results page (time-gated)
+* `src/app/e/[slug]/completed/page.tsx` → Post-voting "thank you" page
+* `src/app/e/[slug]/results/page.tsx`   → Results page (time-gated, shows likes/votes in header)
 * `src/app/polls/*`                     → Public explore & listing pages
 * `src/app/api/polls/*`                 → Voting & result APIs
 
 Voting UX:
 
-1. User lands on `/e/[slug]`.
+1. User lands on `/e/[slug]` (public events are freely accessible; private events require a `?key=` param).
 2. A **linear voting flow** guides them through each poll (category) in order.
 3. Votes are validated and stored via:
 
@@ -216,6 +235,7 @@ Voting UX:
    * Hidden until a gala date,
    * Partially visible (e.g. aggregated only),
    * Or fully visible if configuration & time allow.
+6. The **"Volver al Lobby"** button on the results page correctly preserves the `?key=` parameter for private events.
 
 ---
 
@@ -236,12 +256,13 @@ Mechanisms:
 * **HttpOnly cookies** + **hashes** are used to:
 
   * Avoid exposing identifiers to the client.
-  * Distinguish “already voted” states.
+  * Distinguish "already voted" states.
 * If a user is authenticated, their `userId` may be attached to the vote (depending on event configuration).
 * Events have an `isAnonymousVoting` flag:
 
   * When `true`, identities are hidden even from premium analytics.
   * When `false`, premium tiers (or admins) can see who voted for what (when allowed).
+* Unauthenticated users can vote on **public events** — their votes are stored and shown as "Anónimos" in statistics.
 
 ---
 
@@ -261,6 +282,7 @@ Mechanisms:
     * List of voters (if allowed)
 * Builds an `activityTimeline` from recent votes grouped by date.
 * Reads `event.isAnonymousVoting` to ensure privacy is respected in the UI.
+* Fetches **community engagement data**: `likeCount`, `upvotes`, `downvotes`, `voteScore`.
 
 The client-side visualization is handled by:
 
@@ -268,18 +290,54 @@ The client-side visualization is handled by:
 
 Features include:
 
-* KPIs (total votes, active categories, participation status).
+* **Voting KPIs**: total votes, active categories, participation status.
+* **Engagement KPIs** (second row): likes received, upvotes/downvotes breakdown, net score (colour-coded green/red/grey).
 * Progress-bar style charts for vote distribution.
 * Scrollable list of polls with per-category modals.
 * Conditional UI:
 
-  * Free plan: blurred/gated UI + mock stats.
+  * Free plan: blurred/gated UI + mock stats (with realistic mock engagement data).
   * Premium: real numbers.
   * Premium+ or Admin: voter identities (if event is not anonymous).
 
 ---
 
-### 6. Admin Panel
+### 6. Public Explore Page (`/polls`)
+
+`src/app/polls/page.tsx` and its client components provide a fully-featured public event discovery experience:
+
+* **Search bar** — debounced full-text search across titles and descriptions.
+* **Sort filters** (chip buttons):
+  * Recientes, Populares (likes), Mejor valorados, Peor valorados, Más antiguos.
+* **Random event button** — fetches a random approved public event via `/api/events/random` and navigates to it instantly, with a dice icon and spin animation while loading.
+* **Clickable tags** — each tag pill on an event card navigates to `?tag=TAG` to filter by that tag.
+* **Active tag chip** — shows the current tag filter with an × to clear it.
+* **Pagination** — 6 events per page with smart ellipsis page numbers, Previous/Next controls, and auto-scroll to top on page change.
+* **Per-card engagement actions** (authenticated users):
+  * ❤️ **Like** button with live count and optimistic update.
+  * 👍 **Upvote** / 👎 **Downvote** buttons with coloured net score (`+N` green, `-N` red).
+  * All actions use `stopPropagation` so they don't trigger card navigation.
+* **Animated transitions** — `AnimatePresence` with `mode="wait"` ensures correct entry/exit animations when switching between result set and empty state.
+
+---
+
+### 7. Tag System
+
+Tags on events are standardized across the platform:
+
+* Always stored as **lowercase**, diacritics removed (slug-safe).
+* Maximum **5 tags** per event, each up to **20 characters**.
+* Input uses `src/components/ui/TagsInput.tsx`:
+  * Pill display with animated add/remove.
+  * Live autocomplete popup from `/api/tags?q=` showing usage counts.
+  * Enter, comma, or Backspace to add/remove.
+  * Single hidden `<input name="tags">` for form compatibility.
+* Tags are editable both at **event creation** (`CreateEventButton`) and in **event settings** (`EventSettings`).
+* `/api/tags` only returns tags from public events, rate-limited to 60 req/min.
+
+---
+
+### 8. Admin Panel
 
 Admin routes are located under:
 
@@ -297,6 +355,8 @@ Modules:
 Supporting business logic:
 
 * `src/app/lib/admin-actions.ts` – Approvals, rejections, user updates, etc.
+* `src/app/api/admin/events/batch/route.ts` – Bulk event status updates / deletions (ADMIN + MODERATOR only, rate-limited).
+* `src/app/api/admin/users/batch/route.ts` – Bulk user role / ban / plan changes (ADMIN only, rate-limited).
 
 Admins have elevated visibility and control:
 
@@ -306,7 +366,7 @@ Admins have elevated visibility and control:
 
 ---
 
-### 7. Support & Notifications
+### 9. Support & Notifications
 
 **Support system**:
 
@@ -325,7 +385,34 @@ Users can open support chats; admins reply via the admin interface.
 
 ---
 
-### 8. Billing & Subscription Plans
+### 10. API Rate Limiting
+
+All API routes are protected by a **sliding-window in-memory rate limiter** (`src/lib/rate-limit.ts`). The store is cleaned automatically every 5 minutes to prevent unbounded growth.
+
+| Route | Limit | Key |
+|---|---|---|
+| `POST /api/polls` | 10 / min | IP |
+| `GET /api/polls/[id]` | 60 / min | IP |
+| `GET /api/polls/[id]/results` | 60 / min | IP |
+| `POST /api/polls/[id]/vote` | 15 / min | IP |
+| `POST /api/events/[id]/like` | 15 / min | userId |
+| `POST /api/events/[id]/vote` | 20 / min | userId |
+| `GET /api/events/random` | 30 / min | IP |
+| `GET /api/tags` | 60 / min | IP |
+| `POST /api/generate-image` | 5 / min (auth) · 2 / min (anon) | userId / IP |
+| `POST /api/chat` | 15 / min | IP |
+| `GET /api/support/messages/[chatId]` | 30 / min | userId |
+| `POST /api/admin/events/batch` | 30 / min | userId |
+| `POST /api/admin/users/batch` | 30 / min | userId |
+| `POST /api/webhooks/stripe` | — | Stripe signature (exempt) |
+
+All rate-limited endpoints return `429 Too Many Requests` with a `Retry-After` header on violation.
+
+> **Note:** This implementation is in-memory and works well for single-instance deployments. For multi-instance or edge deployments (Vercel, etc.), replacing with `@upstash/ratelimit` + Redis is recommended.
+
+---
+
+### 11. Billing & Subscription Plans
 
 Billing logic is spread across:
 
@@ -361,9 +448,11 @@ Core stack:
 * **Auth:** NextAuth + @auth/prisma-adapter
 * **Payments:** Stripe
 * **Mail:** Resend (email verification, transactional emails)
+* **AI (Chat):** Google Gemini (`gemini-2.5-flash-lite`) via `@google/generative-ai`
+* **AI (Images):** Pollinations AI (multi-model fallback: zimage → p-image → flux)
 * **3D / Visuals:** `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`
 * **Validation:** Zod
-* **Utilities:** date-fns, clsx, use-debounce, canvas-confetti, bcryptjs
+* **Utilities:** date-fns, clsx, use-debounce, canvas-confetti, bcryptjs, ldrs
 
 ---
 
@@ -373,6 +462,7 @@ Some key packages used throughout the project:
 
 ```txt
 @auth/prisma-adapter
+@google/generative-ai
 @hello-pangea/dnd
 @pmndrs/assets
 @pmndrs/branding
@@ -389,6 +479,7 @@ framer-motion
 ldrs
 lucide-react
 resend
+use-debounce
 zod
 ```
 
@@ -428,11 +519,11 @@ These scripts are used throughout the development workflow to iterate on both sc
 ├── src/
 │   ├── app/
 │   │   ├── admin/           # Admin dashboard
-│   │   ├── api/             # API routes (auth, polls, support, webhooks)
+│   │   ├── api/             # API routes (auth, polls, events, support, webhooks, AI)
 │   │   ├── auth/            # Email verification flow
 │   │   ├── dashboard/       # User dashboard & event management
 │   │   ├── e/[slug]/        # Public voting flow for events
-│   │   ├── polls/           # Public poll discovery & results
+│   │   ├── polls/           # Public poll discovery & results (with filters + pagination)
 │   │   ├── login/           # Login page
 │   │   ├── logout/          # Logged-in guard explanation page
 │   │   ├── register/        # Registration page
@@ -444,9 +535,10 @@ These scripts are used throughout the development workflow to iterate on both sc
 │   ├── components/
 │   │   ├── dashboard/       # Dashboard components (tabs, forms, stats, lists)
 │   │   ├── admin/           # Admin-only UI
-│   │   ├── polls/           # Public poll UI
+│   │   ├── polls/           # Public poll UI (cards, filters, explore)
 │   │   ├── premium/         # Billing & pricing components
 │   │   ├── home/            # Landing, hero, 3D award mockup
+│   │   ├── ui/              # Shared UI primitives (TagsInput, etc.)
 │   │   └── shared UI        # Navbar, forms, confetti, etc.
 │   ├── lib/
 │   │   ├── prisma.ts        # Prisma client singleton
@@ -456,9 +548,10 @@ These scripts are used throughout the development workflow to iterate on both sc
 │   │   ├── mail.ts          # Email sending helpers
 │   │   ├── validations.ts   # Zod schemas
 │   │   ├── countResults.ts  # Result aggregation helpers
+│   │   ├── rate-limit.ts    # Sliding-window in-memory rate limiter
 │   │   ├── *_actions.ts     # Server Actions for each domain area
 │   │   └── stripe-actions.ts# Stripe integration helpers
-│   ├── middleware.ts        # Route guarding & cross-cutting concerns
+│   ├── middleware.ts        # Route guarding, voter_id cookie, cross-cutting concerns
 │   └── types/next-auth.d.ts # NextAuth type augmentation
 └── reset-password.ts        # Standalone entry for password reset
 ```
@@ -491,15 +584,17 @@ This project served as a deep-dive into:
   * Duplicate prevention.
 * Adding **real subscription tiers** using Stripe and handling webhooks safely.
 * Building a real-world level **admin panel**, **support system**, and **notification layer**.
+* Integrating **AI features**: Gemini-powered chat assistant and Pollinations AI image generation with multi-model fallback.
+* Designing a **community engagement layer**: event likes, upvote/downvote ratings, tag-based discovery, and sort/filter exploration.
+* Protecting a public API surface with **rate limiting** across all endpoints.
 * Polishing UX with motion, dark theme, and consistent component patterns.
 
 This repository is intended as a **complete, production-style reference** for a modern SaaS-like voting platform, showcasing how all these pieces can work together coherently in a single codebase.
 
 ---
 
-Last update: 8/1/2026
+Last update: 7/4/2026
 
 > Made with ♥️ by Rayelus
 > <br>
 > <a href="https://pollnow.es">Pollnow</a> © 2025 by <a href="https://rayelus.com">Raimundo Palma</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
-.
