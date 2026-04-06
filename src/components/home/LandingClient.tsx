@@ -122,9 +122,17 @@ export default function LandingClient({ session, showAds = true }: { session: an
     const [showPopup, setShowPopup] = useState(false);
 
     useEffect(() => {
-        // en 3 segundos se muestra el anuncio
+        const AD_KEY = "ad_last_shown";
+        const COOLDOWN = 60 * 60 * 1000; // 1 hora en ms
+
+        const lastShown = localStorage.getItem(AD_KEY);
+        const elapsed = lastShown ? Date.now() - parseInt(lastShown, 10) : Infinity;
+
+        if (elapsed < COOLDOWN) return; // Todavía dentro del período de cooldown
+
         const timer = setTimeout(() => {
             setShowPopup(true);
+            localStorage.setItem(AD_KEY, String(Date.now()));
         }, 3000);
 
         return () => clearTimeout(timer);

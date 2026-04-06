@@ -61,13 +61,6 @@ export default function CookiesPage() {
                                 <br />
                                 <em className="text-xs text-gray-500">Duración: Sesión / Persistente.</em>
                             </li>
-                            <li>
-                                <strong>cookie_preferences:</strong> Almacena las preferencias de cookies
-                                que el usuario ha establecido mediante el panel de consentimiento, de modo que
-                                no sea necesario volver a solicitarlas en cada visita. No contiene datos personales.
-                                <br />
-                                <em className="text-xs text-gray-500">Duración: 1 año.</em>
-                            </li>
                         </ul>
                     </div>
 
@@ -83,6 +76,35 @@ export default function CookiesPage() {
                             </li>
                         </ul>
                     </div>
+                </div>
+            </section>
+
+            <section className="mt-10 space-y-4">
+                <h3>Almacenamiento Local (localStorage)</h3>
+                <p>
+                    Además de cookies, POLLNOW utiliza el almacenamiento local del navegador
+                    (<em>localStorage</em>) para guardar preferencias de sesión que no requieren
+                    ser enviadas al servidor.
+                </p>
+                <div className="mt-4">
+                    <h4 className="text-base font-semibold text-white">Entradas de localStorage</h4>
+                    <ul className="mt-3 space-y-3 list-disc ml-6">
+                        <li>
+                            <strong>ad_last_shown:</strong> Guarda la marca de tiempo (timestamp)
+                            del momento en que se mostró por última vez el banner de bienvenida al
+                            visitar la página principal. Se utiliza para respetar un intervalo mínimo
+                            de una hora entre visualizaciones consecutivas del banner, evitando
+                            mostrarlo en cada recarga de página. No contiene datos personales.
+                            <br />
+                            <em className="text-xs text-gray-500">Duración: Indefinido (se actualiza cada vez que se muestra el banner).</em>
+                        </li>
+                        <li>
+                            <strong>cookie_preferences:</strong> Guarda las preferencias de cookies
+                            establecidas mediante el panel de consentimiento. No contiene datos personales.
+                            <br />
+                            <em className="text-xs text-gray-500">Duración: Indefinido.</em>
+                        </li>
+                    </ul>
                 </div>
             </section>
 

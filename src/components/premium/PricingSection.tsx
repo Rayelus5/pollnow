@@ -163,8 +163,9 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                         <div className="relative flex flex-col items-center md:items-end gap-4 ">
                                             {/* Price block (recommended: numeric fields) */}
                                             <div className="text-center md:text-right">
-                                                <span className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.2em] mb-1">
-                                                    Precio (Oferta de salida)
+                                                <span className="block text-xs font-semibold text-gray-400 uppercase tracking-[0.2em] mb-1 flex flex-col items-center md:items-end">
+                                                    Precio
+                                                    <span className="text-lg font-bold text-blue-400 tracking-[0.05em] mb-1">¡Oferta de salida!</span>
                                                 </span>
 
                                                 <div className="flex items-baseline items-center gap-3 justify-start md:justify-end mt-5 md:mt-0">
@@ -370,7 +371,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
-                                    Sin publicidad
+                                    Sin publicidad o personalizada
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
