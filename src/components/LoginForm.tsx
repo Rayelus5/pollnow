@@ -19,7 +19,7 @@ export default function LoginForm() {
                     id="email"
                     type="email"
                     name="email"
-                    placeholder="admin@foty.com"
+                    placeholder="tu@email.com"
                     required
                 />
             </div>

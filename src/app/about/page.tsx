@@ -57,8 +57,8 @@ export default function AboutPage() {
                         Más que una app, <br /> una <span className="text-blue-500">tradición.</span>
                     </motion.h1>
 
-                    <motion.p variants={fadeInUp} className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
-                        POLLNOW nació de una necesidad simple: poner fin a las discusiones sobre quién llegó más tarde o quién contó el peor chiste. Lo que empezó como una broma interna, hoy es la plataforma definitiva para crear eventos digitales de encuestas de todo tipo.
+                    <motion.p variants={fadeInUp} className="text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto">
+                        POLLNOW nació de una necesidad simple, poner fin a las discusiones sobre quién llegó más tarde o quién contó el peor chiste. Lo que empezó como una broma interna en mis amigos, hoy es la plataforma definitiva para crear eventos digitales de encuestas de todo tipo.
                     </motion.p>
                 </motion.div>
             </section>
@@ -96,14 +96,14 @@ export default function AboutPage() {
                         {/* Texto Bio */}
                         <div className="space-y-8">
                             <h2 className="text-4xl font-bold text-white">Creador de Pollnow</h2>
-                            <p className="text-gray-400 text-lg leading-relaxed">
+                            <p className="text-gray-400 text-lg leading-relaxed text-justify">
                                 Hola! soy Rayelus, el desarrollador detrás de este proyecto. Como buen apasionado por la informática que soy, quería crear algo que uniera a las personas de una manera divertida y moderna.
                             </p>
-                            <p className="text-gray-400 text-lg leading-relaxed">
-                                POLLNOW está construido con las últimas tecnologías web (Next.js 16, React 19, TypeScript, Tailwind CSS) para asegurar una experiencia fluida, rápida y segura.
+                            <p className="text-gray-400 text-lg leading-relaxed text-justify">
+                                POLLNOW está construido con las últimas tecnologías web (Next.js, React, TypeScript, Tailwind CSS) para asegurar una experiencia fluida, rápida y segura.
                             </p>
-                            <p className="text-gray-400 text-lg leading-relaxed">
-                                Este proyecto nació para unir (o destruir) tu grupo de amigos, para pasar un buen rato en la comida familiar, o simplemente para crear encuestas/votaciones de todo tipo.
+                            <p className="text-gray-400 text-lg leading-relaxed text-justify">
+                                Este proyecto nació para unir (o destruir) tu grupo de amigos, para pasar un buen rato en la comida familiar, o simplemente para crear encuestas/votaciones de todo tipo y compartirlas con el mundo entero.
                             </p>
 
                             <div className="flex flex-wrap gap-4 pt-4">
@@ -124,7 +124,9 @@ export default function AboutPage() {
                                     <Github size={20} /> GitHub
                                 </a>
                                 <a
-                                    href="#"
+                                    href="https://www.linkedin.com/in/rayelus/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="px-6 py-3 border-2 border-white/20 rounded-full font-bold hover:bg-blue-600/20 hover:border-blue-500/50 transition-colors flex items-center gap-2 text-blue-400"
                                 >
                                     <Linkedin size={20} /> LinkedIn
