@@ -91,20 +91,20 @@ export default function HomeHero({
                     >
                         <span className="flex h-2 w-2 rounded-full bg-sky-400 mr-2 animate-pulse shadow-[0_0_10px_#38bdf8]" />
                         <span className="text-xs font-medium tracking-[0.2em] text-gray-300 uppercase">
-                            Evento Oficial
+                            Evento
                         </span>
                     </motion.div>
 
                     <motion.h1
                         variants={itemVariants}
-                        className="text-5xl md:text-8xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40 mb-6 drop-shadow-2xl break-words w-full"
+                        className="text-4xl md:text-8xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40 mb-6 drop-shadow-2xl break-words w-full"
                     >
                         {title}
                     </motion.h1>
 
                     <motion.p
                         variants={itemVariants}
-                        className="text-lg md:text-xl text-gray-400 max-w-2xl mb-12 font-light leading-relaxed overflow-y-auto max-h-[200px] break-words tail-line-clamp-3"
+                        className="text-sm md:text-xl text-gray-400 max-w-xs md:max-w-2xl mb-12 font-light leading-relaxed overflow-y-auto max-h-[200px] break-words tail-line-clamp-3"
                     >
                         {description}
                     </motion.p>
