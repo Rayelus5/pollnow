@@ -14,7 +14,7 @@ export async function getEventStats(eventId: string) {
                     _count: { select: { votes: true } },
                     options: {
                         include: {
-                            participant: true, // nombre / imagen del nominado
+                            participant: true,
                             votes: {
                                 include: {
                                     vote: {
@@ -29,7 +29,9 @@ export async function getEventStats(eventId: string) {
                         }
                     }
                 }
-            }
+            },
+            _count: { select: { likes: true } },
+            eventVotes: { select: { value: true } },
         }
     });
 
@@ -87,13 +89,21 @@ export async function getEventStats(eventId: string) {
         .map(([date, count]) => ({ date, count }))
         .reverse();
 
+    const likeCount = event._count.likes;
+    const upvotes = event.eventVotes.filter((v) => v.value === 1).length;
+    const downvotes = event.eventVotes.filter((v) => v.value === -1).length;
+    const voteScore = upvotes - downvotes;
+
     return {
         totalVotes,
         totalPolls,
         votesByPoll,
         activityTimeline,
         pollsDetail,
-        // Para saber en el front si se deben mostrar identidades
         isAnonymousConfig: event.isAnonymousVoting,
+        likeCount,
+        upvotes,
+        downvotes,
+        voteScore,
     };
 }

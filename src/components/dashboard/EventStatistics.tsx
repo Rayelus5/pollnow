@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, TrendingUp, Users, Lock, ChevronRight, X } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Lock, ChevronRight, X, Heart, ThumbsUp, ThumbsDown } from "lucide-react";
 import Link from "next/link";
 // import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,6 +34,10 @@ type StatsData = {
     activityTimeline: { date: string; count: number }[];
     pollsDetail: PollDetail[];
     isAnonymousConfig: boolean;
+    likeCount: number;
+    upvotes: number;
+    downvotes: number;
+    voteScore: number;
 };
 
 type Props = {
@@ -62,6 +66,10 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
             activityTimeline: [],
             pollsDetail: [],
             isAnonymousConfig: true,
+            likeCount: 0,
+            upvotes: 0,
+            downvotes: 0,
+            voteScore: 0,
         };
 
     // (por si en el futuro dibujas timeline)
@@ -99,7 +107,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                 className={`space-y-8 transition-all ${isFree ? "opacity-20 filter blur-sm pointer-events-none select-none" : ""
                     }`}
             >
-                {/* 1. KPIs */}
+                {/* 1. KPIs — votaciones */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <KpiCard
                         title="Votos Totales"
@@ -113,11 +121,48 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                     />
                     <KpiCard
                         title="Participación"
-                        value={
-                            displayStats.totalVotes > 0 ? "Activa" : "Sin datos"
-                        }
+                        value={displayStats.totalVotes > 0 ? "Activa" : "Sin datos"}
                         icon={<Users className="text-green-400" />}
                         subtext="Estado del evento"
+                    />
+                </div>
+
+                {/* 2. KPIs — valoración del evento */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <KpiCard
+                        title="Me gusta"
+                        value={displayStats.likeCount}
+                        icon={<Heart className="text-rose-400 fill-rose-400" />}
+                        subtext="Likes recibidos"
+                        accent="rose"
+                    />
+                    <KpiCard
+                        title="Upvotes / Downvotes"
+                        value={`${displayStats.upvotes} / ${displayStats.downvotes}`}
+                        icon={
+                            <div className="flex gap-1">
+                                <ThumbsUp className="text-emerald-400" size={18} />
+                                <ThumbsDown className="text-red-400" size={18} />
+                            </div>
+                        }
+                        subtext="Valoraciones del evento"
+                    />
+                    <KpiCard
+                        title="Score neto"
+                        value={displayStats.voteScore > 0 ? `+${displayStats.voteScore}` : displayStats.voteScore}
+                        icon={
+                            displayStats.voteScore >= 0
+                                ? <TrendingUp className="text-emerald-400" />
+                                : <TrendingUp className="text-red-400 rotate-180" />
+                        }
+                        subtext={
+                            displayStats.voteScore > 0
+                                ? "Valoración positiva"
+                                : displayStats.voteScore < 0
+                                    ? "Valoración negativa"
+                                    : "Sin valoraciones"
+                        }
+                        accent={displayStats.voteScore > 0 ? "emerald" : displayStats.voteScore < 0 ? "red" : undefined}
                     />
                 </div>
 
@@ -370,21 +415,40 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
     );
 }
 
-function KpiCard({ title, value, icon, subtext }: any) {
+const ACCENT_CLASSES: Record<string, { border: string; bg: string; text: string }> = {
+    rose:    { border: "border-rose-500/20",    bg: "bg-rose-500/5",    text: "text-rose-400" },
+    emerald: { border: "border-emerald-500/20", bg: "bg-emerald-500/5", text: "text-emerald-400" },
+    red:     { border: "border-red-500/20",     bg: "bg-red-500/5",     text: "text-red-400" },
+};
+
+function KpiCard({
+    title,
+    value,
+    icon,
+    subtext,
+    accent,
+}: {
+    title: string;
+    value: string | number;
+    icon: React.ReactNode;
+    subtext?: string;
+    accent?: string;
+}) {
+    const a = accent ? ACCENT_CLASSES[accent] : null;
     return (
-        <div className="bg-neutral-900/50 border-2 border-white/10 rounded-2xl p-6 flex items-start justify-between">
+        <div className={`bg-neutral-900/50 border-2 rounded-2xl p-6 flex items-start justify-between ${a ? `${a.border} ${a.bg}` : "border-white/10"}`}>
             <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
                     {title}
                 </p>
                 <h4 className="text-3xl font-black text-white">{value}</h4>
                 {subtext && (
-                    <p className="text-xs text-green-400 mt-1 font-medium">
+                    <p className={`text-xs mt-1 font-medium ${a ? a.text : "text-green-400"}`}>
                         {subtext}
                     </p>
                 )}
             </div>
-            <div className="p-3 bg-white/5 rounded-xl border-2 border-white/5">
+            <div className={`p-3 rounded-xl border-2 ${a ? `${a.bg} ${a.border}` : "bg-white/5 border-white/5"}`}>
                 {icon}
             </div>
         </div>
@@ -398,4 +462,8 @@ const MOCK_STATS: StatsData = {
     activityTimeline: [],
     pollsDetail: [],
     isAnonymousConfig: true,
+    likeCount: 47,
+    upvotes: 31,
+    downvotes: 4,
+    voteScore: 27,
 };

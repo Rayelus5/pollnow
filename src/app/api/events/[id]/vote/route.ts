@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -10,8 +11,18 @@ export async function POST(req: Request, { params }: Props) {
         return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
+    // Rate limit: 20 votes/min per user
+    const { allowed, retryAfter } = rateLimit(`vote:${session.user.id}`, 20);
+    if (!allowed) {
+        return NextResponse.json(
+            { error: "Demasiadas peticiones. Inténtalo en unos segundos." },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        );
+    }
+
     const { id: eventId } = await params;
-    const { value } = await req.json();
+    const body = await req.json().catch(() => null);
+    const { value } = body ?? {};
     const userId = session.user.id;
 
     if (value !== 1 && value !== -1) {
@@ -22,11 +33,11 @@ export async function POST(req: Request, { params }: Props) {
         where: { eventId_userId: { eventId, userId } },
     });
 
-    if (existing && existing.value === value) {
-        // Mismo voto → toggle off (eliminar)
-        await prisma.eventVote.delete({ where: { id: existing.id } });
+    const isToggleOff = existing?.value === value;
+
+    if (isToggleOff) {
+        await prisma.eventVote.delete({ where: { id: existing!.id } });
     } else {
-        // Nuevo voto o cambio de voto → upsert
         await prisma.eventVote.upsert({
             where: { eventId_userId: { eventId, userId } },
             create: { eventId, userId, value },
@@ -39,7 +50,9 @@ export async function POST(req: Request, { params }: Props) {
         select: { value: true },
     });
     const score = votes.reduce((acc, v) => acc + v.value, 0);
-    const userVote = existing?.value === value ? null : value;
 
-    return NextResponse.json({ userVote, score });
+    return NextResponse.json({
+        userVote: isToggleOff ? null : (value as 1 | -1),
+        score,
+    });
 }

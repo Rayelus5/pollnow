@@ -5,6 +5,7 @@ import { useState } from "react";
 import { motion, Variants } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Heart, ThumbsUp, ThumbsDown } from "lucide-react";
 import { CustomAdBannerVertical } from "@/components/ads/CustomAdBannerVertical";
 import { Bouncy } from "ldrs/react";
 import "ldrs/react/Bouncy.css";
@@ -14,10 +15,19 @@ type Poll = {
     title: string;
 };
 
+type EventStats = {
+    likeCount: number;
+    voteScore: number;
+    upvotes: number;
+    downvotes: number;
+};
+
 type Props = {
     polls: Poll[];
     eventSlug: string;
-    showAds?: boolean; // controlar banners laterales
+    lobbyHref?: string;
+    showAds?: boolean;
+    eventStats?: EventStats;
 };
 
 const containerVariants: Variants = {
@@ -41,8 +51,11 @@ const itemVariants: Variants = {
 export default function GlobalResultsClient({
     polls,
     eventSlug,
+    lobbyHref,
     showAds = true,
+    eventStats,
 }: Props) {
+    const resolvedLobbyHref = lobbyHref ?? `/e/${eventSlug}`;
     const router = useRouter();
     const [loadingPollId, setLoadingPollId] = useState<string | null>(null);
 
@@ -93,20 +106,54 @@ export default function GlobalResultsClient({
                     {/* HEADER */}
                     <motion.header
                         variants={itemVariants}
-                        className="py-8 border-b-2 border-white/10 mb-10 flex flex-col md:flex-row justify-between items-center gap-6"
+                        className="py-8 border-b-2 border-white/10 mb-10 flex flex-col md:flex-row justify-between items-start gap-6"
                     >
-                        <div>
+                        <div className="space-y-3">
                             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                                 Ceremonia de premios
                             </h1>
-                            <p className="text-gray-400 mt-2 text-lg font-light">
+                            <p className="text-gray-400 text-lg font-light">
                                 Comienza la gala de premios del evento.
                             </p>
+
+                            {/* Event stats */}
+                            {eventStats && (
+                                <div className="flex flex-wrap items-center gap-2 pt-1">
+                                    {/* Likes */}
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 border border-rose-500/25 rounded-full text-xs font-semibold text-rose-400">
+                                        <Heart size={12} className="fill-rose-400" />
+                                        <span>{eventStats.likeCount} {eventStats.likeCount === 1 ? "like" : "likes"}</span>
+                                    </div>
+
+                                    {/* Upvotes */}
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/25 rounded-full text-xs font-semibold text-emerald-400">
+                                        <ThumbsUp size={12} className="fill-emerald-400" />
+                                        <span>{eventStats.upvotes}</span>
+                                    </div>
+
+                                    {/* Downvotes */}
+                                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 border border-red-500/25 rounded-full text-xs font-semibold text-red-400">
+                                        <ThumbsDown size={12} className="fill-red-400" />
+                                        <span>{eventStats.downvotes}</span>
+                                    </div>
+
+                                    {/* Score */}
+                                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold font-mono border ${
+                                        eventStats.voteScore > 0
+                                            ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-400"
+                                            : eventStats.voteScore < 0
+                                                ? "bg-red-500/8 border-red-500/20 text-red-400"
+                                                : "bg-white/5 border-white/10 text-gray-500"
+                                    }`}>
+                                        Score: {eventStats.voteScore > 0 ? `+${eventStats.voteScore}` : eventStats.voteScore}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <Link
-                            href={`/e/${eventSlug}`}
-                            className="group relative px-6 py-2 rounded-full overflow-hidden bg-white/5 border-2 border-white/10 hover:border-white/30 transition-colors"
+                            href={resolvedLobbyHref}
+                            className="group relative px-6 py-2 rounded-full overflow-hidden bg-white/5 border-2 border-white/10 hover:border-white/30 transition-colors shrink-0"
                         >
                             <span className="relative z-10 text-sm font-bold text-gray-300 group-hover:text-white transition-colors">
                                 Volver al Lobby

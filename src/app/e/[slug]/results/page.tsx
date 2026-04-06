@@ -3,7 +3,6 @@ import { redirect, notFound } from "next/navigation";
 import GlobalResultsClient from "@/components/GlobalResultsClient";
 import { getCurrentUserPlan } from "@/lib/user-plan";
 
-
 type Props = {
     params: Promise<{ slug: string }>
 }
@@ -13,7 +12,6 @@ export const dynamic = "force-dynamic";
 export default async function EventGalaPage({ params }: Props) {
     const { slug } = await params;
 
-    // 1. Buscar el evento y sus encuestas
     const event = await prisma.event.findUnique({
         where: { slug },
         include: {
@@ -21,25 +19,40 @@ export default async function EventGalaPage({ params }: Props) {
                 where: { isPublished: true },
                 orderBy: { order: 'asc' },
                 select: { id: true, title: true }
-            }
+            },
+            _count: { select: { likes: true } },
+            eventVotes: { select: { value: true } },
         }
     });
 
     if (!event) notFound();
 
-    // 2. SEGURIDAD: Comprobar la fecha DE ESTE EVENTO
     const galaDate = event.galaDate || new Date('2030-01-01');
     const now = new Date();
 
     const plan = await getCurrentUserPlan();
-    const showAds = plan.slug === "free" || plan.slug === "premium"; // solo UNLIMITED NO ven anuncios
+    const showAds = plan.slug === "free" || plan.slug === "premium";
 
-    // Si intentan entrar antes de tiempo, los mandamos al Lobby del evento
     if (now < galaDate) {
         redirect(`/e/${slug}`);
     }
 
-    // 3. Renderizar Cliente (Reutilizamos tu componente visual)
-    // Le pasamos también el slug para que el botón "Volver" sepa a dónde ir
-    return <GlobalResultsClient polls={event.polls} eventSlug={slug} showAds={showAds} />;
+    const likeCount = event._count.likes;
+    const voteScore = event.eventVotes.reduce((acc, v) => acc + v.value, 0);
+    const upvotes = event.eventVotes.filter(v => v.value === 1).length;
+    const downvotes = event.eventVotes.filter(v => v.value === -1).length;
+
+    const lobbyHref = event.isPublic
+        ? `/e/${slug}`
+        : `/e/${slug}?key=${event.accessKey}`;
+
+    return (
+        <GlobalResultsClient
+            polls={event.polls}
+            eventSlug={slug}
+            lobbyHref={lobbyHref}
+            showAds={showAds}
+            eventStats={{ likeCount, voteScore, upvotes, downvotes }}
+        />
+    );
 }

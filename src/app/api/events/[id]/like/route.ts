@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 type Props = { params: Promise<{ id: string }> };
 
-export async function POST(_req: Request, { params }: Props) {
+export async function POST(req: Request, { params }: Props) {
     const session = await auth();
     if (!session?.user?.id) {
         return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    // Rate limit: 15 likes/min per user
+    const { allowed, retryAfter } = rateLimit(`like:${session.user.id}`, 15);
+    if (!allowed) {
+        return NextResponse.json(
+            { error: "Demasiadas peticiones. Inténtalo en unos segundos." },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        );
     }
 
     const { id: eventId } = await params;

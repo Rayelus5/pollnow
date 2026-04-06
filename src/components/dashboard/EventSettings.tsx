@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { updateEvent, deleteEvent, rotateEventKey, requestEventPublication } from "@/app/lib/dashboard-actions"; // Importa requestEventPublication (asegúrate de que esté exportada donde la pusiste, si fue en dashboard-actions o event-actions)
-// Nota: Si pusiste requestEventPublication en dashboard-actions.ts, impórtala de ahí.
-// Si prefieres tener todo lo del evento en un solo sitio, muévela a event-actions.ts. 
-// Asumiré que la pusiste en dashboard-actions.ts como en el paso anterior.
-
+import { updateEvent, deleteEvent, rotateEventKey, requestEventPublication } from "@/app/lib/dashboard-actions";
+import TagsInput from "@/components/ui/TagsInput";
 import { Save, Trash2, AlertTriangle, RefreshCw, Copy, Send, Clock, Check, CheckCircle, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from 'react-dom';
@@ -21,8 +18,9 @@ type EventData = {
     slug: string;
     accessKey: string;
     isAnonymousVoting: boolean;
-    status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'DENIED'; // Nuevo campo
-    reviewReason: string | null; // Nuevo campo
+    tags: string[];
+    status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'DENIED';
+    reviewReason: string | null;
 };
 
 function formatLocalDatetime(date: Date | string | null) {
@@ -55,6 +53,7 @@ function SubmitButton() {
 
 export default function EventSettings({ event, planSlug }: { event: EventData, planSlug: string }) {
     const [currentEvent, setCurrentEvent] = useState(event);
+    const [tags, setTags] = useState<string[]>(event.tags ?? []);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isRegenerating, setIsRegenerating] = useState(false);
@@ -85,7 +84,17 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
             }`;
 
         const fullUrl = `${origin}${path}`;
-        await navigator.clipboard.writeText(fullUrl);
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(fullUrl);
+        } else {
+            const ta = document.createElement("textarea");
+            ta.value = fullUrl;
+            ta.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+        }
 
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
@@ -100,6 +109,9 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                 formData.delete('isAnonymousVoting');
             }
         }
+        // Inject current tags state into formData
+        formData.set('tags', tags.join(','));
+
         const galaDateString = formData.get('galaDate') as string | null;
         const galaDate = galaDateString ? new Date(galaDateString) : null;
         const newIsAnonymous = formData.get('isAnonymousVoting') === 'on';
@@ -112,6 +124,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
             isPublic: newIsPublic,
             isAnonymousVoting: newIsAnonymous,
             galaDate: galaDate,
+            tags,
         }));
 
         await updateEvent(event.id, formData);
@@ -192,6 +205,10 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
                         <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Etiquetas</label>
+                        <TagsInput value={tags} onChange={setTags} name="tags" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>

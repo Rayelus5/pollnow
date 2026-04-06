@@ -121,6 +121,10 @@ export async function updateEvent(eventId: string, formData: FormData) {
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const galaDateStr = formData.get("galaDate") as string;
+  const tagsRaw = formData.get("tags") as string | null;
+  const tags = tagsRaw
+    ? tagsRaw.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
+    : [];
 
   const isPublicInput = formData.get("isPublic") === "on";
   const isAnonymousVoting = formData.get("isAnonymousVoting") === "on";
@@ -148,6 +152,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
       galaDate,
       isPublic: newIsPublic,
       isAnonymousVoting,
+      tags,
     },
   });
 
