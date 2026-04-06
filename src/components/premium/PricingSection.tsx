@@ -81,7 +81,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="mb-20"
             >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/20 border border-indigo-600/40 mb-6 backdrop-blur-sm">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/20 border-2 border-indigo-600/40 mb-6 backdrop-blur-sm">
                     <Sparkles size={12} className="text-indigo-400" />
                     <span className="text-xs font-bold text-indigo-300 tracking-widest uppercase">Upgrade your party</span>
                 </div>
@@ -124,7 +124,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                     colSpanClass
                                 )}
                             >
-                                <div className="relative overflow-hidden rounded-[2rem] border border-blue-600/40 bg-gradient-to-r from-blue-900/60 via-black to-indigo-400/70 p-[1px] cursor-pointer hover:scale-102 transition-all duration-300">
+                                <div className="relative overflow-hidden rounded-[2rem] border-2 border-blue-600/40 bg-gradient-to-r from-blue-900/60 via-black to-indigo-400/70 p-[1px] cursor-pointer hover:scale-102 transition-all duration-300">
                                     <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 px-8 py-12 md:py-20 bg-black/80 rounded-[2rem]">
                                         {/* Glow decorativo */}
                                         <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
@@ -132,7 +132,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
 
                                         {/* Texto principal */}
                                         <div className="relative text-left max-w-2xl">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border border-blue-600/40 mb-4">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/40 border-2 border-blue-600/40 mb-4">
                                                 <Sparkles size={12} className="text-blue-300" />
                                                 <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-blue-200">
                                                     Perfecto para profesionales
@@ -169,7 +169,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
 
                                                 <div className="flex items-baseline items-center gap-3 justify-start md:justify-end mt-5 md:mt-0">
                                                     {/* Original price (tached) */}
-                                                    <div className="flex flex-col justify-end p-2 rounded-xl bg-blue-950/40 border border-blue-400/30">
+                                                    <div className="flex flex-col justify-end p-2 rounded-xl bg-blue-950/40 border-2 border-blue-400/30">
                                                         <span
                                                             className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs md:text-sm justify-center font-semibold bg-blue-600 text-white"
                                                             aria-hidden="true"
@@ -205,7 +205,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                                 plan.priceId ? (
                                                     <ManageButton />
                                                 ) : (
-                                                    <div className="w-full py-3 rounded-xl font-bold border border-green-500/30 text-green-400 bg-green-500/5 cursor-default flex items-center justify-center gap-2">
+                                                    <div className="w-full py-3 rounded-xl font-bold border-2 border-green-500/30 text-green-400 bg-green-500/5 cursor-default flex items-center justify-center gap-2">
                                                         <Check size={16} /> Plan Actual
                                                     </div>
                                                 )
@@ -214,7 +214,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                             ) : (
                                                 <Link
                                                     href="/about#contact"
-                                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm md:text-base bg-white text-black hover:bg-gray-100 transition-colors border border-white/10"
+                                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm md:text-base bg-white text-black hover:bg-gray-100 transition-colors border-2 border-white/10"
                                                 >
                                                     Contactar
                                                     <ArrowRight size={16} />
@@ -294,14 +294,14 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                             <ManageButton />
                                         </div>
                                     ) : (
-                                        <div className="w-full py-3 rounded-xl font-bold border border-green-500/30 text-green-400 bg-green-500/5 cursor-default flex items-center justify-center gap-2">
+                                        <div className="w-full py-3 rounded-xl font-bold border-2 border-green-500/30 text-green-400 bg-green-500/5 cursor-default flex items-center justify-center gap-2">
                                             <Check size={16} /> Plan Actual
                                         </div>
                                     )
                                 ) : plan.priceId ? (
                                     <CheckoutButton priceId={plan.priceId} highlight={plan.highlight || false} />
                                 ) : (
-                                    <button className="w-full py-3 rounded-xl font-bold border border-white/10 text-gray-400 cursor-not-allowed bg-white/5">
+                                    <button className="w-full py-3 rounded-xl font-bold border-2 border-white/10 text-gray-400 cursor-not-allowed bg-white/5">
                                         Incluido
                                     </button>
                                 )}
@@ -318,7 +318,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 animate="visible"
                 className="mt-10 w-full"
             >
-                <div className="relative overflow-hidden rounded-[2rem] border border-indigo-600/40 bg-gradient-to-r from-indigo-900/60 via-black to-indigo-400/70 p-[1px] cursor-pointer hover:scale-102 transition-all duration-300 ">
+                <div className="relative overflow-hidden rounded-[2rem] border-2 border-indigo-600/40 bg-gradient-to-r from-indigo-900/60 via-black to-indigo-400/70 p-[1px] cursor-pointer hover:scale-102 transition-all duration-300 ">
                     <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 px-8 py-12 md:py-20 bg-black/80 rounded-[2rem]">
                         {/* Glow decorativo */}
                         <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-indigo-600/20 blur-3xl" />
@@ -326,7 +326,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
 
                         {/* Texto principal */}
                         <div className="relative text-left max-w-2xl">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/40 border border-indigo-600/40 mb-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/40 border-2 border-indigo-600/40 mb-4">
                                 <Sparkles size={12} className="text-indigo-300" />
                                 <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-indigo-200">
                                     Para empresas y grandes creadores
@@ -396,7 +396,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
 
                             <Link
                                 href="/about#contact"
-                                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm md:text-base bg-white text-black hover:bg-gray-100 transition-colors border border-white/10"
+                                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm md:text-base bg-white text-black hover:bg-gray-100 transition-colors border-2 border-white/10"
                             >
                                 Hablar sobre Enterprise
                                 <ArrowRight size={16} />

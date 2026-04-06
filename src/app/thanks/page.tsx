@@ -42,7 +42,7 @@ export default function ThanksPage() {
                     variants={fadeInUp}
                     className="flex justify-center mb-6"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border-2 border-white/10 backdrop-blur-sm">
                         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                         <span className="text-[11px] font-medium text-gray-300 tracking-[0.25em] uppercase">
                             Mensaje enviado
@@ -53,7 +53,7 @@ export default function ThanksPage() {
                 {/* Tarjeta principal */}
                 <motion.div
                     variants={fadeInUp}
-                    className="bg-neutral-900/60 border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-xl"
+                    className="bg-neutral-900/60 border-2 border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-xl"
                 >
                     {/* Icono */}
                     <div className="flex flex-col items-center text-center gap-5 mb-6">
@@ -65,14 +65,14 @@ export default function ThanksPage() {
                                 ¡Gracias por tu mensaje!
                             </h1>
                             <p className="text-sm md:text-base text-gray-400 max-w-md mx-auto leading-relaxed">
-                                Hemos recibido correctamente tu formulario. 
+                                Hemos recibido correctamente tu formulario.
                                 Revisaremos tu mensaje y, si es necesario, nos pondremos en contacto contigo lo antes posible.
                             </p>
                         </div>
                     </div>
 
                     {/* Bloque informativo */}
-                    <div className="mb-8 rounded-2xl border border-white/10 bg-black/40 px-5 py-4 text-sm text-gray-300">
+                    <div className="mb-8 rounded-2xl border-2 border-white/10 bg-black/40 px-5 py-4 text-sm text-gray-300">
                         <p className="mb-1 font-medium text-gray-100">
                             ¿Qué puedes hacer ahora?
                         </p>
@@ -93,7 +93,7 @@ export default function ThanksPage() {
 
                         <Link
                             href="/about#contact"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-white/20 text-gray-200 font-semibold text-sm md:text-base hover:bg-white/10 hover:border-blue-400/60 transition-colors"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border-2 border-white/20 text-gray-200 font-semibold text-sm md:text-base hover:bg-white/10 hover:border-blue-400/60 transition-colors"
                         >
                             <ArrowRight size={18} />
                             Enviar otro mensaje

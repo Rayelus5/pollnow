@@ -223,7 +223,7 @@ export default function VotingForm({
             >
                 <Link
                     href={`/e/${eventSlug}`}
-                    className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10"
+                    className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 border-2 border-transparent hover:border-white/10"
                 >
                     <svg
                         className="w-4 h-4 transition-transform group-hover:-translate-x-1"
@@ -256,12 +256,12 @@ export default function VotingForm({
                 <div className="flex justify-center mt-2">
                     <span
                         className={clsx(
-                            "inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] uppercase tracking-wide",
+                            "inline-flex items-center gap-2 px-3 py-1 rounded-full border-2 text-[11px] uppercase tracking-wide",
                             poll.votingType === "SINGLE"
                                 ? "bg-green-500/10 text-green-500 border-green-500/20"
                                 : poll.votingType === "MULTIPLE"
-                                ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                                : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                                    ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                    : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
                         )}
                     >
                         {votingTypeLabel}
@@ -276,7 +276,7 @@ export default function VotingForm({
                     animate={{ marginBottom: 24, opacity: 1, filter: "blur(0px)", transform: "scale(1)" }}
                     className="mb-8 max-w-xl mx-auto overflow-hidden"
                 >
-                    <div className="p-4 bg-blue-500/10 border border-blue-500/50 rounded-xl text-center">
+                    <div className="p-4 bg-blue-500/10 border-2 border-blue-500/50 rounded-xl text-center">
                         <p className="text-blue-500 font-bold flex items-center justify-center gap-2">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -316,8 +316,8 @@ export default function VotingForm({
                                         ? "ring-4 ring-green-500 opacity-100 z-10 cursor-default shadow-[0_0_30px_rgba(34,197,94,0.4)]"
                                         : "opacity-20 grayscale ring-0 cursor-not-allowed"
                                     : isSelected
-                                    ? "ring-4 ring-blue-500 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] z-10"
-                                    : "ring-1 ring-white/10 hover:ring-white/30"
+                                        ? "ring-4 ring-blue-500 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] z-10"
+                                        : "ring-1 ring-white/10 hover:ring-white/30"
                             )}
                         >
                             {/* Imagen */}
@@ -331,8 +331,8 @@ export default function VotingForm({
                                             isSelected
                                                 ? "scale-110 grayscale-0"
                                                 : hasVoted
-                                                ? "grayscale"
-                                                : "grayscale-[0.5] group-hover:grayscale-0 scale-100"
+                                                    ? "grayscale"
+                                                    : "grayscale-[0.5] group-hover:grayscale-0 scale-100"
                                         )}
                                     />
                                 ) : (

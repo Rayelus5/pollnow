@@ -38,7 +38,7 @@ export default function RootLayout({
 
         {/* FOOTER (solo si no está en mantenimiento) */}
         {showUI && (
-          <footer className="py-8 text-center text-sm text-gray-300 border-t border-white/15">
+          <footer className="py-8 text-center text-sm text-gray-300 border-t-2 border-white/15">
             <div className="flex justify-center gap-6 mb-4">
               <Link href="/legal/terms" className="hover:text-white transition-colors">Términos</Link>
               <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacidad</Link>

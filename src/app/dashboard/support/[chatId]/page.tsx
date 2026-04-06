@@ -41,7 +41,7 @@ export default async function UserSupportChatPage({ params }: Props) {
 
     return (
         <main className="min-h-screen bg-black text-white">
-            <header className="border-b border-white/10 bg-neutral-900/30">
+            <header className="border-b-2 border-white/10 bg-neutral-900/30">
                 <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
                     <div>
                         <div className="text-xs text-gray-400 mb-1">

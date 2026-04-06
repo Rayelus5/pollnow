@@ -156,7 +156,7 @@ function CategoryRow({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-white/8 overflow-hidden bg-white/3">
+    <div className="rounded-xl border-2 border-white/8 overflow-hidden bg-white/3">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3">
         <span className="text-blue-400 shrink-0">{cat.icon}</span>
@@ -164,7 +164,7 @@ function CategoryRow({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-white">{cat.name}</span>
             {cat.required && (
-              <span className="text-[10px] uppercase tracking-wider text-blue-400 border border-blue-400/30 rounded-full px-1.5 py-0.5 leading-none">
+              <span className="text-[10px] uppercase tracking-wider text-blue-400 border-2 border-blue-400/30 rounded-full px-1.5 py-0.5 leading-none">
                 Requerida
               </span>
             )}
@@ -199,7 +199,7 @@ function CategoryRow({
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/8 px-4 py-3 space-y-2">
+            <div className="border-t-2 border-white/8 px-4 py-3 space-y-2">
               {cat.cookies.map((c) => (
                 <div key={c.name} className="flex gap-3 text-xs text-gray-400">
                   <code className="text-blue-300 font-mono shrink-0 text-[11px] mt-px">
@@ -290,13 +290,13 @@ export default function CookieConsent() {
             className="fixed bottom-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg"
             style={{ x: "-50%" }}
           >
-            <div className="relative rounded-2xl border border-white/10 bg-zinc-950/95 backdrop-blur-xl shadow-2xl shadow-black/60 overflow-hidden">
+            <div className="relative rounded-2xl border-2 border-white/10 bg-zinc-950/95 backdrop-blur-xl shadow-2xl shadow-black/60 overflow-hidden">
               {/* Top accent line */}
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
 
               {/* ── Compact header (always visible) ── */}
               <div className="flex items-start gap-3 px-4 pt-4 pb-3">
-                <div className="mt-0.5 shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                <div className="mt-0.5 shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 border-2 border-blue-500/20 text-blue-400">
                   <Cookie size={15} />
                 </div>
 
@@ -355,7 +355,7 @@ export default function CookieConsent() {
                   <>
                     <button
                       onClick={saveCustom}
-                      className="flex-1 min-w-0 flex items-center justify-center gap-1.5 rounded-full border border-white/15 py-2 px-4 text-xs font-medium text-white hover:bg-white/5 transition-colors"
+                      className="flex-1 min-w-0 flex items-center justify-center gap-1.5 rounded-full border-2 border-white/15 py-2 px-4 text-xs font-medium text-white hover:bg-white/5 transition-colors"
                     >
                       <Check size={12} />
                       Guardar selección
@@ -371,14 +371,14 @@ export default function CookieConsent() {
                   <>
                     <button
                       onClick={() => setExpanded(true)}
-                      className="flex items-center gap-1.5 rounded-full border border-white/15 py-2 px-4 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                      className="flex items-center gap-1.5 rounded-full border-2 border-white/15 py-2 px-4 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
                       <Settings2 size={12} />
                       Gestionar
                     </button>
                     <button
                       onClick={() => accept(false)}
-                      className="flex-1 rounded-full border border-white/15 py-2 px-4 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                      className="flex-1 rounded-full border-2 border-white/15 py-2 px-4 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
                       Solo esenciales
                     </button>

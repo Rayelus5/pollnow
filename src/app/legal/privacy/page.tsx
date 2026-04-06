@@ -13,7 +13,7 @@ export default function PrivacyPage() {
 
             <section className="mt-10 space-y-3">
                 <h3>1. Responsable del Tratamiento</h3>
-                <p className="bg-neutral-800 p-4 rounded-2xl text-gray-400 border border-white/15">
+                <p className="bg-neutral-800 p-4 rounded-2xl text-gray-400 border-2 border-white/15">
                     <strong>Titular:</strong> Raimundo Palma Méndez (Rayelus)
                     <br />
                     <strong>DNI:</strong> 54184186G

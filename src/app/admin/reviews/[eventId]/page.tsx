@@ -42,7 +42,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
 
     return (
         <div className="max-w-7xl mx-auto pb-20">
-            
+
             {/* Header de Navegación */}
             <div className="mb-8">
                 <Link href="/admin/reviews" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-4">
@@ -52,11 +52,10 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
                     <div>
                         <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
                             {event.title}
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                                event.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30' :
-                                event.status === 'APPROVED' ? 'bg-green-500/20 text-green-500 border-green-500/30' :
-                                'bg-red-500/20 text-red-500 border-red-500/30'
-                            }`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${event.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30' :
+                                    event.status === 'APPROVED' ? 'bg-green-500/20 text-green-500 border-green-500/30' :
+                                        'bg-red-500/20 text-red-500 border-red-500/30'
+                                }`}>
                                 {event.status}
                             </span>
                         </h1>
@@ -66,8 +65,8 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
                         </div>
                     </div>
 
-                    <Link 
-                        href={`/e/${event.slug}`} 
+                    <Link
+                        href={`/e/${event.slug}`}
                         target="_blank"
                         className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm font-medium transition-colors"
                     >
@@ -77,12 +76,12 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 {/* COLUMNA IZQUIERDA: DETALLES */}
                 <div className="lg:col-span-2 space-y-6">
-                    
+
                     {/* Descripción */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Descripción del Evento</h3>
                         <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
                             {event.description || <span className="italic text-gray-600">Sin descripción.</span>}
@@ -90,13 +89,13 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
                     </div>
 
                     {/* Categorías (Polls) */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
                             Categorías ({event.polls.length})
                         </h3>
                         <div className="space-y-3">
                             {event.polls.map(poll => (
-                                <div key={poll.id} className="p-3 bg-black/30 rounded-lg border border-white/5 flex justify-between items-center">
+                                <div key={poll.id} className="p-3 bg-black/30 rounded-lg border-2 border-white/5 flex justify-between items-center">
                                     <span className="font-medium text-gray-200">{poll.title}</span>
                                     <span className="text-xs text-gray-500">{poll._count.options} opciones</span>
                                 </div>
@@ -105,15 +104,15 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
                         </div>
                     </div>
 
-                     {/* Participantes */}
-                     <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+                    {/* Participantes */}
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
                             Participantes ({event.participants.length})
                         </h3>
                         <div className="flex flex-wrap gap-2">
                             {event.participants.map(p => (
-                                <div key={p.id} className="px-3 py-1.5 bg-black/30 rounded-full border border-white/5 text-xs text-gray-300 flex items-center gap-2">
-                                    {p.imageUrl && <div className="w-4 h-4 rounded-full bg-gray-700 overflow-hidden relative"><img src={p.imageUrl} alt="" className="w-full h-full object-cover"/></div>}
+                                <div key={p.id} className="px-3 py-1.5 bg-black/30 rounded-full border-2 border-white/5 text-xs text-gray-300 flex items-center gap-2">
+                                    {p.imageUrl && <div className="w-4 h-4 rounded-full bg-gray-700 overflow-hidden relative"><img src={p.imageUrl} alt="" className="w-full h-full object-cover" /></div>}
                                     {p.name}
                                 </div>
                             ))}
@@ -125,22 +124,21 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
 
                 {/* COLUMNA DERECHA: ACCIONES Y USUARIO */}
                 <div className="space-y-6">
-                    
+
                     {/* Acciones de Moderación */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 sticky top-6">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6 sticky top-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <ShieldCheck size={16} /> Acciones de Moderación
                         </h3>
-                        
+
                         {event.status === 'PENDING' ? (
                             <ReviewActions eventId={event.id} eventTitle={event.title} />
                         ) : (
-                            <div className={`p-4 rounded-lg text-center border ${
-                                event.status === 'APPROVED' ? 'bg-green-900/20 border-green-500/30 text-green-400' : 'bg-red-900/20 border-red-500/30 text-red-400'
-                            }`}>
+                            <div className={`p-4 rounded-lg text-center border-2 ${event.status === 'APPROVED' ? 'bg-green-900/20 border-green-500/30 text-green-400' : 'bg-red-900/20 border-red-500/30 text-red-400'
+                                }`}>
                                 <p className="font-bold mb-1">Este evento ya ha sido {event.status === 'APPROVED' ? 'aprobado' : 'rechazado'}.</p>
                                 {event.reviewReason && (
-                                    <p className="text-xs opacity-80 mt-2 pt-2 border-t border-white/10">
+                                    <p className="text-xs opacity-80 mt-2 pt-2 border-t-2 border-white/10">
                                         Motivo: {event.reviewReason}
                                     </p>
                                 )}
@@ -149,7 +147,7 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
                     </div>
 
                     {/* Información del Creador */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <User size={16} /> Creador
                         </h3>
@@ -166,8 +164,8 @@ export default async function ReviewDetailPage({ params }: { params: Promise<{ e
                                 <p className="text-xs text-gray-500">{event.user.email}</p>
                             </div>
                         </div>
-                        <Link 
-                            href={`/admin/users/${event.user.id}`} 
+                        <Link
+                            href={`/admin/users/${event.user.id}`}
                             className="block w-full py-2 text-center text-xs font-bold text-gray-400 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
                         >
                             Ver Perfil Completo

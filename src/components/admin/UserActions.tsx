@@ -187,7 +187,7 @@ export default function UserActions({ user }: { user: User }) {
     return (
         <div className="space-y-6">
             {/* DATOS BÁSICOS + PLAN */}
-            <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 space-y-4">
+            <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6 space-y-4">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                     <UserCog size={16} /> Datos de Usuario & Plan
                 </h3>
@@ -206,7 +206,7 @@ export default function UserActions({ user }: { user: User }) {
                                     name: e.target.value,
                                 }))
                             }
-                            className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+                            className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                         />
                     </div>
 
@@ -223,7 +223,7 @@ export default function UserActions({ user }: { user: User }) {
                                     username: e.target.value,
                                 }))
                             }
-                            className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+                            className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                         />
                     </div>
 
@@ -240,7 +240,7 @@ export default function UserActions({ user }: { user: User }) {
                                     email: e.target.value,
                                 }))
                             }
-                            className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+                            className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                         />
                     </div>
 
@@ -277,7 +277,7 @@ export default function UserActions({ user }: { user: User }) {
                                     };
                                 });
                             }}
-                            className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
+                            className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
                         >
                             <option value="free">Free</option>
                             <option value="premium">Premium</option>
@@ -299,7 +299,7 @@ export default function UserActions({ user }: { user: User }) {
                                     subscriptionEndDate: e.target.value,
                                 }))
                             }
-                            className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+                            className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                         />
                         <p className="text-[10px] text-gray-500 mt-1">
                             Déjalo vacío para borrar la fecha de fin.
@@ -329,12 +329,12 @@ export default function UserActions({ user }: { user: User }) {
                 </div>
 
                 {profileError && (
-                    <div className="mt-3 text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                    <div className="mt-3 text-xs text-red-400 bg-red-500/10 border-2 border-red-500/30 rounded-lg px-3 py-2">
                         {profileError}
                     </div>
                 )}
                 {profileSuccess && (
-                    <div className="mt-3 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2">
+                    <div className="mt-3 text-xs text-emerald-400 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-lg px-3 py-2">
                         {profileSuccess}
                     </div>
                 )}
@@ -355,7 +355,7 @@ export default function UserActions({ user }: { user: User }) {
             </div>
 
             {/* PERMISOS Y ROLES */}
-            <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+            <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                     <Shield size={16} /> Permisos y Roles
                 </h3>
@@ -365,11 +365,10 @@ export default function UserActions({ user }: { user: User }) {
                             key={r}
                             onClick={() => handleRoleChange(r)}
                             disabled={loading || role === r}
-                            className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all ${
-                                role === r
+                            className={`flex-1 py-2 rounded-lg text-xs font-bold border-2 transition-all ${role === r
                                     ? "bg-blue-600 border-blue-500 text-white cursor-default"
                                     : "bg-black border-white/10 text-gray-500 hover:text-white hover:border-white/30"
-                            }`}
+                                }`}
                         >
                             {r}
                         </button>
@@ -378,7 +377,7 @@ export default function UserActions({ user }: { user: User }) {
             </div>
 
             {/* CONTRASEÑA (admin reset) */}
-            <div className="bg-neutral-900 border border-amber-500/20 rounded-xl p-6 space-y-3">
+            <div className="bg-neutral-900 border-2 border-amber-500/20 rounded-xl p-6 space-y-3">
                 <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Lock size={16} /> Seguridad
                 </h3>
@@ -396,7 +395,7 @@ export default function UserActions({ user }: { user: User }) {
                             type="password"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
-                            className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+                            className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                         />
                     </div>
                     <div>
@@ -409,18 +408,18 @@ export default function UserActions({ user }: { user: User }) {
                             onChange={(e) =>
                                 setConfirmPassword(e.target.value)
                             }
-                            className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+                            className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                         />
                     </div>
                 </div>
 
                 {passwordError && (
-                    <div className="mt-3 text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                    <div className="mt-3 text-xs text-red-400 bg-red-500/10 border-2 border-red-500/30 rounded-lg px-3 py-2">
                         {passwordError}
                     </div>
                 )}
                 {passwordSuccess && (
-                    <div className="mt-3 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2">
+                    <div className="mt-3 text-xs text-emerald-400 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-lg px-3 py-2">
                         {passwordSuccess}
                     </div>
                 )}
@@ -441,12 +440,12 @@ export default function UserActions({ user }: { user: User }) {
             </div>
 
             {/* ZONA DE PELIGRO */}
-            <div className="bg-red-950/10 border border-red-500/20 rounded-xl p-6 space-y-4">
+            <div className="bg-red-950/10 border-2 border-red-500/20 rounded-xl p-6 space-y-4">
                 <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
                     <ShieldAlert size={16} /> BANEAR Y ELIMINAR
                 </h3>
 
-                <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border-2 border-white/5">
                     <div>
                         <p className="text-white text-sm font-bold">
                             Banear Usuario
@@ -458,11 +457,10 @@ export default function UserActions({ user }: { user: User }) {
                     <button
                         onClick={handleBanToggle}
                         disabled={loading}
-                        className={`px-4 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${
-                            user.ipBan
+                        className={`px-4 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${user.ipBan
                                 ? "bg-green-600 text-white hover:bg-green-500"
                                 : "bg-red-600 text-white hover:bg-red-500"
-                        }`}
+                            }`}
                     >
                         {user.ipBan ? "Desbloquear" : "Banear"}
                     </button>
@@ -471,7 +469,7 @@ export default function UserActions({ user }: { user: User }) {
                 <button
                     onClick={handleDelete}
                     disabled={loading}
-                    className="w-full py-3 text-xs font-bold text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 text-xs font-bold text-red-400 border-2 border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                     {loading ? (
                         <Bouncy size="45" speed="1.75" color="red" />

@@ -118,9 +118,9 @@ export default function AdminUsersTableClient({
     }
 
     return (
-        <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden mb-6">
+        <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden mb-6">
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+            <div className="flex items-center justify-between px-4 py-3 border-b-2 border-white/5">
                 <div className="flex items-center gap-3">
                     <label className="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" checked={allSelectedOnPage} onChange={toggleAll} className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function AdminUsersTableClient({
                     <button
                         onClick={() => doBatch("setRole", { role: "ADMIN" })}
                         disabled={!someSelected || loadingAction}
-                        className={clsx("px-3 py-1 text-sm rounded-md border", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-purple-600/10 border-purple-600 text-purple-300")}
+                        className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-purple-600/10 border-purple-600 text-purple-300")}
                     >
                         Hacer Admin
                     </button>
@@ -142,7 +142,7 @@ export default function AdminUsersTableClient({
                     <button
                         onClick={() => doBatch("setRole", { role: "MODERATOR" })}
                         disabled={!someSelected || loadingAction}
-                        className={clsx("px-3 py-1 text-sm rounded-md border", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-blue-600/10 border-blue-600 text-blue-300")}
+                        className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-blue-600/10 border-blue-600 text-blue-300")}
                     >
                         Hacer Moderador
                     </button>
@@ -150,7 +150,7 @@ export default function AdminUsersTableClient({
                     <button
                         onClick={() => doBatch("ban", { ban: true })}
                         disabled={!someSelected || loadingAction}
-                        className={clsx("px-3 py-1 text-sm rounded-md border", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-red-600/10 border-red-600 text-red-300")}
+                        className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-red-600/10 border-red-600 text-red-300")}
                     >
                         Banear
                     </button>
@@ -158,7 +158,7 @@ export default function AdminUsersTableClient({
                     <button
                         onClick={() => doBatch("ban", { ban: false })}
                         disabled={!someSelected || loadingAction}
-                        className={clsx("px-3 py-1 text-sm rounded-md border", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-emerald-600/10 border-emerald-600 text-emerald-300")}
+                        className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-emerald-600/10 border-emerald-600 text-emerald-300")}
                     >
                         Desbanear
                     </button>
@@ -166,7 +166,7 @@ export default function AdminUsersTableClient({
                     <button
                         onClick={() => doBatch("setPlan", { plan: "free" })}
                         disabled={!someSelected || loadingAction}
-                        className={clsx("px-3 py-1 text-sm rounded-md border", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-white/5 border-white/20 text-gray-200")}
+                        className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-white/5 border-white/20 text-gray-200")}
                     >
                         Marcar Free
                     </button>
@@ -174,7 +174,7 @@ export default function AdminUsersTableClient({
                     <button
                         onClick={() => doBatch("setPlan", { plan: "unlimited" })}
                         disabled={!someSelected || loadingAction}
-                        className={clsx("px-3 py-1 text-sm rounded-md border", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-indigo-600/10 border-indigo-600 text-indigo-300")}
+                        className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-indigo-600/10 border-indigo-600 text-indigo-300")}
                     >
                         Marcar Unlimited
                     </button>
@@ -182,7 +182,7 @@ export default function AdminUsersTableClient({
                     <button
                         onClick={() => doBatch("delete")}
                         disabled={!someSelected || loadingAction}
-                        className={clsx("px-3 py-1 text-sm rounded-md border", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-red-700/10 border-red-700 text-red-300")}
+                        className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-red-700/10 border-red-700 text-red-300")}
                     >
                         Eliminar
                     </button>
@@ -228,10 +228,10 @@ export default function AdminUsersTableClient({
 
                                 <td className="p-3">
                                     <div className="flex gap-2 items-center">
-                                        <span className={clsx("px-2 py-0.5 rounded text-[10px] font-bold uppercase border", u.role === "ADMIN" ? "bg-purple-900/20 text-purple-400 border-purple-500/20" : u.role === "MODERATOR" ? "bg-blue-900/20 text-blue-400 border-blue-500/20" : "bg-gray-800 text-gray-400 border-gray-700")}>
+                                        <span className={clsx("px-2 py-0.5 rounded text-[10px] font-bold uppercase border-2", u.role === "ADMIN" ? "bg-purple-900/20 text-purple-400 border-purple-500/20" : u.role === "MODERATOR" ? "bg-blue-900/20 text-blue-400 border-blue-500/20" : "bg-gray-800 text-gray-400 border-gray-700")}>
                                             {u.role}
                                         </span>
-                                        {u.ipBan && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-900/20 text-red-400 border border-red-500/20 flex items-center gap-1"><ShieldAlert size={10} /> BANNED</span>}
+                                        {u.ipBan && <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-900/20 text-red-400 border-2 border-red-500/20 flex items-center gap-1"><ShieldAlert size={10} /> BANNED</span>}
                                     </div>
                                 </td>
 

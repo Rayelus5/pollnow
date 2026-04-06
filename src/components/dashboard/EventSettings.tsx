@@ -81,9 +81,8 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
     const handleCopy = async () => {
         const origin =
             typeof window !== "undefined" ? window.location.origin : "";
-        const path = `/e/${event.slug}${
-            !currentEvent.isPublic ? `?key=${event.accessKey}` : ""
-        }`;
+        const path = `/e/${event.slug}${!currentEvent.isPublic ? `?key=${event.accessKey}` : ""
+            }`;
 
         const fullUrl = `${origin}${path}`;
         await navigator.clipboard.writeText(fullUrl);
@@ -179,25 +178,25 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
             {/* COLUMNA 1: FORMULARIO */}
             <div className="space-y-8">
 
-                
+
 
                 {/* FORMULARIO ORIGINAL */}
-                <form action={handleFormSubmit} className="space-y-6 p-6 bg-neutral-900 border border-neutral-800 rounded-xl shadow-lg tour-event-settings-card">
+                <form action={handleFormSubmit} className="space-y-6 p-6 bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-lg tour-event-settings-card">
                     {/* ... (Mismo contenido del formulario que tenías: Título, Descripción, Fecha...) ... */}
                     {/* COPIA AQUÍ EL RESTO DEL FORMULARIO QUE YA TENÍAS EN EL ARCHIVO PREVIO */}
-                    <h2 className="text-2xl font-bold text-white mb-4 border-b border-neutral-700 pb-3">Configuración General</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4 border-b-2 border-neutral-700 pb-3">Configuración General</h2>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Nombre del Evento</label>
-                        <input name="title" maxLength={40} defaultValue={currentEvent.title} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required />
+                        <input name="title" maxLength={40} defaultValue={currentEvent.title} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
-                        <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" />
+                        <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-1">Fecha de la Gala</label>
-                            <input type="datetime-local" name="galaDate" defaultValue={defaultDate} className="w-full bg-black border border-white/20 rounded-lg p-3 text-white dark-calendar focus:border-blue-500 outline-none" />
+                            <input type="datetime-local" name="galaDate" defaultValue={defaultDate} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white dark-calendar focus:border-blue-500 outline-none" />
                         </div>
                         {/* VISIBILIDAD (solo editable si el evento está APROBADO) */}
                         <div className={!canEditVisibility ? "opacity-60" : ""}>
@@ -206,7 +205,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                             </label>
 
                             <label
-                                className={`flex items-center gap-3 p-3 border border-white/10 rounded-lg bg-black transition-colors h-[50px] ${canEditVisibility
+                                className={`flex items-center gap-3 p-3 border-2 border-white/10 rounded-lg bg-black transition-colors h-[50px] ${canEditVisibility
                                     ? "cursor-pointer hover:border-white/30"
                                     : "cursor-not-allowed"
                                     }`}
@@ -243,10 +242,10 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                                 )
                             )}
 
-                            
+
                         </div>
                     </div>
-                    <div className={`p-4 rounded-lg border transition-colors ${isUnlimited ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-70'}`}>
+                    <div className={`p-4 rounded-lg border-2 transition-colors ${isUnlimited ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-70'}`}>
                         <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
                                 <label htmlFor="isAnonymous" className={`font-bold text-sm ${isUnlimited ? 'cursor-pointer text-white' : 'text-gray-400'}`}>Votación Anónima</label>
@@ -269,7 +268,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
 
             {showRequestModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-blue-500">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-blue-500">
                         <h2 className="text-xl font-bold text-white mb-2">Enviar a revisión</h2>
                         <p className="text-gray-400 text-sm mb-6">
                             ¿Estás seguro de que quieres enviar <strong>{event.title}</strong> a revisión?
@@ -308,7 +307,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
             <div className="space-y-8">
 
                 {/* NUEVO: CAJA DE ESTADO DE PUBLICACIÓN */}
-                <div className={`p-6 rounded-xl border ${isApproved ? 'bg-green-900/20 border-green-500/30' :
+                <div className={`p-6 rounded-xl border-2 ${isApproved ? 'bg-green-900/20 border-green-500/30' :
                     isPending ? 'bg-yellow-900/20 border-yellow-500/30' :
                         isDenied ? 'bg-red-900/20 border-red-500/30' :
                             'bg-neutral-900 border-white/10'
@@ -345,7 +344,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
 
                     {/* MOTIVO DE RECHAZO */}
                     {isDenied && currentEvent.reviewReason && (
-                        <div className="mb-4 p-3 bg-red-950/30 border border-red-500/20 rounded-lg">
+                        <div className="mb-4 p-3 bg-red-950/30 border-2 border-red-500/20 rounded-lg">
                             <p className="text-xs text-red-300 font-bold uppercase mb-1">Motivo del rechazo:</p>
                             <p className="text-sm text-white">{currentEvent.reviewReason}</p>
                         </div>
@@ -370,8 +369,8 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     )}
 
                 </div>
-                
-                <div className="p-6 border border-blue-500/20 bg-blue-500/5 rounded-xl space-y-4">
+
+                <div className="p-6 border-2 border-blue-500/20 bg-blue-500/5 rounded-xl space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
                             {currentEvent.isPublic ? '🌍 Enlace Público' : '🔒 Enlace Privado (Con Clave)'}
@@ -384,7 +383,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                         )}
                         {showConfirm && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                                <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-blue-500">
+                                <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-blue-500">
                                     <h2 className="text-xl font-bold text-white mb-2">¿Regenerar clave?</h2>
                                     <p className="text-gray-400 text-sm mb-6">El enlace anterior dejará de funcionar.</p>
                                     <div className="flex gap-3">
@@ -396,7 +395,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                         )}
                     </div>
                     <div className="flex items-center gap-4">
-                        <div className="flex-1 bg-black/50 p-3 rounded border border-white/10 text-sm text-gray-400 font-mono truncate select-all">
+                        <div className="flex-1 bg-black/50 p-3 rounded border-2 border-white/10 text-sm text-gray-400 font-mono truncate select-all">
                             {shareUrl || "Cargando..."}
                         </div>
                         <button onClick={handleCopy} className={`text-xs font-bold w-[100px] px-2 py-3 rounded transition-all flex items-center justify-center gap-2 cursor-pointer ${copied ? "bg-green-600" : "bg-blue-600"}`}>
@@ -406,18 +405,18 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     </div>
                 </div>
 
-                <div className="p-6 border border-red-500/20 bg-red-500/5 rounded-xl">
+                <div className="p-6 border-2 border-red-500/20 bg-red-500/5 rounded-xl">
                     <div className="flex justify-between items-center">
                         <div>
                             <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-1"><AlertTriangle size={16} /> Eliminar Evento</h3>
                             <p className="text-xs text-red-300/60">Esta acción es irreversible.</p>
                         </div>
-                        <button onClick={() => setIsDeleteModalOpen(true)} className="text-xs font-bold text-red-200 bg-red-500/20 border border-red-500/30 px-4 py-3 rounded hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2 cursor-pointer"><Trash2 size={14} /> Eliminar</button>
+                        <button onClick={() => setIsDeleteModalOpen(true)} className="text-xs font-bold text-red-200 bg-red-500/20 border-2 border-red-500/30 px-4 py-3 rounded hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2 cursor-pointer"><Trash2 size={14} /> Eliminar</button>
                     </div>
                 </div>
                 {isDeleteModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-red-500">
+                        <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-red-500">
                             <h2 className="text-xl font-bold text-white mb-2">¿Estás seguro?</h2>
                             <p className="text-gray-400 text-sm mb-6">Vas a eliminar <strong>{event.title}</strong>.</p>
                             <div className="flex gap-3">

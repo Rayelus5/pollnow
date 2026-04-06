@@ -105,9 +105,9 @@ export default function AdminEventsTableClient({
     }
 
     return (
-        <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden mb-6">
+        <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden mb-6">
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+            <div className="flex items-center justify-between px-4 py-3 border-b-2 border-white/5">
                 <div className="flex items-center gap-3">
                     <label className="inline-flex items-center gap-2 text-sm">
                         <input
@@ -127,7 +127,7 @@ export default function AdminEventsTableClient({
                         onClick={() => doBatchAction("updateStatus", { status: "APPROVED" })}
                         disabled={!someSelected || loadingAction}
                         className={clsx(
-                            "px-3 py-1 text-sm rounded-md border",
+                            "px-3 py-1 text-sm rounded-md border-2",
                             !someSelected ? "opacity-40 cursor-not-allowed" : "bg-green-600/10 border-green-600 text-green-300"
                         )}
                     >
@@ -138,7 +138,7 @@ export default function AdminEventsTableClient({
                         onClick={() => doBatchAction("updateStatus", { status: "PENDING" })}
                         disabled={!someSelected || loadingAction}
                         className={clsx(
-                            "px-3 py-1 text-sm rounded-md border",
+                            "px-3 py-1 text-sm rounded-md border-2",
                             !someSelected ? "opacity-40 cursor-not-allowed" : "bg-yellow-600/10 border-yellow-600 text-yellow-300"
                         )}
                     >
@@ -149,7 +149,7 @@ export default function AdminEventsTableClient({
                         onClick={() => doBatchAction("delete")}
                         disabled={!someSelected || loadingAction}
                         className={clsx(
-                            "px-3 py-1 text-sm rounded-md border",
+                            "px-3 py-1 text-sm rounded-md border-2",
                             !someSelected ? "opacity-40 cursor-not-allowed" : "bg-red-600/10 border-red-600 text-red-300"
                         )}
                     >
@@ -214,16 +214,16 @@ export default function AdminEventsTableClient({
                                 <td className="p-3">
                                     <span className={clsx(
                                         "inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold",
-                                        event.status === "APPROVED" ? "bg-green-500/10 text-green-400 border border-green-500/20" :
-                                        event.status === "PENDING" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" :
-                                        "bg-gray-800 text-gray-400 border border-gray-700"
+                                        event.status === "APPROVED" ? "bg-green-500/10 text-green-400 border-2 border-green-500/20" :
+                                            event.status === "PENDING" ? "bg-yellow-500/10 text-yellow-400 border-2 border-yellow-500/20" :
+                                                "bg-gray-800 text-gray-400 border-2 border-gray-700"
                                     )}>
                                         {event.status}
                                     </span>
                                 </td>
 
                                 <td className="p-3">
-                                    <span className={`text-[10px] px-2 py-1 rounded border ${event.isPublic ? "border-blue-500/30 text-blue-400 bg-blue-500/10" : "border-gray-700 text-gray-400 bg-gray-800"}`}>
+                                    <span className={`text-[10px] px-2 py-1 rounded border-2 ${event.isPublic ? "border-blue-500/30 text-blue-400 bg-blue-500/10" : "border-gray-700 text-gray-400 bg-gray-800"}`}>
                                         {event.isPublic ? "Público" : "Privado"}
                                     </span>
                                 </td>

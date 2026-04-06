@@ -35,7 +35,7 @@ export default async function RequestsPage() {
 
                 <div className="space-y-4">
                     {events.map(event => (
-                        <div key={event.id} className="bg-neutral-900/50 border border-white/10 rounded-xl p-6 flex flex-col md:flex-row md:items-start justify-between gap-6 hover:border-white/20 transition-colors">
+                        <div key={event.id} className="bg-neutral-900/50 border-2 border-white/10 rounded-xl p-6 flex flex-col md:flex-row md:items-start justify-between gap-6 hover:border-white/20 transition-colors">
 
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
@@ -47,7 +47,7 @@ export default async function RequestsPage() {
                                 </p>
 
                                 {event.status === 'DENIED' && event.reviewReason && (
-                                    <div className="mt-4 p-4 bg-red-950/30 border border-red-500/20 rounded-lg animate-in fade-in slide-in-from-top-2">
+                                    <div className="mt-4 p-4 bg-red-950/30 border-2 border-red-500/20 rounded-lg animate-in fade-in slide-in-from-top-2">
                                         <div className="flex items-center gap-2 text-red-400 text-xs font-bold uppercase mb-2">
                                             <AlertCircle size={14} /> Motivo del rechazo
                                         </div>
@@ -67,7 +67,7 @@ export default async function RequestsPage() {
                                 ) : (
                                     <Link
                                         href={`/dashboard/event/${event.id}`}
-                                        className="px-4 py-2 bg-white/5 text-white font-medium rounded-lg text-sm hover:bg-white/10 transition-colors border border-white/10 text-center"
+                                        className="px-4 py-2 bg-white/5 text-white font-medium rounded-lg text-sm hover:bg-white/10 transition-colors border-2 border-white/10 text-center"
                                     >
                                         Ver Detalles
                                     </Link>
@@ -77,7 +77,7 @@ export default async function RequestsPage() {
                     ))}
 
                     {events.length === 0 && (
-                        <div className="text-center py-32 border border-dashed border-white/10 rounded-2xl bg-white/5 flex flex-col items-center justify-center">
+                        <div className="text-center py-32 border-2 border-dashed border-white/10 rounded-2xl bg-white/5 flex flex-col items-center justify-center">
                             <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mb-4 text-gray-600">
                                 <FileText size={32} />
                             </div>
@@ -96,17 +96,17 @@ export default async function RequestsPage() {
 
 function StatusBadge({ status }: { status: string }) {
     if (status === 'PENDING') return (
-        <span className="flex items-center gap-1.5 text-yellow-500 text-[10px] font-bold uppercase bg-yellow-500/10 px-2.5 py-1 rounded-full border border-yellow-500/20">
+        <span className="flex items-center gap-1.5 text-yellow-500 text-[10px] font-bold uppercase bg-yellow-500/10 px-2.5 py-1 rounded-full border-2 border-yellow-500/20">
             <Clock size={12} /> En Revisión
         </span>
     );
     if (status === 'APPROVED') return (
-        <span className="flex items-center gap-1.5 text-green-500 text-[10px] font-bold uppercase bg-green-500/10 px-2.5 py-1 rounded-full border border-green-500/20">
+        <span className="flex items-center gap-1.5 text-green-500 text-[10px] font-bold uppercase bg-green-500/10 px-2.5 py-1 rounded-full border-2 border-green-500/20">
             <CheckCircle2 size={12} /> Publicado
         </span>
     );
     if (status === 'DENIED') return (
-        <span className="flex items-center gap-1.5 text-red-500 text-[10px] font-bold uppercase bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
+        <span className="flex items-center gap-1.5 text-red-500 text-[10px] font-bold uppercase bg-red-500/10 px-2.5 py-1 rounded-full border-2 border-red-500/20">
             <AlertCircle size={12} /> Rechazado
         </span>
     );

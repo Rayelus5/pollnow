@@ -72,7 +72,7 @@ export default function CompletedView({ targetDate, eventSlug, showAds = true }:
                         }}
                         className="w-24 h-24 bg-gradient-to-br from-sky-300 to-blue-700 rounded-full flex items-center justify-center mx-auto shadow-[0_0_60px_-10px_rgba(56,189,248,0.5)] relative group"
                     >
-                        <div className="absolute inset-0 rounded-full border border-sky-400/30 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                        <div className="absolute inset-0 rounded-full border-2 border-sky-400/30 animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
                         <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" strokeWidth="4" viewBox="0 0 24 24">
                             <motion.path
                                 strokeLinecap="round"
@@ -98,7 +98,7 @@ export default function CompletedView({ targetDate, eventSlug, showAds = true }:
 
                     <motion.div
                         variants={itemVariants}
-                        className="py-8 px-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm mx-auto inline-block"
+                        className="py-8 px-6 bg-white/5 border-2 border-white/10 rounded-2xl backdrop-blur-sm mx-auto inline-block"
                     >
                         <p className="text-xs font-bold text-sky-500 mb-4 tracking-[0.3em] uppercase flex items-center justify-center gap-2">
                             <span className="w-2 h-2 bg-sky-500 rounded-full animate-pulse"></span>

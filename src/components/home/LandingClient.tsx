@@ -184,7 +184,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                     className="flex flex-col items-center w-full"
                 >
                     {/* Badge */}
-                    <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
+                    <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border-2 border-white/10 mb-8 backdrop-blur-sm">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -265,7 +265,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                         </Link>
                         <Link
                             href="/polls"
-                            className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all  hover:border-white/20"
+                            className="px-8 py-4 bg-white/5 border-2 border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all  hover:border-white/20"
                         >
                             Explorar Eventos
                         </Link>
@@ -341,7 +341,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                             </button>
 
                             {/* Banner */}
-                            <div className="relative rounded-3xl border border-white/20 bg-black overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] shadow-blue-500/20">
+                            <div className="relative rounded-3xl border-2 border-white/20 bg-black overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] shadow-blue-500/20">
                                 {showAds ? (
                                     <CustomAdBanner />
                                 ) : (
@@ -390,9 +390,9 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
         <motion.div
             variants={itemFeatureVariants}
             whileHover={{ y: -10 }}
-            className="p-8 rounded-3xl bg-white/5 border border-white/5 hover:border-blue-500/30 hover:bg-white/10 transition-colors duration-300 group cursor-pointer"
+            className="p-8 rounded-3xl bg-white/5 border-2 border-white/5 hover:border-blue-500/30 hover:bg-white/10 transition-colors duration-300 group cursor-pointer"
         >
-            <div className="mb-6 p-4 bg-black/50 rounded-2xl w-fit border border-white/5 group-hover:border-white/20 transition-colors">
+            <div className="mb-6 p-4 bg-black/50 rounded-2xl w-fit border-2 border-white/5 group-hover:border-white/20 transition-colors">
                 {icon}
             </div>
             <h3 className="text-2xl font-bold text-white mb-4">{title}</h3>

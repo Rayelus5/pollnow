@@ -87,7 +87,7 @@ export default function CreateEventButton({
             {/* MODAL PRINCIPAL */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
                         {/* Botón cerrar */}
                         <button
                             onClick={closeModal}
@@ -100,7 +100,7 @@ export default function CreateEventButton({
                         {/* CASO: LÍMITE ALCANZADO → UPGRADE */}
                         {isQuotaExceeded ? (
                             <>
-                                <h4 className="text-xl font-bold text-indigo-400 mb-4 pb-2 border-b border-indigo-600">
+                                <h4 className="text-xl font-bold text-indigo-400 mb-4 pb-2 border-b-2 border-indigo-600">
                                     Límite alcanzado
                                 </h4>
                                 <p className="text-white mb-6 text-sm">
@@ -151,7 +151,7 @@ export default function CreateEventButton({
                                             value={title}
                                             onChange={handleTitleChange}
                                             placeholder="Ej: Premios Verano 2025"
-                                            className="w-full bg-black border border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors"
+                                            className="w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors"
                                             autoFocus
                                             disabled={isSubmitting}
                                         />
@@ -169,7 +169,7 @@ export default function CreateEventButton({
                                             rows={3}
                                             maxLength={100}
                                             placeholder="¿De qué va esta gala?"
-                                            className="w-full bg-black border border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none"
+                                            className="w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none"
                                             disabled={isSubmitting}
                                         />
                                     </div>
@@ -182,7 +182,7 @@ export default function CreateEventButton({
                                             name="tags"
                                             maxLength={50}
                                             placeholder="Etiquetas separadas por comas (ej: cine, amigos, verano)"
-                                            className="w-full bg-black border border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none"
+                                            className="w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none"
                                             disabled={isSubmitting}
                                         />
                                         <p className="text-[10px] text-gray-600 mt-1">
@@ -192,7 +192,7 @@ export default function CreateEventButton({
 
                                     {/* Error del servidor */}
                                     {serverError && (
-                                        <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-red-300 text-sm">
+                                        <div className="p-3 bg-red-500/10 border-2 border-red-500/30 rounded text-red-300 text-sm">
                                             {serverError}
                                         </div>
                                     )}

@@ -87,7 +87,7 @@ export default function HomeHero({
                 >
                     <motion.div
                         variants={itemVariants}
-                        className="mb-8 inline-flex items-center px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm shadow-lg shadow-sky-500/10"
+                        className="mb-8 inline-flex items-center px-3 py-1 rounded-full border-2 border-white/10 bg-white/5 backdrop-blur-sm shadow-lg shadow-sky-500/10"
                     >
                         <span className="flex h-2 w-2 rounded-full bg-sky-400 mr-2 animate-pulse shadow-[0_0_10px_#38bdf8]" />
                         <span className="text-xs font-medium tracking-[0.2em] text-gray-300 uppercase">
@@ -132,7 +132,7 @@ export default function HomeHero({
                                     </Link>
 
                                     <Link href={`/`} className="group relative">
-                                        <div className="px-10 py-3 bg-white/5 border border-white/10 rounded-full text-gray-500 font-medium">
+                                        <div className="px-10 py-3 bg-white/5 border-2 border-white/10 rounded-full text-gray-500 font-medium">
                                             <House
                                                 size={20}
                                                 color="white"
@@ -142,7 +142,7 @@ export default function HomeHero({
                                     </Link>
                                 </>
                             ) : (
-                                <div className="px-8 py-4 bg-white/5 border border-white/10 rounded-full text-gray-500 font-medium backdrop-blur-md">
+                                <div className="px-8 py-4 bg-white/5 border-2 border-white/10 rounded-full text-gray-500 font-medium backdrop-blur-md">
                                     Las urnas están cerradas.
                                 </div>
                             )
@@ -166,7 +166,7 @@ export default function HomeHero({
 
                     <motion.div
                         variants={itemVariants}
-                        className="mt-12 border-t border-white/10 pt-8 w-full max-w-md"
+                        className="mt-12 border-t-2 border-white/10 pt-8 w-full max-w-md"
                     >
                         <p className="text-xs text-gray-600 uppercase tracking-[0.3em] mb-4">
                             Countdown to Gala

@@ -45,8 +45,8 @@ export default async function AdminUserDetailPage({
         user.role === "ADMIN"
             ? "bg-purple-900/30 text-purple-400 border-purple-500/20"
             : user.role === "MODERATOR"
-            ? "bg-blue-900/30 text-blue-400 border-blue-500/20"
-            : "bg-gray-900/30 text-gray-400 border-gray-500/20";
+                ? "bg-blue-900/30 text-blue-400 border-blue-500/20"
+                : "bg-gray-900/30 text-gray-400 border-gray-500/20";
 
     return (
         <div className="max-w-7xl mx-auto pb-20">
@@ -61,7 +61,7 @@ export default async function AdminUserDetailPage({
                 {/* COLUMNA IZQUIERDA: PERFIL + EVENTOS */}
                 <div className="lg:col-span-1 space-y-6">
                     {/* Tarjeta de perfil */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 flex items-start gap-6">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6 flex items-start gap-6">
                         <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center text-2xl font-bold text-gray-500 overflow-hidden border-2 border-white/5 shrink-0">
                             {user.image ? (
                                 <img
@@ -96,19 +96,19 @@ export default async function AdminUserDetailPage({
 
                             <div className="flex flex-wrap gap-2 mt-2">
                                 <span
-                                    className={`px-2 py-0.5 rounded text-xs font-bold border uppercase ${roleBadgeClasses}`}
+                                    className={`px-2 py-0.5 rounded text-xs font-bold border-2 uppercase ${roleBadgeClasses}`}
                                 >
                                     {user.role}
                                 </span>
                                 <span
-                                    className={`px-2 py-0.5 rounded text-xs font-bold border uppercase ${planBadgeClasses}`}
+                                    className={`px-2 py-0.5 rounded text-xs font-bold border-2 uppercase ${planBadgeClasses}`}
                                 >
                                     Plan {planLabel}
                                 </span>
                             </div>
 
                             <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-gray-400">
-                                <div className="bg-black/40 rounded-lg p-2 border border-white/5">
+                                <div className="bg-black/40 rounded-lg p-2 border-2 border-white/5">
                                     <p className="text-[10px] uppercase tracking-wider text-gray-500">
                                         Eventos
                                     </p>
@@ -116,7 +116,7 @@ export default async function AdminUserDetailPage({
                                         {user._count.events}
                                     </p>
                                 </div>
-                                <div className="bg-black/40 rounded-lg p-2 border border-white/5">
+                                <div className="bg-black/40 rounded-lg p-2 border-2 border-white/5">
                                     <p className="text-[10px] uppercase tracking-wider text-gray-500">
                                         Votos
                                     </p>
@@ -124,7 +124,7 @@ export default async function AdminUserDetailPage({
                                         {user._count.votes}
                                     </p>
                                 </div>
-                                <div className="bg-black/40 rounded-lg p-2 border border-white/5">
+                                <div className="bg-black/40 rounded-lg p-2 border-2 border-white/5">
                                     <p className="text-[10px] uppercase tracking-wider text-gray-500">
                                         Reportes
                                     </p>
@@ -137,8 +137,8 @@ export default async function AdminUserDetailPage({
                     </div>
 
                     {/* Lista de Eventos */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-white/5 font-bold text-sm text-gray-400 uppercase tracking-wider flex justify-between items-center">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden">
+                        <div className="px-6 py-4 border-b-2 border-white/5 font-bold text-sm text-gray-400 uppercase tracking-wider flex justify-between items-center">
                             <span>Eventos Creados ({user._count.events})</span>
                         </div>
 
@@ -163,13 +163,12 @@ export default async function AdminUserDetailPage({
                                                 </p>
                                             </div>
                                             <span
-                                                className={`text-[10px] px-2 py-1 rounded font-bold uppercase whitespace-nowrap ${
-                                                    event.status === "APPROVED"
+                                                className={`text-[10px] px-2 py-1 rounded font-bold uppercase whitespace-nowrap ${event.status === "APPROVED"
                                                         ? "text-green-500 bg-green-900/20"
                                                         : event.status === "DENIED"
-                                                        ? "text-red-400 bg-red-900/20"
-                                                        : "text-yellow-500 bg-yellow-900/20"
-                                                }`}
+                                                            ? "text-red-400 bg-red-900/20"
+                                                            : "text-yellow-500 bg-yellow-900/20"
+                                                    }`}
                                             >
                                                 {event.status}
                                             </span>

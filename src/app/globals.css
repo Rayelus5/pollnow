@@ -45,5 +45,5 @@ body {
 .glass-panel {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-2: 1px solid rgba(255, 255, 255, 0.08);
 }

@@ -43,7 +43,7 @@ export default async function LogoutPage() {
                 </div>
 
                 {/* Tarjeta principal */}
-                <div className="bg-neutral-900/60 border border-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl space-y-6">
+                <div className="bg-neutral-900/60 border-2 border-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl space-y-6">
                     <p className="text-sm text-gray-300">
                         Para <span className="font-semibold">iniciar sesión con otra cuenta</span> o{" "}
                         <span className="font-semibold">registrar una nueva</span>, primero debes cerrar sesión.

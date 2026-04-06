@@ -19,7 +19,7 @@ const TimeUnit = ({ value, label }: { value: number; label: string }) => {
     return (
         <div className="flex flex-col items-center mx-1 md:mx-2">
             {/* Contenedor del Número: overflow-hidden corta lo que sale/entra */}
-            <div className="relative h-8 md:h-24 w-8 md:w-24 overflow-hidden flex justify-center items-center bg-white/5 rounded-lg border border-white/10 backdrop-blur-sm">
+            <div className="relative h-8 md:h-24 w-8 md:w-24 overflow-hidden flex justify-center items-center bg-white/5 rounded-lg border-2 border-white/10 backdrop-blur-sm">
                 <AnimatePresence mode="popLayout">
                     <motion.span
                         key={value} // ¡Clave! Al cambiar el valor, fuerza la animación

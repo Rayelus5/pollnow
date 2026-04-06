@@ -20,7 +20,7 @@ const actionIcons: any = {
     'DEFAULT': <FileText className="text-gray-500" size={16} />
 };
 
-export default async function AdminLogsPage({ searchParams }: { searchParams: Promise<{ page?: string; [key: string]: string | undefined }> }) {
+export default async function AdminLogsPage({ searchParams }: { searchParams: Promise<{ page?: string;[key: string]: string | undefined }> }) {
     const session = await auth();
     // @ts-ignore
     if (session?.user?.role !== 'ADMIN') {
@@ -52,14 +52,14 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Pr
             <div className="flex items-center justify-between mb-10">
                 <div>
                     <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
-                        <Logs size={28} className="text-blue-500" /> 
+                        <Logs size={28} className="text-blue-500" />
                         Auditoría y Logs
                     </h1>
                     <p className="text-gray-400 mt-1">Registro inmutable de todas las acciones administrativas.</p>
                 </div>
-            </div>    
+            </div>
 
-            <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden">
+            <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
                         <tr>
@@ -80,7 +80,7 @@ export default async function AdminLogsPage({ searchParams }: { searchParams: Pr
                                     </div>
                                 </td>
                                 <td className="p-4">
-                                    <span className="px-2 py-1 rounded bg-white/5 text-[10px] font-bold border border-white/10 mr-2">
+                                    <span className="px-2 py-1 rounded bg-white/5 text-[10px] font-bold border-2 border-white/10 mr-2">
                                         {log.targetType}
                                     </span>
                                     <span className="font-mono text-xs text-gray-500 select-all">

@@ -122,7 +122,7 @@ export default function PollList({
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 tour-polls-section">
                 <div className="flex items-center gap-2">
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Orden de Categorías</h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${currentCount >= currentLimit ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-gray-500 border-gray-700'}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 ${currentCount >= currentLimit ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-gray-500 border-gray-700'}`}>
                         {currentCount} / {currentLimit}
                     </span>
                 </div>
@@ -135,7 +135,7 @@ export default function PollList({
                             placeholder="Buscar categoría..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-neutral-900 border border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                            className="w-full bg-neutral-900 border-2 border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
                         />
                     </div>
 
@@ -151,7 +151,7 @@ export default function PollList({
             {/* MODAL DE UPGRADE */}
             {showUpgradeModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-lg p-8 shadow-2xl relative overflow-hidden">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-lg p-8 shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-[80px] pointer-events-none -mr-16 -mt-16" />
 
                         <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
@@ -162,8 +162,8 @@ export default function PollList({
                         </p>
 
                         {/* Comparativa */}
-                        <div className="bg-black/40 rounded-xl border border-white/5 p-4 mb-8 space-y-3">
-                            <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                        <div className="bg-black/40 rounded-xl border-2 border-white/5 p-4 mb-8 space-y-3">
+                            <div className="flex justify-between items-center text-sm border-b-2 border-white/5 pb-2">
                                 <span className="text-gray-500">Tu Plan ({PLANS[planKey].name})</span>
                                 <span className="font-mono text-red-400">{currentLimit} categorías</span>
                             </div>
@@ -211,7 +211,7 @@ export default function PollList({
                                             <div
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
-                                                className={`bg-neutral-900/50 border p-4 rounded-2xl flex items-center gap-4 group transition-colors ${snapshot.isDragging ? 'border-blue-500 bg-neutral-800' : 'border-white/5 hover:border-blue-500/30'}`}
+                                                className={`bg-neutral-900/50 border-2 p-4 rounded-2xl flex items-center gap-4 group transition-colors ${snapshot.isDragging ? 'border-blue-500 bg-neutral-800' : 'border-white/5 hover:border-blue-500/30'}`}
                                             >
                                                 <div {...provided.dragHandleProps} className={`text-gray-600 hover:text-white ${searchQuery ? 'cursor-default opacity-30' : 'cursor-grab active:cursor-grabbing'}`}>
                                                     <GripVertical size={20} />
@@ -222,7 +222,7 @@ export default function PollList({
                                                         <span className="text-xs font-mono text-gray-600 whitespace-nowrap">#{displayIndex + 1}</span>
                                                     </div>
                                                     <div className="flex gap-2 text-xs text-gray-400 mt-1 mb-1">
-                                                        <span className="bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                                                        <span className="bg-white/5 px-2 py-0.5 rounded border-2 border-white/5">
                                                             {poll.votingType === 'SINGLE' ? 'Voto Único' : poll.votingType === 'MULTIPLE' ? 'Múltiple' : `Máx ${poll.maxOptions} ops.`}
                                                         </span>
                                                     </div>
@@ -246,7 +246,7 @@ export default function PollList({
                             })}
                             {provided.placeholder}
                             {filteredPolls.length === 0 && (
-                                <div className="text-center py-10 text-gray-500 text-sm border border-dashed border-white/10 rounded-xl">
+                                <div className="text-center py-10 text-gray-500 text-sm border-2 border-dashed border-white/10 rounded-xl">
                                     No se encontraron categorías.
                                 </div>
                             )}
@@ -258,8 +258,8 @@ export default function PollList({
             {/* MODAL CREAR/EDITAR */}
             {(editingPoll || isCreating) && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in duration-300">
-                        <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in duration-300">
+                        <div className="p-6 border-b-2 border-white/10 flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white">
                                 {isCreating ? "Nueva Categoría" : "Editar Categoría"}
                             </h2>
@@ -287,7 +287,7 @@ export default function PollList({
                                     value={title}
                                     maxLength={100}
                                     onChange={handleTitleChange}
-                                    className="w-full bg-black border border-white/20 rounded p-2 text-white focus:border-blue-500 outline-none"
+                                    className="w-full bg-black border-2 border-white/20 rounded p-2 text-white focus:border-blue-500 outline-none"
                                     required
                                     autoFocus
                                 />
@@ -299,19 +299,19 @@ export default function PollList({
                                     defaultValue={editingPoll?.description || ""}
                                     rows={2}
                                     maxLength={150}
-                                    className="w-full bg-black border border-white/20 rounded p-2 text-white focus:border-blue-500 outline-none"
+                                    className="w-full bg-black border-2 border-white/20 rounded p-2 text-white focus:border-blue-500 outline-none"
                                 />
                             </div>
 
                             {/* --- NUEVOS CAMPOS: TIPO DE VOTO --- */}
-                            <div className="grid grid-cols-2 gap-4 p-4 bg-black/20 rounded-xl border border-white/5">
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-black/20 rounded-xl border-2 border-white/5">
                                 <div>
                                     <label className="text-xs text-gray-500 uppercase block mb-2">Reglas de Voto</label>
                                     <select
                                         name="votingType"
                                         value={votingType}
                                         onChange={(e) => setVotingType(e.target.value as any)}
-                                        className="w-full bg-neutral-900 border border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none appearance-none cursor-pointer"
+                                        className="w-full bg-neutral-900 border-2 border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none appearance-none cursor-pointer"
                                     >
                                         <option value="SINGLE">Opción única</option>
                                         <option value="MULTIPLE">Múltiples (Sin límite)</option>
@@ -327,7 +327,7 @@ export default function PollList({
                                             type="number"
                                             min="2"
                                             defaultValue={editingPoll?.maxOptions || 2}
-                                            className="w-full bg-neutral-900 border border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
+                                            className="w-full bg-neutral-900 border-2 border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none"
                                             required
                                         />
                                     </div>
@@ -347,13 +347,13 @@ export default function PollList({
                                     name="endAt"
                                     type="datetime-local"
                                     defaultValue={editingPoll && editingPoll.endAt && isValid(new Date(editingPoll.endAt)) ? new Date(editingPoll.endAt).toISOString().slice(0, 16) : ""}
-                                    className="w-full bg-black border border-white/20 rounded p-2 text-white dark-calendar focus:border-blue-500 outline-none"
+                                    className="w-full bg-black border-2 border-white/20 rounded p-2 text-white dark-calendar focus:border-blue-500 outline-none"
                                 />
                                 <p className="text-[10px] text-gray-600 mt-1">Si lo dejas vacío, la votación seguirá abierta hasta la gala.</p>
                             </div>
                             */}
 
-                            <div className="pt-4 border-t border-white/10">
+                            <div className="pt-4 border-t-2 border-white/10">
                                 <label className="text-xs text-gray-500 uppercase block mb-3">Nominados (Selecciona)</label>
                                 <ParticipantSelector allParticipants={allParticipants} editingPoll={editingPoll} />
                             </div>
@@ -403,7 +403,7 @@ function ParticipantSelector({ allParticipants, editingPoll }: { allParticipants
                 <input
                     type="text"
                     placeholder="Filtrar participantes..."
-                    className="w-full bg-black/30 border border-white/10 rounded text-xs py-1 pl-7 text-white focus:border-blue-500 outline-none transition-colors"
+                    className="w-full bg-black/30 border-2 border-white/10 rounded text-xs py-1 pl-7 text-white focus:border-blue-500 outline-none transition-colors"
                     onChange={(e) => setFilter(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
                 />
@@ -415,9 +415,9 @@ function ParticipantSelector({ allParticipants, editingPoll }: { allParticipants
                         <div
                             key={p.id}
                             onClick={() => handleToggle(p.id)}
-                            className={`flex items-center gap-2 p-2 rounded border cursor-pointer select-none transition-colors ${isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 hover:bg-white/5'}`}
+                            className={`flex items-center gap-2 p-2 rounded border-2 cursor-pointer select-none transition-colors ${isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-white/5 hover:bg-white/5'}`}
                         >
-                            <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-600'}`}>
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-blue-500 border-blue-500' : 'border-gray-600'}`}>
                                 {isSelected && <Plus size={10} className="text-white" />}
                             </div>
                             <span className={`text-sm truncate ${isSelected ? 'text-white' : 'text-gray-300'}`}>{p.name}</span>

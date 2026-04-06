@@ -56,13 +56,13 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
     const displayStats: StatsData = isFree
         ? MOCK_STATS
         : stats || {
-              totalVotes: 0,
-              totalPolls: 0,
-              votesByPoll: [],
-              activityTimeline: [],
-              pollsDetail: [],
-              isAnonymousConfig: true,
-          };
+            totalVotes: 0,
+            totalPolls: 0,
+            votesByPoll: [],
+            activityTimeline: [],
+            pollsDetail: [],
+            isAnonymousConfig: true,
+        };
 
     // (por si en el futuro dibujas timeline)
     const maxTimelineVotes = Math.max(
@@ -75,7 +75,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
         <div className="relative min-h-[600px] space-y-8 tour-stats-section">
             {/* --- PAYWALL (solo viewers FREE no-admin) --- */}
             {isFree && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl border border-white/10 p-6 text-center animate-in fade-in duration-700">
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl border-2 border-white/10 p-6 text-center animate-in fade-in duration-700">
                     <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-600 rounded-full flex items-center justify-center mb-6 shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)]">
                         <Lock className="text-white w-8 h-8" />
                     </div>
@@ -96,9 +96,8 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
             )}
 
             <div
-                className={`space-y-8 transition-all ${
-                    isFree ? "opacity-20 filter blur-sm pointer-events-none select-none" : ""
-                }`}
+                className={`space-y-8 transition-all ${isFree ? "opacity-20 filter blur-sm pointer-events-none select-none" : ""
+                    }`}
             >
                 {/* 1. KPIs */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -124,7 +123,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
 
                 <div className="grid lg:grid-cols-2 gap-8">
                     {/* 2. GRÁFICO BARRAS */}
-                    <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-8 flex flex-col max-h-[400px] cursor-grab">
+                    <div className="bg-neutral-900/50 border-2 border-white/10 rounded-2xl p-8 flex flex-col max-h-[400px] cursor-grab">
                         <h3 className="text-lg font-bold text-white mb-6">
                             Rendimiento General
                         </h3>
@@ -141,9 +140,8 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                                         <div
                                             className="h-full bg-gradient-to-r from-blue-600 to-sky-400 rounded-full"
                                             style={{
-                                                width: `${
-                                                    (item.votes / maxPollVotes) * 100
-                                                }%`,
+                                                width: `${(item.votes / maxPollVotes) * 100
+                                                    }%`,
                                             }}
                                         />
                                     </div>
@@ -153,13 +151,13 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                     </div>
 
                     {/* 3. LISTA DETALLADA DE CATEGORÍAS (SCROLL) */}
-                    <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-8 flex flex-col max-h-[400px]">
+                    <div className="bg-neutral-900/50 border-2 border-white/10 rounded-2xl p-8 flex flex-col max-h-[400px]">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-white">
                                 Desglose por Categoría
                             </h3>
                             {!isPlus && !isFree && (
-                                <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">
+                                <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-1 rounded border-2 border-purple-500/30">
                                     Mejora a Unlimited para ver usuarios
                                 </span>
                             )}
@@ -174,7 +172,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                                         if (poll.options.length > 0)
                                             setSelectedOptionId(poll.options[0].id);
                                     }}
-                                    className="w-full text-left p-4 rounded-xl bg-black/40 border border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group flex justify-between items-center cursor-pointer"
+                                    className="w-full text-left p-4 rounded-xl bg-black/40 border-2 border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group flex justify-between items-center cursor-pointer"
                                 >
                                     <div>
                                         <p className="font-bold text-gray-200 text-sm group-hover:text-white">
@@ -209,11 +207,11 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-neutral-900 border border-white/10 w-full max-w-4xl max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                            className="bg-neutral-900 border-2 border-white/10 w-full max-w-4xl max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header Modal */}
-                            <div className="p-6 border-b border-white/10 flex justify-between items-start bg-neutral-900 sticky top-0 z-10">
+                            <div className="p-6 border-b-2 border-white/10 flex justify-between items-start bg-neutral-900 sticky top-0 z-10">
                                 <div>
                                     <h2 className="text-2xl font-bold text-white">
                                         {selectedPoll.title}
@@ -234,7 +232,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
 
                             <div className="flex flex-col md:flex-row h-full overflow-hidden">
                                 {/* Sidebar: Selector de Opciones */}
-                                <div className="w-full md:w-1/3 border-r border-white/10 bg-black/20 overflow-y-auto custom-scrollbar p-4 space-y-2">
+                                <div className="w-full md:w-1/3 border-r-2 border-white/10 bg-black/20 overflow-y-auto custom-scrollbar p-4 space-y-2">
                                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pl-2">
                                         Resultados
                                     </p>
@@ -249,7 +247,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                                                     : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200"
                                             )}
                                         >
-                                            <div className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center overflow-hidden border border-white/10">
+                                            <div className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center overflow-hidden border-2 border-white/10">
                                                 {opt.imageUrl ? (
                                                     <img
                                                         src={opt.imageUrl}
@@ -329,7 +327,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                                                         ?.voters.map((voter, i) => (
                                                             <div
                                                                 key={i}
-                                                                className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 cursor-pointer"
+                                                                className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border-2 border-white/5 cursor-pointer"
                                                             >
                                                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white overflow-hidden">
                                                                     {voter.image ? (
@@ -353,11 +351,11 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
                                                             o.id ===
                                                             selectedOptionId
                                                     )?.voters.length === 0 && (
-                                                        <p className="text-gray-500 text-sm italic col-span-full">
-                                                            Nadie votó por esta opción
-                                                            aún.
-                                                        </p>
-                                                    )}
+                                                            <p className="text-gray-500 text-sm italic col-span-full">
+                                                                Nadie votó por esta opción
+                                                                aún.
+                                                            </p>
+                                                        )}
                                                 </div>
                                             )}
                                         </>
@@ -374,7 +372,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
 
 function KpiCard({ title, value, icon, subtext }: any) {
     return (
-        <div className="bg-neutral-900/50 border border-white/10 rounded-2xl p-6 flex items-start justify-between">
+        <div className="bg-neutral-900/50 border-2 border-white/10 rounded-2xl p-6 flex items-start justify-between">
             <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
                     {title}
@@ -386,7 +384,7 @@ function KpiCard({ title, value, icon, subtext }: any) {
                     </p>
                 )}
             </div>
-            <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+            <div className="p-3 bg-white/5 rounded-xl border-2 border-white/5">
                 {icon}
             </div>
         </div>

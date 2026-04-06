@@ -85,7 +85,7 @@ export default function AdminPagination({
     const pages = getPages();
 
     return (
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/10 pt-4">
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 border-t-2 border-white/10 pt-4">
             <div className="flex items-center gap-2 text-xs text-gray-400">
                 {isPending && (
                     <Bouncy size="26" speed="1.75" color="#9ca3af" />
@@ -100,7 +100,7 @@ export default function AdminPagination({
                 <button
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1 || isPending}
-                    className="px-3 py-1.5 rounded-lg border border-white/10 bg-black/60 text-gray-300 hover:border-white/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg border-2 border-white/10 bg-black/60 text-gray-300 hover:border-white/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                     Anterior
                 </button>
@@ -115,9 +115,9 @@ export default function AdminPagination({
                             key={p}
                             onClick={() => goToPage(p)}
                             disabled={isPending}
-                            className={`min-w-[32px] px-2 py-1.5 rounded-lg border text-xs font-medium cursor-pointer ${p === currentPage
-                                    ? "bg-blue-600 border-blue-500 text-white"
-                                    : "bg-black/60 border-white/10 text-gray-300 hover:border-white/40 hover:text-white"
+                            className={`min-w-[32px] px-2 py-1.5 rounded-lg border-2 text-xs font-medium cursor-pointer ${p === currentPage
+                                ? "bg-blue-600 border-blue-500 text-white"
+                                : "bg-black/60 border-white/10 text-gray-300 hover:border-white/40 hover:text-white"
                                 }`}
                         >
                             {p}
@@ -128,7 +128,7 @@ export default function AdminPagination({
                 <button
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages || isPending}
-                    className="px-3 py-1.5 rounded-lg border border-white/10 bg-black/60 text-gray-300 hover:border-white/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg border-2 border-white/10 bg-black/60 text-gray-300 hover:border-white/40 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                     Siguiente
                 </button>

@@ -26,10 +26,10 @@ export async function sendVerificationEmail(email: string, token: string) {
   <body style="margin:0; padding:24px 0; background-color:#020617;">
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width:600px; margin:0 auto; padding:0 16px;">
       
-      <div style="border-radius:24px; border:1px solid #1f2937; background-color:#020617; box-shadow:0 18px 45px rgba(15,23,42,0.85); padding:32px 28px;">
+      <div style="border-radius:24px; border-2:1px solid #1f2937; background-color:#020617; box-shadow:0 18px 45px rgba(15,23,42,0.85); padding:32px 28px;">
         
         <!-- Badge superior -->
-        <div style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; background:rgba(37,99,235,0.12); border:1px solid rgba(129,140,248,0.4); margin-bottom:20px;">
+        <div style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; background:rgba(37,99,235,0.12); border-2:1px solid rgba(129,140,248,0.4); margin-bottom:20px;">
           <span style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#bfdbfe; font-weight:600;">
             Verificación de cuenta
           </span>
@@ -44,7 +44,7 @@ export async function sendVerificationEmail(email: string, token: string) {
         </p>
 
         <!-- Bloque destacado -->
-        <div style="margin:20px 0 24px 0; padding:16px 18px; border-radius:16px; background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9);">
+        <div style="margin:20px 0 24px 0; padding:16px 18px; border-radius:16px; background:rgba(15,23,42,0.9); border-2:1px solid rgba(55,65,81,0.9);">
           <p style="margin:0; font-size:13px; line-height:1.6; color:#e5e7eb;">
             Haz clic en el botón de abajo para confirmar tu cuenta y acceder a todas las funciones de POLLNOW.
           </p>
@@ -61,7 +61,7 @@ export async function sendVerificationEmail(email: string, token: string) {
              border-radius:999px;
              background:linear-gradient(135deg,#4f46e5,#6366f1);
              color:#0b1120;
-             border:1px solid rgba(191,219,254,0.9);
+             border-2:1px solid rgba(191,219,254,0.9);
              text-align:center;
              margin:4px 0 18px 0;
            ">
@@ -106,10 +106,10 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   <body style="margin:0; padding:24px 0; background-color:#020617;">
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width:600px; margin:0 auto; padding:0 16px;">
 
-      <div style="border-radius:24px; border:1px solid #1f2937; background-color:#020617; box-shadow:0 18px 45px rgba(15,23,42,0.85); padding:32px 28px;">
+      <div style="border-radius:24px; border-2:1px solid #1f2937; background-color:#020617; box-shadow:0 18px 45px rgba(15,23,42,0.85); padding:32px 28px;">
         
         <!-- Badge superior -->
-        <div style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; background:rgba(15,23,42,0.9); border:1px solid rgba(75,85,99,0.9); margin-bottom:20px;">
+        <div style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; background:rgba(15,23,42,0.9); border-2:1px solid rgba(75,85,99,0.9); margin-bottom:20px;">
           <span style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#e5e7eb; font-weight:600;">
             Seguridad de la cuenta
           </span>
@@ -124,7 +124,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
         </p>
 
         <!-- Bloque destacado -->
-        <div style="margin:20px 0 24px 0; padding:16px 18px; border-radius:16px; background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9);">
+        <div style="margin:20px 0 24px 0; padding:16px 18px; border-radius:16px; background:rgba(15,23,42,0.9); border-2:1px solid rgba(55,65,81,0.9);">
           <p style="margin:0; font-size:13px; line-height:1.6; color:#e5e7eb;">
             Haz clic en el botón de abajo para establecer una nueva contraseña. 
             Por seguridad, este enlace es válido durante 1 hora.
@@ -142,7 +142,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
              border-radius:999px;
              background:#020617;
              color:#f9fafb;
-             border:1px solid rgba(148,163,184,0.9);
+             border-2:1px solid rgba(148,163,184,0.9);
              text-align:center;
              margin:4px 0 18px 0;
            ">

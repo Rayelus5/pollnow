@@ -68,14 +68,14 @@ export default function ExploreClient({ events }: { events: EventData[] }) {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
-                    className="text-center py-24 border border-dashed border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm"
+                    className="text-center py-24 border-2 border-dashed border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm"
                 >
                     <div className="text-4xl mb-4 grayscale opacity-50">🪐</div>
                     <h3 className="text-2xl font-bold text-white mb-2">Nada por aquí...</h3>
                     <p className="text-gray-400 mb-6">Parece que no hay eventos con esos criterios.</p>
                     <button
                         onClick={() => window.location.href = '/dashboard'}
-                        className="text-sm font-bold text-blue-400 hover:text-blue-300 transition-colors border-b border-blue-500/30 hover:border-blue-400 pb-1"
+                        className="text-sm font-bold text-blue-400 hover:text-blue-300 transition-colors border-b-2 border-blue-500/30 hover:border-blue-400 pb-1"
                     >
                         Crea el primero tú mismo
                     </button>

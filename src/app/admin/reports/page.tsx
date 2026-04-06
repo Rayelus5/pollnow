@@ -186,11 +186,10 @@ export default async function AdminReportsPage({
                     </p>
                 </div>
                 <div
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
-                        pendingBadgeCount === 0
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 ${pendingBadgeCount === 0
                             ? "border-green-500/20"
                             : "border-amber-500/20"
-                    }`}
+                        }`}
                 >
                     <div
                         className="w-2 h-2 rounded-full animate-pulse"
@@ -200,11 +199,10 @@ export default async function AdminReportsPage({
                         }}
                     ></div>
                     <span
-                        className={`${
-                            pendingBadgeCount === 0
+                        className={`${pendingBadgeCount === 0
                                 ? "text-green-500"
                                 : "text-amber-500"
-                        } text-xs font-bold`}
+                            } text-xs font-bold`}
                     >
                         {pendingBadgeCount} Pendientes
                     </span>
@@ -215,37 +213,34 @@ export default async function AdminReportsPage({
             <div className="mb-6 flex gap-3">
                 <Link
                     href="/admin/reports"
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                        !isFiltered
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition ${!isFiltered
                             ? "bg-white text-black"
                             : "bg-white/5 text-gray-400 hover:bg-white/10"
-                    }`}
+                        }`}
                 >
                     Todos
                 </Link>
                 <Link
                     href="/admin/reports?status=PENDING"
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                        statusParam === "PENDING"
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition ${statusParam === "PENDING"
                             ? "bg-amber-500 text-black"
                             : "bg-white/5 text-gray-400 hover:bg-white/10"
-                    }`}
+                        }`}
                 >
                     <AlertTriangle size={16} className="inline mr-2" /> Pendientes
                 </Link>
                 <Link
                     href="/admin/reports?status=REVIEWED"
-                    className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                        statusParam === "REVIEWED"
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition ${statusParam === "REVIEWED"
                             ? "bg-green-500 text-black"
                             : "bg-white/5 text-gray-400 hover:bg-white/10"
-                    }`}
+                        }`}
                 >
                     <CheckCircle size={16} className="inline mr-2" /> Revisados
                 </Link>
             </div>
 
-            <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden">
+            <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
                         <tr>
@@ -271,19 +266,18 @@ export default async function AdminReportsPage({
                         {reports.map((report) => (
                             <tr
                                 key={report.id}
-                                className={`transition-colors ${
-                                    report.isReviewed
+                                className={`transition-colors ${report.isReviewed
                                         ? "opacity-40 hover:opacity-100 bg-neutral-950/50"
                                         : "hover:bg-white/5"
-                                }`}
+                                    }`}
                             >
                                 <td className="p-4">
                                     {report.isReviewed ? (
-                                        <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase bg-green-500/10 text-green-500 border border-green-500/20">
+                                        <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase bg-green-500/10 text-green-500 border-2 border-green-500/20">
                                             Revisado
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                        <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase bg-amber-500/10 text-amber-500 border-2 border-amber-500/20">
                                             Pendiente
                                         </span>
                                     )}
@@ -327,11 +321,10 @@ export default async function AdminReportsPage({
                                         className="group"
                                     >
                                         <div
-                                            className={`font-medium ${
-                                                report.event.user.ipBan
+                                            className={`font-medium ${report.event.user.ipBan
                                                     ? "text-red-500 line-through"
                                                     : "text-gray-300 group-hover:text-white"
-                                            }`}
+                                                }`}
                                         >
                                             {report.event.user.username ||
                                                 "Sin usuario"}
@@ -365,7 +358,7 @@ export default async function AdminReportsPage({
                                                 !report.isReviewed
                                             )}
                                         >
-                                            <button className="min-w-[150px] px-3 py-2 rounded bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300 transition-colors border border-white/10 w-full flex items-center justify-center gap-2 cursor-pointer">
+                                            <button className="min-w-[150px] px-3 py-2 rounded bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300 transition-colors border-2 border-white/10 w-full flex items-center justify-center gap-2 cursor-pointer">
                                                 {report.isReviewed ? (
                                                     <>
                                                         <Filter size={14} /> Reabrir
@@ -387,7 +380,7 @@ export default async function AdminReportsPage({
                                                     session?.user?.id!
                                                 )}
                                             >
-                                                <button className="min-w-[150px] px-3 py-2 w-full rounded bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors border border-red-500/20 flex items-center justify-center gap-2 cursor-pointer">
+                                                <button className="min-w-[150px] px-3 py-2 w-full rounded bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-400 transition-colors border-2 border-red-500/20 flex items-center justify-center gap-2 cursor-pointer">
                                                     <Ban size={14} /> Banear
                                                 </button>
                                             </form>

@@ -48,7 +48,7 @@ export default function AboutPage() {
                     variants={staggerContainer}
                     className="relative z-10 max-w-4xl"
                 >
-                    <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
+                    <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border-2 border-white/10 mb-8 backdrop-blur-sm">
                         <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
                         <span className="text-xs font-medium text-gray-300 tracking-widest uppercase">Nuestra Historia</span>
                     </motion.div>
@@ -65,7 +65,7 @@ export default function AboutPage() {
 
 
             {/* --- 2. EL CREADOR (PERFIL) --- */}
-            <section className="py-24 px-6 border-t border-white/5 bg-neutral-950/50">
+            <section className="py-24 px-6 border-t-2 border-white/5 bg-neutral-950/50">
                 <div className="max-w-6xl mx-auto">
                     <motion.div
                         initial="hidden"
@@ -77,7 +77,7 @@ export default function AboutPage() {
                         {/* Imagen / Tarjeta */}
                         <div className="relative group">
                             <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-sky-600 rounded-3xl opacity-20 group-hover:opacity-40 blur-xl transition-opacity duration-500" />
-                            <div className="relative aspect-square md:aspect-[4/5] rounded-4xl overflow-hidden border border-white/10 bg-neutral-900">
+                            <div className="relative aspect-square md:aspect-[4/5] rounded-4xl overflow-hidden border-2 border-white/10 bg-neutral-900">
                                 {/* REEMPLAZA ESTA URL CON TU FOTO REAL */}
                                 <Image
                                     src="/rayelus-img.jpg"
@@ -119,13 +119,13 @@ export default function AboutPage() {
                                     href="https://github.com/Rayelus5"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-6 py-3 border border-white/20 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center gap-2"
+                                    className="px-6 py-3 border-2 border-white/20 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center gap-2"
                                 >
                                     <Github size={20} /> GitHub
                                 </a>
                                 <a
                                     href="#"
-                                    className="px-6 py-3 border border-white/20 rounded-full font-bold hover:bg-blue-600/20 hover:border-blue-500/50 transition-colors flex items-center gap-2 text-blue-400"
+                                    className="px-6 py-3 border-2 border-white/20 rounded-full font-bold hover:bg-blue-600/20 hover:border-blue-500/50 transition-colors flex items-center gap-2 text-blue-400"
                                 >
                                     <Linkedin size={20} /> LinkedIn
                                 </a>
@@ -186,7 +186,7 @@ export default function AboutPage() {
 
 
             {/* --- 4. CONTACTO --- */}
-            <section id="contact" className="py-24 px-6 border-t border-white/5 bg-gradient-to-b from-black to-blue-950/20">
+            <section id="contact" className="py-24 px-6 border-t-2 border-white/5 bg-gradient-to-b from-black to-blue-950/20">
                 <div className="max-w-3xl mx-auto">
                     <motion.div
                         initial="hidden"
@@ -247,12 +247,12 @@ function RoadmapCard({ icon, title, desc, status, colSpan = "" }: any) {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             whileHover={{ y: -5 }}
-            className={`p-8 rounded-3xl bg-white/5 border border-white/15 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 ${colSpan} flex flex-col justify-between`}
+            className={`p-8 rounded-3xl bg-white/5 border-2 border-white/15 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 ${colSpan} flex flex-col justify-between`}
         >
             <div>
                 <div className="flex justify-between items-start mb-6">
-                    <div className="p-3 bg-white/5 rounded-2xl border border-white/5">{icon}</div>
-                    <span className="px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-white/5">
+                    <div className="p-3 bg-white/5 rounded-2xl border-2 border-white/5">{icon}</div>
+                    <span className="px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-2 border-white/5">
                         {status}
                     </span>
                 </div>

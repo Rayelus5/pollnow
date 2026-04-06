@@ -57,9 +57,8 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
             <Link
                 href={`/e/${event.slug}`}
                 onClick={handleClick}
-                className={`group relative flex flex-col h-full bg-neutral-900/40 border-2 border-white/15 rounded-3xl overflow-hidden hover:border-blue-500/40 transition-colors duration-500 ${
-                    loading ? "opacity-80 pointer-events-none" : ""
-                }`}
+                className={`group relative flex flex-col h-full bg-neutral-900/40 border-2 border-white/15 rounded-3xl overflow-hidden hover:border-blue-500/40 transition-colors duration-500 ${loading ? "opacity-80 pointer-events-none" : ""
+                    }`}
             >
                 {/* Efecto Hover: Glow de fondo */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-transparent to-purple-600/0 group-hover:from-blue-600/10 group-hover:to-sky-600/10 transition-all duration-500 ease-out" />
@@ -69,9 +68,9 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-[5px]">
                         {/* <Bouncy size="40" speed="1.75" color="#ffffff" /> */}
                         <DotPulse
-                        size="60"
-                        speed="1.3"
-                        color="white" 
+                            size="60"
+                            speed="1.3"
+                            color="white"
                         />
                     </div>
                 )}
@@ -80,7 +79,7 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
 
                     {/* Header: Autor y Fecha */}
                     <div className="flex items-center gap-2 mb-5">
-                        <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden relative border border-white/10">
+                        <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden relative border-2 border-white/10">
                             {event.user.image ? (
                                 <img
                                     src={event.user.image}
@@ -124,18 +123,18 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
                     <div className="mt-auto space-y-3 sm:space-y-5">
                         {/* Badges */}
                         <div className="flex gap-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                            <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                            <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border-2 border-white/5">
                                 <Users size={12} className="text-blue-400" />
                                 <span>{event._count.participants} Nominados</span>
                             </div>
-                            <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                            <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border-2 border-white/5">
                                 <Vote size={12} className="text-purple-400" />
                                 <span>{event._count.polls} Categorías</span>
                             </div>
                         </div>
 
                         {/* Tags y Botón Flecha / Loader */}
-                        <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                        <div className="flex items-center justify-between pt-4 border-t-2 border-white/10">
                             <div className="flex flex-wrap gap-2">
                                 {event.tags.slice(0, 2).map((tag) => (
                                     <span
@@ -156,12 +155,12 @@ export default function PublicEventCard({ event }: { event: EventSummary }) {
                                 {loading ? (
                                     // Default values shown
                                     <LineSpinner
-                                    size="40"
-                                    stroke="3"
-                                    speed="1.5"
-                                    color="white" 
+                                        size="40"
+                                        stroke="3"
+                                        speed="1.5"
+                                        color="white"
                                     />
-                                    
+
                                 ) : (
                                     <ArrowRight size={18} />
                                 )}

@@ -36,7 +36,7 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                     </h2>
                     {!isFree && (
                         <span className={clsx(
-                            "px-3 py-1 text-xs font-bold rounded-full border flex items-center gap-2",
+                            "px-3 py-1 text-xs font-bold rounded-full border-2 flex items-center gap-2",
                             user.cancelAtPeriodEnd
                                 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                                 : "bg-green-500/10 text-green-400 border-green-500/20"
@@ -47,7 +47,7 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                     )}
                 </div>
 
-                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-black/40 p-8 rounded-xl border border-white/10 backdrop-blur-sm">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-black/40 p-8 rounded-xl border-2 border-white/10 backdrop-blur-sm">
                     <div className="flex-1 w-full">
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Tu Plan Actual</p>
                         <div className="flex items-baseline gap-3">

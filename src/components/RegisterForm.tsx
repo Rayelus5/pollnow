@@ -8,7 +8,7 @@ export default function RegisterForm() {
     // El nuevo hook usa (action, initialState, permalink?)
     const [state, dispatch, isPending] = useActionState(registerUser, undefined);
 
-  // SI HAY ÉXITO: Mostramos mensaje de confirmación
+    // SI HAY ÉXITO: Mostramos mensaje de confirmación
     if (state && typeof state === 'object' && 'success' in state) {
         return (
             <div className="text-center space-y-6 py-8 animate-in fade-in slide-in-from-bottom-4">
@@ -18,7 +18,7 @@ export default function RegisterForm() {
                 <div>
                     <h3 className="text-2xl font-bold text-white mb-2">¡Revisa tu correo!</h3>
                     <p className="text-gray-400 text-sm leading-relaxed">
-                        Hemos enviado un enlace de confirmación. <br/>
+                        Hemos enviado un enlace de confirmación. <br />
                         Haz clic en él para activar tu cuenta.
                     </p>
                 </div>
@@ -46,7 +46,7 @@ export default function RegisterForm() {
                     maxLength={25}
                     title="Solo letras minúsculas (a-z) y números, sin espacios ni símbolos."
                     // --------------------------
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border-2 border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                     onChange={(e) => {
                         // Forzar minúsculas visualmente mientras escribe
                         e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -66,7 +66,7 @@ export default function RegisterForm() {
                     type="email"
                     placeholder="tu@email.com"
                     required
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border-2 border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 />
             </div>
 
@@ -80,14 +80,14 @@ export default function RegisterForm() {
                     placeholder="Mínimo 6 caracteres"
                     required
                     minLength={6}
-                    className="w-full p-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full p-4 rounded-xl bg-white/5 border-2 border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 />
             </div>
 
             {/* Manejo de error (si state es string, es un mensaje de error) */}
             {state && typeof state === 'string' && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
-                <p>{state}</p>
+                <div className="p-3 bg-red-500/10 border-2 border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+                    <p>{state}</p>
                 </div>
             )}
 

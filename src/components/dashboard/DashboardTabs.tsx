@@ -130,7 +130,7 @@ export default function DashboardTabs({
     return (
         <div>
             {/* Tabs */}
-            <div className="flex border-b border-white/10 mb-6 overflow-x-auto">
+            <div className="flex border-b-2 border-white/10 mb-6 overflow-x-auto">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
@@ -262,7 +262,7 @@ function EventsTab({
                 ))}
 
                 {events.length === 0 && (
-                    <div className="col-span-full py-16 border border-dashed border-white/10 rounded-2xl text-center">
+                    <div className="col-span-full py-16 border-2 border-dashed border-white/10 rounded-2xl text-center">
                         <p className="text-gray-500 mb-2">No tienes eventos activos.</p>
                         <p className="text-sm text-gray-600">
                             ¡Crea el primero para empezar la gala!
@@ -332,7 +332,7 @@ function NotificationsTab({
 }) {
     if (notifications.length === 0) {
         return (
-            <div className="py-10 text-center text-sm text-gray-500 border border-dashed border-white/10 rounded-2xl">
+            <div className="py-10 text-center text-sm text-gray-500 border-2 border-dashed border-white/10 rounded-2xl">
                 No tienes notificaciones por ahora.
             </div>
         );
@@ -373,7 +373,7 @@ function NotificationsTab({
                     <li
                         key={n.id}
                         className={clsx(
-                            "p-4 rounded-xl border text-sm flex justify-between gap-4",
+                            "p-4 rounded-xl border-2 text-sm flex justify-between gap-4",
                             n.isRead
                                 ? "border-white/10 bg-neutral-900/60 text-gray-300"
                                 : "border-blue-500/40 bg-blue-500/5 text-blue-100"
@@ -403,7 +403,7 @@ function NotificationsTab({
                                 <form action={markUserNotificationRead.bind(null, n.id)}>
                                     <button
                                         type="submit"
-                                        className="text-[11px] px-2 py-1 rounded-full bg-white/10 hover:bg-white/20 text-gray-100 border border-white/20 cursor-pointer whitespace-nowrap"
+                                        className="text-[11px] px-2 py-1 rounded-full bg-white/10 hover:bg-white/20 text-gray-100 border-2 border-white/20 cursor-pointer whitespace-nowrap"
                                     >
                                         Marcar como leída
                                     </button>
@@ -452,7 +452,7 @@ function SupportTab({
                         <CreateTicketButton />
                     </div>
                 </div>
-                <div className="py-10 text-center text-sm text-gray-500 border border-dashed border-white/10 rounded-2xl">
+                <div className="py-10 text-center text-sm text-gray-500 border-2 border-dashed border-white/10 rounded-2xl">
                     No tienes tickets abiertos. Crea uno nuevo si necesitas ayuda.
                 </div>
             </section>
@@ -486,13 +486,13 @@ function SupportTab({
                     <a
                         key={chat.id}
                         href={`/dashboard/support/${chat.id}`}
-                        className="block p-4 rounded-xl border border-white/10 bg-neutral-900/60 hover:border-blue-500/40 hover:bg-neutral-900 transition-colors text-sm cursor-pointer"
+                        className="block p-4 rounded-xl border-2 border-white/10 bg-neutral-900/60 hover:border-blue-500/40 hover:bg-neutral-900 transition-colors text-sm cursor-pointer"
                     >
                         <div className="flex justify-between items-center">
                             <div className="font-semibold">Ticket #{chat.id.slice(0, 8)}</div>
                             <span
                                 className={clsx(
-                                    "text-[11px] px-2 py-0.5 rounded-full border",
+                                    "text-[11px] px-2 py-0.5 rounded-full border-2",
                                     chat.isClosed
                                         ? "border-red-500/40 text-red-300 bg-red-500/10"
                                         : "border-emerald-500/40 text-emerald-300 bg-emerald-500/10"
@@ -548,7 +548,7 @@ function Pagination({
                 onClick={prev}
                 disabled={page <= 1}
                 className={clsx(
-                    "px-3 py-1 rounded-md text-sm border transition-colors",
+                    "px-3 py-1 rounded-md text-sm border-2 transition-colors",
                     page <= 1 ? "text-gray-500 border-white/5 cursor-not-allowed" : "text-white border-white/20 hover:bg-white/5 cursor-pointer"
                 )}
             >
@@ -563,7 +563,7 @@ function Pagination({
                 onClick={next}
                 disabled={page >= totalPages}
                 className={clsx(
-                    "px-3 py-1 rounded-md text-sm border transition-colors",
+                    "px-3 py-1 rounded-md text-sm border-2 transition-colors",
                     page >= totalPages ? "text-gray-500 border-white/5 cursor-not-allowed" : "text-white border-white/20 hover:bg-white/5 cursor-pointer"
                 )}
             >

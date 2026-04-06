@@ -42,7 +42,7 @@ export default function MaintenancePage() {
             {/* Glows animados con Framer Motion */}
             <div className="pointer-events-none fixed inset-0">
                 <motion.div
-                    initial={{ 
+                    initial={{
                         opacity: 0.15,
                         x: -500,
                         y: -100,
@@ -70,7 +70,7 @@ export default function MaintenancePage() {
                 />
 
                 <motion.div
-                    initial={{ 
+                    initial={{
                         opacity: 0.15,
                         x: 500,
                         y: 1000,
@@ -109,7 +109,7 @@ export default function MaintenancePage() {
                     variants={fadeInUp}
                     className="flex justify-center mb-6"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border-2 border-white/10 backdrop-blur-sm">
                         <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
                         <span className="text-[11px] font-medium text-gray-300 tracking-[0.25em] uppercase">
                             Mantenimiento activo
@@ -120,7 +120,7 @@ export default function MaintenancePage() {
                 {/* Tarjeta principal */}
                 <motion.div
                     variants={fadeInUp}
-                    className="bg-neutral-900/60 border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-xl"
+                    className="bg-neutral-900/60 border-2 border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl backdrop-blur-xl"
                 >
                     <div className="flex flex-col items-center text-center gap-5 mb-6">
                         <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-500/15 rounded-full flex items-center justify-center text-indigo-300">
@@ -137,7 +137,7 @@ export default function MaintenancePage() {
                     </div>
 
                     {/* Bloque informativo */}
-                    <div className="mb-8 rounded-2xl border border-white/10 bg-black/40 px-5 py-4 text-sm text-gray-300 flex flex-col gap-2">
+                    <div className="mb-8 rounded-2xl border-2 border-white/10 bg-black/40 px-5 py-4 text-sm text-gray-300 flex flex-col gap-2">
                         <div className="flex items-center justify-center gap-2 text-gray-200 text-sm">
                             <Clock size={16} className="text-indigo-300" />
                             <span>Mantenimiento programado</span>

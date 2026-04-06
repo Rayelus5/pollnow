@@ -38,7 +38,7 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
     if (!event.isPublic && event.accessKey !== key) {
         return (
             <main className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center selection:bg-red-500/30">
-                <div className="bg-neutral-900/50 border border-red-500/20 p-10 rounded-3xl backdrop-blur-md max-w-md w-full">
+                <div className="bg-neutral-900/50 border-2 border-red-500/20 p-10 rounded-3xl backdrop-blur-md max-w-md w-full">
                     <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
                         <Lock size={32} />
                     </div>

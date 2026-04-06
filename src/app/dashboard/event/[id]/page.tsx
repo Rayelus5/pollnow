@@ -57,7 +57,7 @@ export default async function EventDashboardPage({ params }: Props) {
 
     return (
         <main className="min-h-screen bg-black text-white">
-            <header className="border-b border-white/10 bg-neutral-900/30">
+            <header className="border-b-2 border-white/10 bg-neutral-900/30">
                 <div className="max-w-7xl mx-auto px-6 py-8 tour-event-header">
                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                         <Link
@@ -75,8 +75,8 @@ export default async function EventDashboardPage({ params }: Props) {
                                 plan.name.toUpperCase() === "PREMIUM"
                                     ? "bg-indigo-500/10 text-indigo-400"
                                     : plan.name.toUpperCase() === "UNLIMITED"
-                                    ? "bg-purple-500/10 text-purple-400"
-                                    : "bg-white/10 text-gray-400"
+                                        ? "bg-purple-500/10 text-purple-400"
+                                        : "bg-white/10 text-gray-400"
                             )}
                         >
                             Plan {plan.name}

@@ -174,9 +174,9 @@ export default function ChatInterface({
     };
 
     return (
-        <div className="flex flex-col h-[70vh] max-h-[600px] border border-white/10 rounded-xl bg-neutral-950/60">
+        <div className="flex flex-col h-[70vh] max-h-[600px] border-2 border-white/10 rounded-xl bg-neutral-950/60">
             {/* Cabecera simple */}
-            <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center">
+            <div className="px-4 py-3 border-b-2 border-white/10 flex justify-between items-center">
                 <div className="text-sm text-gray-300 flex items-center justify-between w-full">
                     <div>
                         Chat de soporte
@@ -192,7 +192,7 @@ export default function ChatInterface({
                     </span>
                 </div>
                 {isClosed && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/30">
+                    <span className="text-xs px-2 py-1 rounded-full bg-red-500/10 text-red-400 border-2 border-red-500/30">
                         Cerrado
                     </span>
                 )}
@@ -209,16 +209,14 @@ export default function ChatInterface({
                 {messages.map((msg) => (
                     <div
                         key={msg.id}
-                        className={`flex ${
-                            isOwn(msg) ? "justify-end" : "justify-start"
-                        }`}
+                        className={`flex ${isOwn(msg) ? "justify-end" : "justify-start"
+                            }`}
                     >
                         <div
-                            className={`max-w-xs md:max-w-md min-w-[100px] px-3 py-2 rounded-lg text-md ${
-                                isOwn(msg)
+                            className={`max-w-xs md:max-w-md min-w-[100px] px-3 py-2 rounded-lg text-md ${isOwn(msg)
                                     ? "bg-blue-600 text-white rounded-br-none"
                                     : "bg-neutral-800 text-gray-100 rounded-bl-none"
-                            } wrap-break-word `}
+                                } wrap-break-word `}
                         >
                             {!isOwn(msg) && (
                                 <div className="text-[12px] text-gray-400 mb-0.5">
@@ -237,7 +235,7 @@ export default function ChatInterface({
 
             {/* Mensaje de error de sync opcional */}
             {syncError && (
-                <div className="px-4 pb-2 text-[11px] text-red-400 bg-red-500/5 border-t border-red-500/20 flex items-center justify-between">
+                <div className="px-4 pb-2 text-[11px] text-red-400 bg-red-500/5 border-t-2 border-red-500/20 flex items-center justify-between">
                     <span>{syncError}</span>
                     <button
                         onClick={fetchMessages}
@@ -251,7 +249,7 @@ export default function ChatInterface({
             {/* Input */}
             <form
                 onSubmit={handleSubmit}
-                className="px-4 py-3 border-t border-white/10 flex gap-2"
+                className="px-4 py-3 border-t-2 border-white/10 flex gap-2"
             >
                 <input
                     type="text"
@@ -260,7 +258,7 @@ export default function ChatInterface({
                     onChange={(e) => setInput(e.target.value)}
                     disabled={isClosed || isSending}
                     placeholder={isClosed ? "Chat cerrado" : "Escribe tu mensaje..."}
-                    className="flex-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500 disabled:opacity-60"
+                    className="flex-1 bg-black/60 border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500 disabled:opacity-60"
                 />
                 <button
                     type="submit"

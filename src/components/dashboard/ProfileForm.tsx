@@ -192,7 +192,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -8, scale: 0.9 }}
                             transition={{ duration: 0.18, ease: "easeOut" }}
-                            className={`pointer-events-auto w-full max-w-sm rounded-xl border px-4 py-3 text-sm shadow-lg backdrop-blur-md
+                            className={`pointer-events-auto w-full max-w-sm rounded-xl border-2 px-4 py-3 text-sm shadow-lg backdrop-blur-md
                     ${toast.type === "success"
                                     ? "bg-emerald-900/80 border-emerald-500/40 text-emerald-100"
                                     : "bg-red-900/80 border-red-500/40 text-red-100"
@@ -273,7 +273,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                             value={previewImage}
                                             onChange={(e) => setPreviewImage(e.target.value)}
                                             placeholder="https://..."
-                                            className="w-full bg-black border border-white/20 rounded-lg py-2 pl-10 pr-4 text-white text-sm focus:border-blue-500 outline-none transition-all"
+                                            className="w-full bg-black border-2 border-white/20 rounded-lg py-2 pl-10 pr-4 text-white text-sm focus:border-blue-500 outline-none transition-all"
                                         />
                                     </div>
                                     <p className="text-[10px] text-gray-600 mt-2">
@@ -283,7 +283,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                             </div>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+                        <div className="grid md:grid-cols-2 gap-6 pt-4 border-t-2 border-white/5">
                             <div>
                                 <label className="block text-xs uppercase text-gray-500 mb-2">
                                     Nombre en pantalla
@@ -294,7 +294,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                     value={name}
                                     onChange={handleNameChange}
                                     maxLength={25}
-                                    className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
+                                    className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
                                     placeholder="Cómo te verán los demás"
                                 />
                                 <p className="text-[10px] text-gray-500 mt-1">
@@ -311,7 +311,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                     value={username}
                                     onChange={handleUsernameChange}
                                     maxLength={20}
-                                    className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
+                                    className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
                                     placeholder="tu_usuario"
                                 />
                                 <p className="text-[10px] text-gray-500 mt-1">
@@ -350,7 +350,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                 <input
                                     disabled
                                     value={user.email || ""}
-                                    className="w-full bg-white/5 border border-white/5 rounded-lg p-3 text-gray-400 cursor-not-allowed"
+                                    className="w-full bg-white/5 border-2 border-white/5 rounded-lg p-3 text-gray-400 cursor-not-allowed"
                                 />
                             </div>
 
@@ -363,7 +363,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                         type="password"
                                         name="currentPassword"
                                         required
-                                        className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
+                                        className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
                                     />
                                 </div>
                                 <div>
@@ -375,7 +375,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                         name="newPassword"
                                         required
                                         minLength={6}
-                                        className="w-full bg-black border border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
+                                        className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none"
                                     />
                                 </div>
                             </div>

@@ -36,7 +36,7 @@ export default function EventTabs({
           enabled: true,
         },
         classes:
-          "bg-neutral-900 border border-white/10 text-sm text-gray-100 rounded-xl shadow-xl",
+          "bg-neutral-900 border-2 border-white/10 text-sm text-gray-100 rounded-xl shadow-xl",
         scrollTo: { behavior: "smooth", block: "center" as const },
       },
       useModalOverlay: true,
@@ -269,7 +269,7 @@ export default function EventTabs({
   return (
     <div>
       {/* TABS + botón de guía */}
-      <div className="flex border-b border-white/10 mb-8 overflow-x-auto tour-event-tabs">
+      <div className="flex border-b-2 border-white/10 mb-8 overflow-x-auto tour-event-tabs">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -292,7 +292,7 @@ export default function EventTabs({
           <button
             type="button"
             onClick={handleStartTour}
-            className="px-3 py-2 text-[11px] rounded-full border border-blue-500/40 text-blue-300 hover:bg-blue-500/10 cursor-pointer flex items-center gap-1 whitespace-nowrap"
+            className="px-3 py-2 text-[11px] rounded-full border-2 border-blue-500/40 text-blue-300 hover:bg-blue-500/10 cursor-pointer flex items-center gap-1 whitespace-nowrap"
           >
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
             Guía interactiva

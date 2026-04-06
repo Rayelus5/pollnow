@@ -80,7 +80,7 @@ export default function ResultsClient({
                         </h1>
                         <Link
                             href={backUrl}
-                            className="text-sm text-gray-500 hover:text-white transition-colors border-b border-transparent hover:border-white pb-0.5"
+                            className="text-sm text-gray-500 hover:text-white transition-colors border-b-2 border-transparent hover:border-white pb-0.5"
                         >
                             ← Volver a la Ceremonia
                         </Link>
@@ -90,7 +90,7 @@ export default function ResultsClient({
                     {winners.length > 0 ? (
                         <motion.div
                             variants={itemVariants}
-                            className="relative overflow-hidden rounded-3xl border border-blue-500/30 p-6 md:p-10 text-center mb-10 md:mb-12 shadow-[0_0_80px_-20px_rgba(37,99,235,0.4)] min-h-[420px] md:min-h-[550px] w-full max-w-4xl mx-auto flex flex-col justify-center items-center group"
+                            className="relative overflow-hidden rounded-3xl border-2 border-blue-500/30 p-6 md:p-10 text-center mb-10 md:mb-12 shadow-[0_0_80px_-20px_rgba(37,99,235,0.4)] min-h-[420px] md:min-h-[550px] w-full max-w-4xl mx-auto flex flex-col justify-center items-center group"
                         >
                             <WinnerConfetti />
 
@@ -128,7 +128,7 @@ export default function ResultsClient({
 
                                 <div className="inline-block relative max-w-full">
                                     <div className="absolute -inset-1 bg-blue-500/20 blur-lg rounded-full" />
-                                    <h2 className="relative text-sm sm:text-base md:text-lg text-blue-200 font-light uppercase tracking-[0.2em] border-t border-b border-blue-500/30 py-2 sm:py-3 px-4 sm:px-6 break-words">
+                                    <h2 className="relative text-sm sm:text-base md:text-lg text-blue-200 font-light uppercase tracking-[0.2em] border-t-2 border-b-2 border-blue-500/30 py-2 sm:py-3 px-4 sm:px-6 break-words">
                                         {winners[0].name.endsWith("a") ? "GANADORA" : "GANADOR"} DE ESTA CATEGORÍA
                                         {/* {pollDescription || "ESTA CATEGORÍA"} */}
                                     </h2>
@@ -138,7 +138,7 @@ export default function ResultsClient({
                     ) : (
                         <motion.div
                             variants={itemVariants}
-                            className="text-center p-6 md:p-10 text-gray-500 bg-neutral-900/50 rounded-2xl border border-white/5 max-w-xl mx-auto"
+                            className="text-center p-6 md:p-10 text-gray-500 bg-neutral-900/50 rounded-2xl border-2 border-white/5 max-w-xl mx-auto"
                         >
                             No hubo votos suficientes.
                         </motion.div>
@@ -175,7 +175,7 @@ export default function ResultsClient({
                                 </div>
 
                                 {/* Barra de progreso */}
-                                <div className="h-2.5 md:h-3 w-full bg-gray-900 rounded-full overflow-hidden border border-white/5 relative">
+                                <div className="h-2.5 md:h-3 w-full bg-gray-900 rounded-full overflow-hidden border-2 border-white/5 relative">
                                     <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                     <motion.div

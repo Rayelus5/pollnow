@@ -161,20 +161,20 @@ function ParticipantForm({
                             value={name}
                             onChange={handleNameChange}
                             autoFocus={!isEditMode}
-                            className="flex-1 bg-black border border-blue-500/30 rounded px-3 py-2 text-white text-sm focus:border-blue-500 outline-none w-full"
+                            className="flex-1 bg-black border-2 border-blue-500/30 rounded px-3 py-2 text-white text-sm focus:border-blue-500 outline-none w-full"
                             placeholder="Nombre del participante..."
                             required
                         />
                         {/*FREE no puede generar con IA */}
-                        {planSlug !== 'free' ? ( 
+                        {planSlug !== 'free' ? (
                             <button
                                 type="button"
                                 onClick={generateAIImage}
                                 disabled={isGenerating || !name}
-                                className="px-3 py-2 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded hover:bg-purple-600/40 transition-colors disabled:opacity-50 flex items-center gap-2 text-xs font-bold whitespace-nowrap cursor-pointer min-h-[38px]"
+                                className="px-3 py-2 bg-purple-600/20 text-purple-300 border-2 border-purple-500/30 rounded hover:bg-purple-600/40 transition-colors disabled:opacity-50 flex items-center gap-2 text-xs font-bold whitespace-nowrap cursor-pointer min-h-[38px]"
                                 title="Generar avatar con IA"
                             >
-                            {isGenerating ? (
+                                {isGenerating ? (
                                     <Mirage size="40" speed="2.5" color="#d8b4fe" />
                                 ) : (
                                     <>
@@ -187,7 +187,7 @@ function ParticipantForm({
                             <Link
                                 type="button"
                                 href={'/premium'}
-                                className="px-3 py-2 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded hover:bg-purple-600/40 transition-colors opacity-40 flex items-center gap-2 text-xs font-bold whitespace-nowrap cursor-not-allowed min-h-[38px]"
+                                className="px-3 py-2 bg-purple-600/20 text-purple-300 border-2 border-purple-500/30 rounded hover:bg-purple-600/40 transition-colors opacity-40 flex items-center gap-2 text-xs font-bold whitespace-nowrap cursor-not-allowed min-h-[38px]"
                                 title="Generar con IA (PREMIUM)"
                             >
                                 <>
@@ -204,14 +204,14 @@ function ParticipantForm({
                             name="imageUrl"
                             value={image}
                             onChange={(e) => setImage(e.target.value)}
-                            className="w-full bg-black border border-blue-500/30 rounded px-3 py-1.5 pl-8 text-white text-[10px] focus:border-blue-500 outline-none text-gray-400"
+                            className="w-full bg-black border-2 border-blue-500/30 rounded px-3 py-1.5 pl-8 text-white text-[10px] focus:border-blue-500 outline-none text-gray-400"
                             placeholder="O pega URL..."
                         />
                     </div>
                 </div>
             </div>
 
-            <div className={`flex gap-2 ${isEditMode ? 'w-full sm:w-auto' : 'justify-end border-t border-white/5 pt-3'}`}>
+            <div className={`flex gap-2 ${isEditMode ? 'w-full sm:w-auto' : 'justify-end border-t-2 border-white/5 pt-3'}`}>
                 {isEditMode ? (
                     <>
                         <SaveButton />
@@ -295,7 +295,7 @@ export default function ParticipantList({
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">
                         Lista de Nominados
                     </h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${currentCount >= currentLimit ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-gray-500 border-gray-700'}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 ${currentCount >= currentLimit ? 'text-red-400 border-red-500/30 bg-red-500/10' : 'text-gray-500 border-gray-700'}`}>
                         {currentCount} / {currentLimit}
                     </span>
                 </div>
@@ -308,7 +308,7 @@ export default function ParticipantList({
                             placeholder="Buscar participantes..."
                             value={searchQuery}
                             onChange={handleSearch}
-                            className="w-full bg-neutral-900 border border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                            className="w-full bg-neutral-900 border-2 border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
                         />
                     </div>
                     <button
@@ -323,7 +323,7 @@ export default function ParticipantList({
             {/* MODAL DE UPGRADE (LÍMITE ALCANZADO) */}
             {showUpgradeModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-lg p-8 shadow-2xl relative overflow-hidden">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-lg p-8 shadow-2xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] pointer-events-none -mr-16 -mt-16" />
 
                         <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
@@ -334,8 +334,8 @@ export default function ParticipantList({
                         </p>
 
                         {/* Tabla Comparativa */}
-                        <div className="bg-black/40 rounded-xl border border-white/5 p-4 mb-8 space-y-3">
-                            <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                        <div className="bg-black/40 rounded-xl border-2 border-white/5 p-4 mb-8 space-y-3">
+                            <div className="flex justify-between items-center text-sm border-b-2 border-white/5 pb-2">
                                 <span className="text-gray-500">Tu Plan ({PLANS[planKey].name})</span>
                                 <span className="font-mono text-red-400">{currentLimit} participantes</span>
                             </div>
@@ -360,8 +360,8 @@ export default function ParticipantList({
                         </div>
 
                         <div className="flex gap-3">
-                            <button 
-                                onClick={() => setShowUpgradeModal(false)} 
+                            <button
+                                onClick={() => setShowUpgradeModal(false)}
                                 className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-300 font-bold transition-colors cursor-pointer"
                             >
                                 Cancelar
@@ -374,7 +374,7 @@ export default function ParticipantList({
 
             {/* FORMULARIO DE CREACIÓN */}
             {isCreating && (
-                <div className="bg-blue-900/20 border border-blue-500/50 p-4 rounded-xl animate-in fade-in slide-in-from-top-2">
+                <div className="bg-blue-900/20 border-2 border-blue-500/50 p-4 rounded-xl animate-in fade-in slide-in-from-top-2">
                     <ParticipantForm
                         onSubmit={async (formData) => {
                             await createEventParticipant(eventId, formData);
@@ -389,7 +389,7 @@ export default function ParticipantList({
             {/* LISTA PAGINADA */}
             <div className="space-y-2 min-h-[300px]">
                 {paginatedData.map((p) => (
-                    <div key={p.id} className="bg-neutral-900/50 border border-white/10 p-4 rounded-xl flex items-center justify-between group hover:border-white/20 transition-colors cursor-pointer">
+                    <div key={p.id} className="bg-neutral-900/50 border-2 border-white/10 p-4 rounded-xl flex items-center justify-between group hover:border-white/20 transition-colors cursor-pointer">
 
                         {editingId === p.id ? (
                             <ParticipantForm
@@ -406,7 +406,7 @@ export default function ParticipantList({
                         ) : (
                             <>
                                 <div className="flex items-center gap-4 cursor-pointer flex-1 min-w-0">
-                                    <div className="w-12 h-12 rounded-full bg-gray-800 overflow-hidden shrink-0 border border-white/10">
+                                    <div className="w-12 h-12 rounded-full bg-gray-800 overflow-hidden shrink-0 border-2 border-white/10">
                                         {p.imageUrl ? (
                                             <img src={p.imageUrl} alt={p.name.charAt(0)} className="w-full h-full object-cover" />
                                         ) : (
@@ -433,7 +433,7 @@ export default function ParticipantList({
                 ))}
 
                 {filteredData.length === 0 && !isCreating && (
-                    <div className="text-center py-10 border border-dashed border-white/10 rounded-xl text-gray-600 text-sm h-full flex items-center justify-center">
+                    <div className="text-center py-10 border-2 border-dashed border-white/10 rounded-xl text-gray-600 text-sm h-full flex items-center justify-center">
                         {searchQuery ? "No se encontraron nominados." : "No hay participantes. Añade a tus amigos para empezar."}
                     </div>
                 )}
@@ -441,7 +441,7 @@ export default function ParticipantList({
 
             {/* CONTROLES DE PAGINACIÓN (SOLO SI ES NECESARIO) */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 pt-4 border-t border-white/5">
+                <div className="flex justify-center items-center gap-4 pt-4 border-t-2 border-white/5">
                     <button
                         onClick={prevPage}
                         disabled={currentPage === 1}

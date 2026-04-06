@@ -29,7 +29,7 @@ export default function ReportButton({ eventId }: { eventId: string }) {
 
     return (
         <>
-            <button 
+            <button
                 onClick={() => setIsOpen(true)}
                 className="text-gray-500 hover:text-red-400 transition-colors p-2 rounded-full hover:bg-red-500/10"
                 title="Reportar Evento"
@@ -39,22 +39,22 @@ export default function ReportButton({ eventId }: { eventId: string }) {
 
             {isOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-                        <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20}/></button>
-                        
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
+                        <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
+
                         {!sent ? (
                             <form onSubmit={handleSubmit}>
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <AlertTriangle className="text-red-500" size={20} /> Reportar Contenido
                                 </h3>
-                                
+
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Motivo</label>
-                                        <select 
-                                            value={reason} 
+                                        <select
+                                            value={reason}
                                             onChange={(e) => setReason(e.target.value)}
-                                            className="w-full bg-black border border-white/20 rounded-lg p-2 text-white text-sm outline-none focus:border-red-500"
+                                            className="w-full bg-black border-2 border-white/20 rounded-lg p-2 text-white text-sm outline-none focus:border-red-500"
                                         >
                                             <option value="SPAM">Spam o Publicidad</option>
                                             <option value="INAPPROPRIATE_CONTENT">Contenido Inapropiado / Ofensivo</option>
@@ -63,21 +63,21 @@ export default function ReportButton({ eventId }: { eventId: string }) {
                                             <option value="OTHER">Otro</option>
                                         </select>
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Detalles</label>
-                                        <textarea 
+                                        <textarea
                                             value={details}
                                             onChange={(e) => setDetails(e.target.value)}
                                             rows={3}
-                                            className="w-full bg-black border border-white/20 rounded-lg p-3 text-white text-sm outline-none focus:border-red-500 resize-none"
+                                            className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white text-sm outline-none focus:border-red-500 resize-none"
                                             placeholder="Describe brevemente el problema..."
                                             required
                                         />
                                     </div>
 
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         disabled={loading}
                                         className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors flex justify-center items-center gap-2 disabled:opacity-50"
                                     >

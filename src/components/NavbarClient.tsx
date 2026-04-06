@@ -17,19 +17,19 @@ type NavbarProps = {
     showPremium?: boolean;
 };
 
-export default function NavbarClient({ user, showPremium=true }: NavbarProps) {
+export default function NavbarClient({ user, showPremium = true }: NavbarProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const pathname = usePathname();
 
     const closeMenu = () => setIsMobileMenuOpen(false);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/20">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b-2 border-white/20">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
                 {/* --- LOGO --- */}
                 <Link href="/" className="flex items-center gap-2 group z-50" onClick={closeMenu}>
-                    <div className="w-10 h-10 border border-white/20 bg-gradient-to-br from-gray-700 to-black rounded-lg flex items-center justify-center font-bold text-black group-hover:scale-105 transition-transform">
+                    <div className="w-10 h-10 border-2 border-white/20 bg-gradient-to-br from-gray-700 to-black rounded-lg flex items-center justify-center font-bold text-black group-hover:scale-105 transition-transform">
                         <img src="/logo.webp" alt="" />
                     </div>
                     <span className="font-bold text-2xl tracking-tight text-white">POLLNOW</span>
@@ -50,8 +50,8 @@ export default function NavbarClient({ user, showPremium=true }: NavbarProps) {
                 <div className="hidden lg:flex items-center gap-4">
                     {user ? (
                         <div className="flex items-center gap-3">
-                            <Link href="/dashboard?tab=profile" className="flex items-center gap-3 p-1 pr-4 rounded-full hover:bg-white/10 transition-colors group border border-white/20">
-                                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 relative">
+                            <Link href="/dashboard?tab=profile" className="flex items-center gap-3 p-1 pr-4 rounded-full hover:bg-white/10 transition-colors group border-2 border-white/20">
+                                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 relative">
                                     {user.image ? (
                                         <img src={user.image} alt="Avatar" className="object-cover" />
                                     ) : (
@@ -67,7 +67,7 @@ export default function NavbarClient({ user, showPremium=true }: NavbarProps) {
 
                             <button
                                 onClick={() => logoutUser()}
-                                className="text-xs text-red-400 hover:text-red-300 font-medium p-3 border border-red-500/20 rounded-full hover:bg-red-500/10 transition-colors cursor-pointer"
+                                className="text-xs text-red-400 hover:text-red-300 font-medium p-3 border-2 border-red-500/20 rounded-full hover:bg-red-500/10 transition-colors cursor-pointer"
                                 title="Cerrar Sesión"
                             >
                                 <LogOut size={16} />
@@ -108,7 +108,7 @@ export default function NavbarClient({ user, showPremium=true }: NavbarProps) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-16 left-0 right-0 bg-black/95 backdrop-blur-xl border-b border-white/20 p-6 lg:hidden shadow-2xl flex flex-col gap-4 h-[calc(100vh-64px)] overflow-y-auto"
+                        className="absolute top-16 left-0 right-0 bg-black/95 backdrop-blur-xl border-b-2 border-white/20 p-6 lg:hidden shadow-2xl flex flex-col gap-4 h-[calc(100vh-64px)] overflow-y-auto"
                     >
                         {/* Enlaces de Navegación */}
                         <div className="flex flex-col space-y-2">
@@ -129,9 +129,9 @@ export default function NavbarClient({ user, showPremium=true }: NavbarProps) {
                                 <Link
                                     href="/dashboard?tab=profile"
                                     onClick={closeMenu}
-                                    className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/20 hover:bg-white/10 transition-colors"
+                                    className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border-2 border-white/20 hover:bg-white/10 transition-colors"
                                 >
-                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-white/20 relative shrink-0">
+                                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 relative shrink-0">
                                         {user.image ? (
                                             <img src={user.image} alt="Avatar" className="object-cover" />
                                         ) : (
@@ -148,7 +148,7 @@ export default function NavbarClient({ user, showPremium=true }: NavbarProps) {
 
                                 <button
                                     onClick={() => logoutUser()}
-                                    className="flex items-center justify-center gap-2 w-full p-4 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors font-bold"
+                                    className="flex items-center justify-center gap-2 w-full p-4 rounded-xl border-2 border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors font-bold"
                                 >
                                     <LogOut size={18} /> Cerrar Sesión
                                 </button>
@@ -158,7 +158,7 @@ export default function NavbarClient({ user, showPremium=true }: NavbarProps) {
                                 <Link
                                     href="/login"
                                     onClick={closeMenu}
-                                    className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-center font-bold hover:bg-white/10"
+                                    className="w-full py-3 rounded-xl bg-white/5 border-2 border-white/10 text-center font-bold hover:bg-white/10"
                                 >
                                     Iniciar Sesión
                                 </Link>

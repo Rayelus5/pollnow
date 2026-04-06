@@ -18,9 +18,9 @@ export default async function ResultsPage({ params }: Props) {
     const poll = await prisma.poll.findUnique({
         where: { id },
         include: {
-        event: { select: { galaDate: true, slug: true } }, // <--- IMPORTANTE
-        options: { include: { participant: true } },
-        votes: { include: { voteOptions: true } }
+            event: { select: { galaDate: true, slug: true } }, // <--- IMPORTANTE
+            options: { include: { participant: true } },
+            votes: { include: { voteOptions: true } }
         }
     });
 
@@ -42,7 +42,7 @@ export default async function ResultsPage({ params }: Props) {
     if (!isGalaTime) {
         return (
             <main className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center selection:bg-blue-500/30">
-                <div className="bg-neutral-900/50 border border-white/10 p-10 rounded-3xl backdrop-blur-md max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-500">
+                <div className="bg-neutral-900/50 border-2 border-white/10 p-10 rounded-3xl backdrop-blur-md max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-500">
 
                     {/* Icono Candado Animado */}
                     <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
@@ -56,14 +56,14 @@ export default async function ResultsPage({ params }: Props) {
                         La votación se ha registrado, pero el sobre está cerrado hasta la ceremonia oficial.
                     </p>
 
-                    <div className="py-4 border-t border-b border-white/5 mb-8">
+                    <div className="py-4 border-t-2 border-b-2 border-white/5 mb-8">
                         <p className="text-xs text-blue-500 font-mono uppercase tracking-widest mb-2">Tiempo restante</p>
                         <div className="text-white">
                             <Countdown targetDate={galaDate} />
                         </div>
                     </div>
 
-                    <Link href={`/e/${poll.event.slug}`} className="text-sm text-gray-400 hover:text-white transition-colors border-b border-transparent hover:border-white pb-1">
+                    <Link href={`/e/${poll.event.slug}`} className="text-sm text-gray-400 hover:text-white transition-colors border-b-2 border-transparent hover:border-white pb-1">
                         Volver al inicio
                     </Link>
                 </div>
@@ -97,15 +97,15 @@ export default async function ResultsPage({ params }: Props) {
 
     // 4. RENDERIZADO DEL COMPONENTE CLIENTE (ANIMACIONES)
     return (
-        <ResultsClient 
-        pollTitle={poll.title}
-        pollDescription={poll.description}
-        results={results}
-        winners={winners}
-        winnerImage={winnerImage}
-        // Añadimos la URL de retorno correcta
-        backUrl={`/e/${poll.event.slug}/results`}
-        showAds={showAds}
+        <ResultsClient
+            pollTitle={poll.title}
+            pollDescription={poll.description}
+            results={results}
+            winners={winners}
+            winnerImage={winnerImage}
+            // Añadimos la URL de retorno correcta
+            backUrl={`/e/${poll.event.slug}/results`}
+            showAds={showAds}
         />
     );
 }

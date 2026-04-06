@@ -93,7 +93,7 @@ export default function GlobalResultsClient({
                     {/* HEADER */}
                     <motion.header
                         variants={itemVariants}
-                        className="py-8 border-b border-white/10 mb-10 flex flex-col md:flex-row justify-between items-center gap-6"
+                        className="py-8 border-b-2 border-white/10 mb-10 flex flex-col md:flex-row justify-between items-center gap-6"
                     >
                         <div>
                             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
@@ -106,7 +106,7 @@ export default function GlobalResultsClient({
 
                         <Link
                             href={`/e/${eventSlug}`}
-                            className="group relative px-6 py-2 rounded-full overflow-hidden bg-white/5 border border-white/10 hover:border-white/30 transition-colors"
+                            className="group relative px-6 py-2 rounded-full overflow-hidden bg-white/5 border-2 border-white/10 hover:border-white/30 transition-colors"
                         >
                             <span className="relative z-10 text-sm font-bold text-gray-300 group-hover:text-white transition-colors">
                                 Volver al Lobby
@@ -130,14 +130,14 @@ export default function GlobalResultsClient({
                                         onClick={(e) => handlePollClick(e, poll.id)}
                                         className={`
                                             group relative aspect-video bg-neutral-900/40 rounded-2xl overflow-hidden 
-                                            border border-white/5 hover:border-sky-500/50 transition-all duration-500 block
+                                            border-2 border-white/5 hover:border-sky-500/50 transition-all duration-500 block
                                             ${isLoadingThisCard ? "pointer-events-none opacity-80" : ""}
                                         `}
                                     >
                                         {/* CONTENIDO NORMAL DE LA TARJETA */}
                                         <div className="absolute inset-0 p-8 flex flex-col justify-between z-20">
                                             <div className="flex justify-between items-start">
-                                                <span className="text-xs font-mono text-sky-500/80 uppercase tracking-[0.2em] border border-sky-500/20 px-2 py-1 rounded bg-sky-500/5">
+                                                <span className="text-xs font-mono text-sky-500/80 uppercase tracking-[0.2em] border-2 border-sky-500/20 px-2 py-1 rounded bg-sky-500/5">
                                                     Cat. {index + 1}
                                                 </span>
                                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity text-sky-400 transform translate-x-2 group-hover:translate-x-0 duration-300">

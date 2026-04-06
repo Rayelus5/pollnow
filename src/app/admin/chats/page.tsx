@@ -60,11 +60,10 @@ export default async function AdminChatsPage({
                     </p>
                 </div>
                 <div
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
-                        openChatsCount === 0
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 ${openChatsCount === 0
                             ? "border-green-500/20"
                             : "border-amber-500/20"
-                    }`}
+                        }`}
                 >
                     <div
                         className="w-2 h-2 rounded-full animate-pulse"
@@ -73,9 +72,8 @@ export default async function AdminChatsPage({
                         }}
                     ></div>
                     <span
-                        className={`${
-                            openChatsCount === 0 ? "text-green-500" : "text-amber-500"
-                        } text-xs font-bold`}
+                        className={`${openChatsCount === 0 ? "text-green-500" : "text-amber-500"
+                            } text-xs font-bold`}
                     >
                         {openChatsCount} abiertos
                     </span>
@@ -91,7 +89,7 @@ export default async function AdminChatsPage({
 
             <div className="grid gap-4">
                 {totalChats === 0 && (
-                    <div className="flex flex-col items-center justify-center py-32 border border-dashed border-white/10 rounded-2xl bg-white/5 text-center">
+                    <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-white/10 rounded-2xl bg-white/5 text-center">
                         <div className="text-4xl mb-4 grayscale opacity-50">💬</div>
                         <h3 className="text-xl font-bold text-white mb-2">
                             ¡Todo limpio!
@@ -107,11 +105,10 @@ export default async function AdminChatsPage({
                     <Link
                         key={chat.id}
                         href={`/admin/chats/${chat.id}`}
-                        className={`flex items-center gap-6 p-4 rounded-xl border transition-all ${
-                            chat.isClosed
+                        className={`flex items-center gap-6 p-4 rounded-xl border-2 transition-all ${chat.isClosed
                                 ? "bg-neutral-950 border-white/5 opacity-40 hover:opacity-60"
                                 : "bg-neutral-900 border-white/10 hover:border-blue-500/40"
-                        }`}
+                            }`}
                     >
                         <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-bold text-gray-400 shrink-0">
                             {chat.user.name?.[0]}
@@ -169,11 +166,10 @@ function FilterLink({
     return (
         <Link
             href={`?status=${status}`}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition ${
-                isActive
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition ${isActive
                     ? "bg-white text-black"
                     : "bg-white/5 text-gray-400 hover:bg-white/10"
-            }`}
+                }`}
         >
             {label}
         </Link>

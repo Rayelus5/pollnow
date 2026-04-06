@@ -58,12 +58,12 @@ export default function LegalLayout({ title, date, children }: LegalLayoutProps)
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="bg-gradient-to-b from-white/10 via-white/[0.03] to-white/[0.02] border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(15,23,42,0.8)] backdrop-blur-2xl px-6 py-8 md:px-10 md:py-10"
+                    className="bg-gradient-to-b from-white/10 via-white/[0.03] to-white/[0.02] border-2 border-white/10 rounded-3xl shadow-[0_0_60px_rgba(15,23,42,0.8)] backdrop-blur-2xl px-6 py-8 md:px-10 md:py-10"
                 >
                     {/* Cabecera legal */}
                     <motion.header
                         variants={itemVariants}
-                        className="mb-8 md:mb-10 border-b border-white/10 pb-6"
+                        className="mb-8 md:mb-10 border-b-2 border-white/10 pb-6"
                     >
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
@@ -79,7 +79,7 @@ export default function LegalLayout({ title, date, children }: LegalLayoutProps)
                             </div>
 
                             <div className="flex flex-col items-start lg:items-end text-xs text-gray-400 gap-1">
-                                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-1">
+                                <span className="inline-flex items-center gap-2 rounded-full border-2 border-white/10 bg-black/40 px-3 py-1">
                                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                                     <span className="font-medium text-gray-200">
                                         POLLNOW &middot; Legal
@@ -103,7 +103,7 @@ export default function LegalLayout({ title, date, children }: LegalLayoutProps)
                     {/* Navegación entre documentos legales */}
                     <motion.footer
                         variants={itemVariants}
-                        className="mt-10 pt-6 border-t border-white/10"
+                        className="mt-10 pt-6 border-t-2 border-white/10"
                     >
                         <p className="text-xs uppercase tracking-[0.18em] text-gray-500 mb-3">
                             Otros documentos de POLLNOW
@@ -111,21 +111,21 @@ export default function LegalLayout({ title, date, children }: LegalLayoutProps)
                         <div className="flex flex-wrap gap-3">
                             <Link
                                 href="/legal/terms"
-                                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-300 hover:border-blue-500/60 hover:text-white transition-colors"
+                                className="inline-flex items-center gap-2 rounded-full border-2 border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-300 hover:border-blue-500/60 hover:text-white transition-colors"
                             >
                                 <Scale size={14} />
                                 Términos de uso
                             </Link>
                             <Link
                                 href="/legal/privacy"
-                                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-300 hover:border-blue-500/60 hover:text-white transition-colors"
+                                className="inline-flex items-center gap-2 rounded-full border-2 border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-300 hover:border-blue-500/60 hover:text-white transition-colors"
                             >
                                 <Shield size={14} />
                                 Política de privacidad
                             </Link>
                             <Link
                                 href="/legal/cookies"
-                                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-300 hover:border-blue-500/60 hover:text-white transition-colors"
+                                className="inline-flex items-center gap-2 rounded-full border-2 border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs text-gray-300 hover:border-blue-500/60 hover:text-white transition-colors"
                             >
                                 <Cookie size={14} />
                                 Política de cookies

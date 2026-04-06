@@ -58,13 +58,13 @@ export default function DashboardEventCard({ event }: DashboardEventCardProps) {
                                 </div>
 
                                 {event.status !== "DRAFT" && (
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border border-white/10 text-gray-300 ${event.status === "APPROVED" ? "bg-green-500/10" : event.status === "DENIED" ? "bg-red-500/10" : event.status === "PENDING" ? "bg-yellow-500/10" : "bg-gray-800/30"}`}>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 border-white/10 text-gray-300 ${event.status === "APPROVED" ? "bg-green-500/10" : event.status === "DENIED" ? "bg-red-500/10" : event.status === "PENDING" ? "bg-yellow-500/10" : "bg-gray-800/30"}`}>
                                         {event.status === "PENDING" && "En revisión"}
                                         {event.status === "APPROVED" && "Aprobado"}
                                         {event.status === "DENIED" && "Rechazado"}
                                     </span>
                                 )}
-                                
+
                             </div>
                             <span className="text-gray-500 text-xs">
                                 {formatDistanceToNow(event.createdAt, {
@@ -82,7 +82,7 @@ export default function DashboardEventCard({ event }: DashboardEventCardProps) {
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-start gap-4 text-xs text-gray-500 font-mono border-t border-white/10 pt-4">
+                    <div className="flex items-center justify-start gap-4 text-xs text-gray-500 font-mono border-t-2 border-white/10 pt-4">
                         <div className="flex items-center gap-1">
                             <span className="text-white font-bold">{event._count.polls}</span>{" "}
                             Categorías

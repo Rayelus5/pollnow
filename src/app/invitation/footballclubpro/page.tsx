@@ -49,7 +49,7 @@ export default function AboutPage() {
                     variants={staggerContainer}
                     className="relative z-10 max-w-5xl"
                 >
-                    <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm">
+                    <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border-2 border-white/10 mb-8 backdrop-blur-sm">
                         <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                         <span className="text-xs font-medium text-gray-300 tracking-widest uppercase">Invitación Recibida</span>
                     </motion.div>
@@ -66,7 +66,7 @@ export default function AboutPage() {
 
 
             {/* --- 2. EL CREADOR (PERFIL) --- */}
-            <section className="py-24 px-6 border-t border-white/15 bg-neutral-950/50">
+            <section className="py-24 px-6 border-t-2 border-white/15 bg-neutral-950/50">
                 <div className="max-w-6xl mx-auto">
                     <motion.div
                         initial="hidden"
@@ -78,7 +78,7 @@ export default function AboutPage() {
                         {/* Imagen / Tarjeta */}
                         <div className="relative group">
                             <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-sky-600 rounded-3xl opacity-20 group-hover:opacity-40 blur-xl transition-opacity duration-500" />
-                            <div className="relative aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 bg-neutral-900">
+                            <div className="relative aspect-square md:aspect-[4/5] rounded-2xl overflow-hidden border-2 border-white/10 bg-neutral-900">
                                 {/* REEMPLAZA ESTA URL CON TU FOTO REAL */}
                                 <Image
                                     src="/rayelus-img.jpg"
@@ -98,7 +98,7 @@ export default function AboutPage() {
                         <div className="space-y-8">
                             <h2 className="text-4xl font-bold text-white">¿Qué es POLLNOW?</h2>
                             <p className="text-gray-400 text-lg leading-relaxed">
-                                Una plataforma moderna para crear, gestionar y analizar eventos interactivos con votaciones en tiempo real. Incluye panel de administración, estadísticas avanzadas, categorías personalizables, control de participantes, planes de suscripción y soporte integrado. 
+                                Una plataforma moderna para crear, gestionar y analizar eventos interactivos con votaciones en tiempo real. Incluye panel de administración, estadísticas avanzadas, categorías personalizables, control de participantes, planes de suscripción y soporte integrado.
                             </p>
                             <p className="text-gray-400 text-lg leading-relaxed">
                                 POLLNOW está construido con las últimas tecnologías como Next.js, React, Tailwind CSS, Prisma, NextAuth y Stripe.
@@ -117,13 +117,13 @@ export default function AboutPage() {
                                     href="https://github.com/Rayelus5"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-6 py-3 border border-white/20 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center gap-2"
+                                    className="px-6 py-3 border-2 border-white/20 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center gap-2"
                                 >
                                     <Github size={20} /> GitHub
                                 </a>
                                 <a
                                     href="#"
-                                    className="px-6 py-3 border border-white/20 rounded-full font-bold hover:bg-blue-600/20 hover:border-blue-500/50 transition-colors flex items-center gap-2 text-blue-400"
+                                    className="px-6 py-3 border-2 border-white/20 rounded-full font-bold hover:bg-blue-600/20 hover:border-blue-500/50 transition-colors flex items-center gap-2 text-blue-400"
                                 >
                                     <Linkedin size={20} /> LinkedIn
                                 </a>
@@ -136,57 +136,57 @@ export default function AboutPage() {
 
             {/* --- 3. ROADMAP (BENTO GRID) --- */}
             <section className="py-10 px-6 bg-neutral-950/50">
-    <div className="max-w-6xl mx-auto">
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-        >
-            <h2 className="text-4xl font-bold mb-4">¿Qué podemos ofrecerte?</h2>
-            <p className="text-gray-400">
-                Ya seas un club, una empresa o un creador de eventos, estamos aquí para ayudarte a llevar tus votaciones y ceremonias al siguiente nivel.
-            </p>
-        </motion.div>
+                <div className="max-w-6xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-16"
+                    >
+                        <h2 className="text-4xl font-bold mb-4">¿Qué podemos ofrecerte?</h2>
+                        <p className="text-gray-400">
+                            Ya seas un club, una empresa o un creador de eventos, estamos aquí para ayudarte a llevar tus votaciones y ceremonias al siguiente nivel.
+                        </p>
+                    </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-            
-            {/* Card 1 – Asesoramiento y Guía */}
-            <RoadmapCard
-                icon={<HandCoins className="text-blue-400" />}
-                title="Asesoramiento Personalizado"
-                desc="Te ayudamos a planificar y estructurar tu evento: categorías, participantes, votaciones, dinámica y presentación. Acompañamiento completo desde el primer día. Además aumentamos tus límites de eventos activos, nominados y categorías a tus necesidades."
-                status="Ideal para Nuevos Usuarios"
-                colSpan="md:col-span-2"
-            />
+                    <div className="grid md:grid-cols-3 gap-6">
 
-            {/* Card 2 – Videollamada */}
-            <RoadmapCard
-                icon={<Zap className="text-sky-400" />}
-                title="Reunión por Videollamada"
-                desc="Si prefieres explicarnos tu proyecto cara a cara, agendamos una videollamada donde resolveremos dudas, compartiremos ideas y definiremos juntos el evento."
-                status="Opción Directa y Rápida"
-            />
+                        {/* Card 1 – Asesoramiento y Guía */}
+                        <RoadmapCard
+                            icon={<HandCoins className="text-blue-400" />}
+                            title="Asesoramiento Personalizado"
+                            desc="Te ayudamos a planificar y estructurar tu evento: categorías, participantes, votaciones, dinámica y presentación. Acompañamiento completo desde el primer día. Además aumentamos tus límites de eventos activos, nominados y categorías a tus necesidades."
+                            status="Ideal para Nuevos Usuarios"
+                            colSpan="md:col-span-2"
+                        />
 
-            {/* Card 3 – Eventos a Medida */}
-            <RoadmapCard
-                icon={<Palette className="text-purple-400" />}
-                title="Eventos Personalizados (Enterprise)"
-                desc="Creamos una experiencia única para tu organización."
-                status="Plan Enterprise"
-            />
+                        {/* Card 2 – Videollamada */}
+                        <RoadmapCard
+                            icon={<Zap className="text-sky-400" />}
+                            title="Reunión por Videollamada"
+                            desc="Si prefieres explicarnos tu proyecto cara a cara, agendamos una videollamada donde resolveremos dudas, compartiremos ideas y definiremos juntos el evento."
+                            status="Opción Directa y Rápida"
+                        />
 
-            {/* Card 4 – Integración y Soporte Profesional */}
-            <RoadmapCard
-                icon={<Heart className="text-red-400" />}
-                title="Soporte Técnico y Acompañamiento"
-                desc="Te guiamos paso a paso si quieres crear tu evento personalizado y compartirlo con tu proyecto/web, redes o con tu comunidad. Soporte prioritario para empresas."
-                status="A tu Lado en Todo Momento"
-                colSpan="md:col-span-2"
-            />
-        </div>
-    </div>
-</section>
+                        {/* Card 3 – Eventos a Medida */}
+                        <RoadmapCard
+                            icon={<Palette className="text-purple-400" />}
+                            title="Eventos Personalizados (Enterprise)"
+                            desc="Creamos una experiencia única para tu organización."
+                            status="Plan Enterprise"
+                        />
+
+                        {/* Card 4 – Integración y Soporte Profesional */}
+                        <RoadmapCard
+                            icon={<Heart className="text-red-400" />}
+                            title="Soporte Técnico y Acompañamiento"
+                            desc="Te guiamos paso a paso si quieres crear tu evento personalizado y compartirlo con tu proyecto/web, redes o con tu comunidad. Soporte prioritario para empresas."
+                            status="A tu Lado en Todo Momento"
+                            colSpan="md:col-span-2"
+                        />
+                    </div>
+                </div>
+            </section>
 
 
 
@@ -275,12 +275,12 @@ function RoadmapCard({ icon, title, desc, status, colSpan = "" }: any) {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             whileHover={{ y: -5 }}
-            className={`p-8 rounded-3xl bg-white/5 border border-white/15 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 ${colSpan} flex flex-col justify-between`}
+            className={`p-8 rounded-3xl bg-white/5 border-2 border-white/15 hover:border-blue-500/30 hover:bg-white/10 transition-all duration-300 ${colSpan} flex flex-col justify-between`}
         >
             <div>
                 <div className="flex justify-between items-start mb-6">
-                    <div className="p-3 bg-white/5 rounded-2xl border border-white/5">{icon}</div>
-                    <span className="px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border border-white/5">
+                    <div className="p-3 bg-white/5 rounded-2xl border-2 border-white/5">{icon}</div>
+                    <span className="px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-2 border-white/5">
                         {status}
                     </span>
                 </div>

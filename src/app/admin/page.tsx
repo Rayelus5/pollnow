@@ -70,14 +70,14 @@ export default async function AdminDashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* ÚLTIMOS EVENTOS */}
-                <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+                <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="font-bold text-white">Actividad Reciente</h3>
                         <Link href="/admin/events" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">Ver todo <ArrowRight size={12} /></Link>
                     </div>
                     <div className="space-y-2">
                         {latestEvents.map(e => (
-                            <Link key={e.id} href={`/admin/events/${e.id}`} className="flex justify-between items-center p-3 border border-white/5 rounded-xl hover:bg-neutral-950 transition-colors duration-400 hover:border-white/10 group min-h-18 max-h-18">
+                            <Link key={e.id} href={`/admin/events/${e.id}`} className="flex justify-between items-center p-3 border-2 border-white/5 rounded-xl hover:bg-neutral-950 transition-colors duration-400 hover:border-white/10 group min-h-18 max-h-18">
                                 <div>
                                     <p className="text-sm font-medium text-gray-200">{e.title}</p>
                                     <p className="text-xs text-gray-500">por {e.user.name}</p>
@@ -102,14 +102,14 @@ export default async function AdminDashboardPage() {
                 </div>
 
                 {/* ÚLTIMOS USUARIOS */}
-                <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+                <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="font-bold text-white">Nuevos Usuarios</h3>
                         <Link href="/admin/users" className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">Ver todo <ArrowRight size={12} /></Link>
                     </div>
                     <div className="space-y-2">
                         {latestUsers.map(u => (
-                            <Link key={u.id} href={`/admin/users/${u.id}`} className="flex items-center gap-2 justify-between p-3 border border-white/5 rounded-xl hover:bg-neutral-950 transition-colors duration-400 hover:border-white/10 group min-h-18 max-h-18">
+                            <Link key={u.id} href={`/admin/users/${u.id}`} className="flex items-center gap-2 justify-between p-3 border-2 border-white/5 rounded-xl hover:bg-neutral-950 transition-colors duration-400 hover:border-white/10 group min-h-18 max-h-18">
 
                                 <div className="flex items-center justify-center font-bold text-xs text-gray-400">
                                     {u.image ? (
@@ -148,7 +148,7 @@ export default async function AdminDashboardPage() {
 
 function KpiCard({ title, value, icon, href, alert }: any) {
     return (
-        <Link href={href} className={`block p-6 bg-neutral-900 border rounded-xl transition-all hover:bg-neutral-800 ${alert ? title == "Pendientes de Revisión" ? 'border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-red-500/50 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-white/10'}`}>
+        <Link href={href} className={`block p-6 bg-neutral-900 border-2 rounded-xl transition-all hover:bg-neutral-800 ${alert ? title == "Pendientes de Revisión" ? 'border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-red-500/50 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-white/10'}`}>
             <div className="flex justify-between items-start mb-4">
                 <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider">{title}</h3>
                 <div className="p-2 bg-white/5 rounded-lg">{icon}</div>

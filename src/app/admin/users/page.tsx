@@ -86,14 +86,14 @@ export default async function AdminUsersPage({
                             name="q"
                             placeholder="Nombre, email o usuario..."
                             defaultValue={query}
-                            className="bg-neutral-900 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:border-blue-500 outline-none w-full md:w-64 transition-all focus:w-80"
+                            className="bg-neutral-900 border-2 border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:border-blue-500 outline-none w-full md:w-64 transition-all focus:w-80"
                         />
                         {roleFilter && (
                             <input type="hidden" name="role" value={roleFilter} />
                         )}
                     </form>
 
-                    <div className="flex bg-neutral-900 border border-white/10 rounded-lg p-1">
+                    <div className="flex bg-neutral-900 border-2 border-white/10 rounded-lg p-1">
                         <FilterLink role="ALL" current={roleFilter} label="Todos" />
                         <FilterLink role="ADMIN" current={roleFilter} label="Admins" />
                         <FilterLink role="USER" current={roleFilter} label="Usuarios" />
@@ -136,9 +136,8 @@ function FilterLink({
     return (
         <Link
             href={`?role=${role}`}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                isActive ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"
-            }`}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${isActive ? "bg-white/10 text-white" : "text-gray-500 hover:text-gray-300"
+                }`}
         >
             {label}
         </Link>

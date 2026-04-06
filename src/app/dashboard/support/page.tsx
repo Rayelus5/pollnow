@@ -30,7 +30,7 @@ export default async function SupportPage() {
                     <Link
                         key={chat.id}
                         href={`/dashboard/support/${chat.id}`}
-                        className="block bg-neutral-900/50 border border-white/10 p-5 rounded-xl hover:border-blue-500/30 transition-colors group"
+                        className="block bg-neutral-900/50 border-2 border-white/10 p-5 rounded-xl hover:border-blue-500/30 transition-colors group"
                     >
                         <div className="flex justify-between mb-2">
                             <span className={`text-xs font-bold px-2 py-1 rounded ${chat.isClosed ? 'bg-gray-800 text-gray-400' : 'bg-green-900/20 text-green-400'}`}>

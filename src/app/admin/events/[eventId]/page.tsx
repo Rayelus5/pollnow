@@ -46,7 +46,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-4xl font-bold text-white">{event.title}</h1>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${event.status === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-gray-800 text-gray-400 border-gray-700'
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 ${event.status === 'APPROVED' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-gray-800 text-gray-400 border-gray-700'
                             }`}>
                             {event.status}
                         </span>
@@ -61,7 +61,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                     <Link
                         href={`/e/${event.slug}`}
                         target="_blank"
-                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-2 transition-colors"
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border-2 border-white/10 rounded-lg text-sm font-bold text-white flex items-center gap-2 transition-colors"
                     >
                         <ExternalLink size={16} /> Ver Público
                     </Link>
@@ -89,8 +89,8 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                     </div>
 
                     {/* Listado de Categorías */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-white/5 font-bold text-sm text-gray-400 uppercase tracking-wider">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden">
+                        <div className="px-6 py-4 border-b-2 border-white/5 font-bold text-sm text-gray-400 uppercase tracking-wider">
                             Estructura del Evento
                         </div>
                         <div className="divide-y divide-white/5">
@@ -110,8 +110,8 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                     </div>
 
                     {/* Historial de Moderación */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden">
-                        <div className="px-6 py-4 border-b border-white/5 font-bold text-sm text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden">
+                        <div className="px-6 py-4 border-b-2 border-white/5 font-bold text-sm text-gray-400 uppercase tracking-wider flex items-center gap-2">
                             <ShieldCheck size={16} /> Historial de Moderación
                         </div>
                         <div className="p-6 space-y-4">
@@ -138,7 +138,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                 <div className="space-y-6">
 
                     {/* Tarjeta del Creador */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl p-6">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
                         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Creador del Evento</h3>
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-12 h-12 rounded-full bg-gray-800 overflow-hidden relative">
@@ -162,7 +162,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                     </div>
 
                     {/* Tarjeta Técnica */}
-                    <div className="bg-neutral-900 border border-white/10 rounded-xl p-6 space-y-4">
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6 space-y-4">
                         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Datos Técnicos</h3>
 
                         <div className="flex justify-between text-sm">
@@ -182,7 +182,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
                             <span className="text-white">{event.isAnonymousVoting ? 'Sí' : 'No'}</span>
                         </div>
 
-                        <div className="pt-4 mt-4 border-t border-white/5">
+                        <div className="pt-4 mt-4 border-t-2 border-white/5">
                             <div className="text-xs text-gray-500 mb-1">Access Key (Privada)</div>
                             <code className="block bg-black/50 p-2 rounded text-[10px] text-gray-400 font-mono break-all">
                                 {event.accessKey}
@@ -199,7 +199,7 @@ export default async function AdminEventDetailPage({ params }: { params: Promise
 
 function StatCard({ label, value, icon }: any) {
     return (
-        <div className="bg-neutral-900 border border-white/10 p-4 rounded-xl flex items-center justify-between">
+        <div className="bg-neutral-900 border-2 border-white/10 p-4 rounded-xl flex items-center justify-between">
             <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{label}</p>
                 <p className="text-2xl font-bold text-white">{value}</p>

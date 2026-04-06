@@ -32,8 +32,8 @@ export default async function AdminLayout({
         <>
             <div className="hidden min-h-screen bg-black text-gray-100 lg:flex font-sans selection:bg-red-900/30">
                 {/* SIDEBAR FIJA */}
-                <aside className="w-64 2xl:w-80 bg-neutral-900 border-r border-white/10 flex flex-col fixed h-full z-50">
-                    <div className="p-6 border-b border-white/10">
+                <aside className="w-64 2xl:w-80 bg-neutral-900 border-r-2 border-white/10 flex flex-col fixed h-full z-50">
+                    <div className="p-6 border-b-2 border-white/10">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                             <h1 className="font-bold tracking-widest text-white text-sm">ADMIN PANEL</h1>
@@ -54,12 +54,12 @@ export default async function AdminLayout({
                         <NavLink href="/admin/users" icon={<Users size={18} />} label="Usuarios" />
                         <NavLink href="/admin/events" icon={<Calendar size={18} />} label="Eventos" />
 
-                        <div className="mt-4 absolute top-0 left-50 2xl:left-65 bg-neutral-900/50 backdrop-blur-50 p-2 rounded-full border border-white/20">
+                        <div className="mt-4 absolute top-0 left-50 2xl:left-65 bg-neutral-900/50 backdrop-blur-50 p-2 rounded-full border-2 border-white/20">
                             <AdminNotifications userId={session?.user?.id} />
                         </div>
                     </nav>
 
-                    <div className="h-[20%] p-4 border-t border-white/10">
+                    <div className="h-[20%] p-4 border-t-2 border-white/10">
                         <div className="flex items-center gap-3 px-3 py-3 bg-black/30 rounded-lg mb-2">
                             <div className="w-8 h-8 bg-red-600 rounded-md flex items-center justify-center font-bold text-xs text-white">
                                 {session.user.name?.[0] || "A"}

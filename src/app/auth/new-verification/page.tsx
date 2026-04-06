@@ -36,7 +36,7 @@ function VerificationForm() {
     }, [onSubmit]);
 
     return (
-        <div className="bg-neutral-900/50 border border-white/10 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl backdrop-blur-xl">
+        <div className="bg-neutral-900/50 border-2 border-white/10 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl backdrop-blur-xl">
             <h1 className="text-2xl font-bold text-white mb-6">Verificando tu cuenta</h1>
 
             {!success && !error && (

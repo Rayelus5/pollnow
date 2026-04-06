@@ -115,7 +115,7 @@ export default async function AdminChatDetailPage({ params }: PageProps) {
 
     return (
         <main className="min-h-screen bg-black text-white">
-            <header className="border-b border-white/10 bg-neutral-900/30">
+            <header className="border-b-2 border-white/10 bg-neutral-900/30">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div>
                         <div className="text-xs text-gray-400 mb-1">
@@ -134,7 +134,7 @@ export default async function AdminChatDetailPage({ params }: PageProps) {
 
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                         {chat.adminId && (
-                            <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                            <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-300 border-2 border-blue-500/30">
                                 Asignado a:{" "}
                                 {isAssignedToCurrent
                                     ? "Tú"
@@ -142,11 +142,10 @@ export default async function AdminChatDetailPage({ params }: PageProps) {
                             </span>
                         )}
                         <span
-                            className={`px-2 py-1 rounded-full border ${
-                                chat.isClosed
+                            className={`px-2 py-1 rounded-full border-2 ${chat.isClosed
                                     ? "bg-red-500/10 text-red-300 border-red-500/40"
                                     : "bg-emerald-500/10 text-emerald-300 border-emerald-500/40"
-                            }`}
+                                }`}
                         >
                             {chat.isClosed ? "Ticket cerrado" : "Ticket abierto"}
                         </span>
@@ -176,8 +175,8 @@ export default async function AdminChatDetailPage({ params }: PageProps) {
                                 {isAssignedToCurrent
                                     ? "Ya asignado a ti"
                                     : chat.adminId
-                                    ? "Reasignarme este chat"
-                                    : "Asignarme este chat"}
+                                        ? "Reasignarme este chat"
+                                        : "Asignarme este chat"}
                             </button>
                         </form>
 
@@ -209,7 +208,7 @@ export default async function AdminChatDetailPage({ params }: PageProps) {
                             <input type="hidden" name="chatId" value={chat.id} />
                             <button
                                 type="submit"
-                                className="px-3 py-2 text-xs rounded-lg bg-red-900 hover:bg-red-800 text-red-200 font-bold cursor-pointer border border-red-700/60"
+                                className="px-3 py-2 text-xs rounded-lg bg-red-900 hover:bg-red-800 text-red-200 font-bold cursor-pointer border-2 border-red-700/60"
                             >
                                 Eliminar chat
                             </button>

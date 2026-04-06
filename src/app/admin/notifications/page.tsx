@@ -55,7 +55,7 @@ export default async function AdminNotificationsPage({
                         Alertas y actualizaciones del sistema.
                     </p>
                 </div>
-                <div className="bg-neutral-900 border border-white/10 rounded-lg px-4 py-2 text-xs text-gray-400">
+                <div className="bg-neutral-900 border-2 border-white/10 rounded-lg px-4 py-2 text-xs text-gray-400">
                     {unreadCount} Sin leer
                 </div>
             </div>
@@ -64,18 +64,16 @@ export default async function AdminNotificationsPage({
                 {notifications.map((notif) => (
                     <div
                         key={notif.id}
-                        className={`p-4 rounded-xl border transition-all flex gap-4 items-start ${
-                            notif.isRead
+                        className={`p-4 rounded-xl border-2 transition-all flex gap-4 items-start ${notif.isRead
                                 ? "bg-transparent border-white/5 opacity-60"
                                 : "bg-neutral-900 border-blue-500/30 shadow-lg shadow-blue-900/5"
-                        }`}
+                            }`}
                     >
                         <div
-                            className={`p-2 rounded-lg shrink-0 ${
-                                notif.isRead
+                            className={`p-2 rounded-lg shrink-0 ${notif.isRead
                                     ? "bg-white/5 text-gray-500"
                                     : "bg-blue-500/10 text-blue-400"
-                            }`}
+                                }`}
                         >
                             <Bell size={20} />
                         </div>
@@ -83,11 +81,10 @@ export default async function AdminNotificationsPage({
                         <div className="flex-1">
                             <div className="flex justify-between items-start">
                                 <p
-                                    className={`text-sm ${
-                                        notif.isRead
+                                    className={`text-sm ${notif.isRead
                                             ? "text-gray-400"
                                             : "text-white font-medium"
-                                    }`}
+                                        }`}
                                 >
                                     {notif.message}
                                 </p>
@@ -126,7 +123,7 @@ export default async function AdminNotificationsPage({
                 ))}
 
                 {notifications.length === 0 && (
-                    <div className="text-center py-20 border border-dashed border-white/10 rounded-xl text-gray-500">
+                    <div className="text-center py-20 border-2 border-dashed border-white/10 rounded-xl text-gray-500">
                         No tienes notificaciones.
                     </div>
                 )}

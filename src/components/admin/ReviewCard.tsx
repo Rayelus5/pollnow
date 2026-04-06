@@ -29,7 +29,7 @@ export default function ReviewCard({ event }: { event: any }) {
     };
 
     return (
-        <div className="bg-neutral-900 border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-colors group">
+        <div className="bg-neutral-900 border-2 border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-colors group">
 
             {/* Header */}
             <div className="p-6 flex flex-col md:flex-row justify-between items-start gap-4">
@@ -44,9 +44,9 @@ export default function ReviewCard({ event }: { event: any }) {
                             <ExternalLink size={14} />
                         </Link>
                         <h3 className="text-xl font-bold text-white">{event.title}</h3>
-                        
+
                     </div>
-                    <p className="text-sm text-gray-400 bg-black/30 p-3 rounded-lg border border-white/5 leading-relaxed">
+                    <p className="text-sm text-gray-400 bg-black/30 p-3 rounded-lg border-2 border-white/5 leading-relaxed">
                         {event.description || <span className="italic text-gray-600">Sin descripción proporcionada.</span>}
                     </p>
                 </div>
@@ -68,7 +68,7 @@ export default function ReviewCard({ event }: { event: any }) {
                         <button
                             onClick={() => setRejecting(true)}
                             disabled={loading}
-                            className="py-4 w-full justify-center bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 font-bold rounded-lg flex items-center gap-2 text-lg transition-colors cursor-pointer"
+                            className="py-4 w-full justify-center bg-red-500/10 text-red-400 border-2 border-red-500/20 hover:bg-red-500/20 font-bold rounded-lg flex items-center gap-2 text-lg transition-colors cursor-pointer"
                         >
                             <X size={16} /> Denegar
                         </button>
@@ -81,12 +81,12 @@ export default function ReviewCard({ event }: { event: any }) {
                         </button>
                     </div>
                 ) : (
-                    <div className="bg-red-950/20 p-4 rounded-lg border border-red-900/50 animate-in fade-in slide-in-from-top-2">
+                    <div className="bg-red-950/20 p-4 rounded-lg border-2 border-red-900/50 animate-in fade-in slide-in-from-top-2">
                         <div className="flex items-center gap-2 mb-2 text-red-400 text-xs font-bold uppercase tracking-wider">
                             <AlertCircle size={14} /> Motivo del rechazo
                         </div>
                         <textarea
-                            className="w-full bg-black border border-red-900/50 rounded-lg p-3 text-white text-sm mb-3 focus:border-red-500 outline-none min-h-[80px] placeholder-gray-600"
+                            className="w-full bg-black border-2 border-red-900/50 rounded-lg p-3 text-white text-sm mb-3 focus:border-red-500 outline-none min-h-[80px] placeholder-gray-600"
                             placeholder="Explica al usuario por qué su evento no cumple las normas (ej: lenguaje ofensivo, spam...)"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
@@ -103,7 +103,7 @@ export default function ReviewCard({ event }: { event: any }) {
             </div>
 
             {/* Info Contextual */}
-            <div className="px-6 py-3 bg-black/20 flex flex-wrap items-center gap-6 text-xs text-gray-400 border-b border-white/5">
+            <div className="px-6 py-3 bg-black/20 flex flex-wrap items-center gap-6 text-xs text-gray-400 border-b-2 border-white/5">
                 <div className="flex items-center gap-2">
                     <div className="w-5 h-5 rounded-full bg-blue-900/50 text-blue-400 flex items-center justify-center font-bold">
                         {event.user.name?.[0] || "?"}

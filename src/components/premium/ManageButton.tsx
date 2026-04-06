@@ -19,10 +19,10 @@ export default function ManageButton() {
     };
 
     return (
-        <button 
+        <button
             onClick={handlePortal}
             disabled={loading}
-            className="w-full py-3 rounded-xl font-bold border border-white/20 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-1 text-white cursor-pointer"
+            className="w-full py-3 rounded-xl font-bold border-2 border-white/20 bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-1 text-white cursor-pointer"
         >
             {loading ? (
                 "Cargando..."

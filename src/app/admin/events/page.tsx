@@ -97,7 +97,7 @@ export default async function AdminEventsPage({
                             name="q"
                             placeholder="Buscar evento, slug o email..."
                             defaultValue={query}
-                            className="bg-neutral-900 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:border-blue-500 outline-none w-full md:w-64 transition-all focus:w-80"
+                            className="bg-neutral-900 border-2 border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:border-blue-500 outline-none w-full md:w-64 transition-all focus:w-80"
                         />
                         {statusFilter && (
                             <input
@@ -108,7 +108,7 @@ export default async function AdminEventsPage({
                         )}
                     </form>
 
-                    <div className="flex bg-neutral-900 border border-white/10 rounded-lg p-1">
+                    <div className="flex bg-neutral-900 border-2 border-white/10 rounded-lg p-1">
                         <FilterLink status="ALL" current={statusFilter} label="Todos" />
                         <FilterLink
                             status="APPROVED"
@@ -160,11 +160,10 @@ function FilterLink({
     return (
         <Link
             href={`?status=${status}`}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                isActive
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${isActive
                     ? "bg-white/10 text-white"
                     : "text-gray-500 hover:text-gray-300"
-            }`}
+                }`}
         >
             {label}
         </Link>
