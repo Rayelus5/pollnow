@@ -72,7 +72,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
     return (
-        <div className="max-w-7xl mx-auto text-center">
+        <div className="max-w-7xl mx-auto text-center w-full overflow-hidden">
 
             {/* HERO TEXT ANIMADO */}
             <motion.div
@@ -99,7 +99,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid md:grid-cols-3 gap-6 relative"
+                className="grid md:grid-cols-3 gap-6 relative w-full"
                 onMouseLeave={() => setHoveredIndex(null)}
             >
                 {PRICING_DATA.map((plan, index) => {
@@ -120,7 +120,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                 variants={cardVariants}
                                 onMouseEnter={() => setHoveredIndex(index)}
                                 className={clsx(
-                                    "relative p-1 rounded-[2rem] transition-transform duration-500 ease-out",
+                                    "relative p-1 rounded-[2rem] transition-transform duration-500 ease-out min-w-0",
                                     colSpanClass
                                 )}
                             >
@@ -168,7 +168,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                                     <span className="text-lg font-bold text-blue-400 tracking-[0.05em] mb-1">¡Oferta de salida!</span>
                                                 </span>
 
-                                                <div className="flex items-baseline items-center gap-3 justify-start md:justify-end mt-5 md:mt-0">
+                                                <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end mt-5 md:mt-0">
                                                     {/* Original price (tached) */}
                                                     <div className="flex flex-col justify-end p-2 rounded-xl bg-blue-950/40 border-2 border-blue-400/30">
                                                         <span
@@ -239,7 +239,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                             variants={cardVariants}
                             onMouseEnter={() => setHoveredIndex(index)}
                             className={clsx(
-                                "cursor-pointer relative p-5 md:p-8 rounded-[2rem] flex flex-col transition-transform duration-500 ease-out border-2 max-h-[700px]",
+                                "cursor-pointer relative p-5 md:p-8 rounded-[2rem] flex flex-col transition-transform duration-500 ease-out border-2 max-h-[700px] min-w-0",
                                 colSpanClass,
                                 plan.highlight
                                     ? "bg-neutral-900 border-indigo-600/50 shadow-[0_0_40px_-10px_rgba(59,130,246,0.15)]"
