@@ -1,17 +1,25 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(
     req: Request,
-    { params }: { params: Promise<{ chatId: string }> } // 👈 params es Promise
+    { params }: { params: Promise<{ chatId: string }> }
 ) {
-    // 👇 HAY QUE DESENVOLVERLO
     const { chatId } = await params;
 
     const session = await auth();
     if (!session?.user) {
         return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const { allowed, retryAfter } = rateLimit(`support:messages:${session.user.id}`, 30);
+    if (!allowed) {
+        return new NextResponse("Too Many Requests", {
+            status: 429,
+            headers: { "Retry-After": String(retryAfter) },
+        });
     }
 
     const chat = await prisma.supportChat.findUnique({

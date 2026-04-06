@@ -2,11 +2,14 @@ import { prisma } from "@/lib/prisma";
 import ExploreClient from "@/components/polls/ExploreClient";
 import { auth } from "@/auth";
 
+const EVENTS_PER_PAGE = 6;
+
 type Props = {
     searchParams?: Promise<{
         q?: string;
         sort?: string;
         tag?: string;
+        page?: string;
     }>;
 };
 
@@ -17,6 +20,7 @@ export default async function ExplorePage({ searchParams }: Props) {
     const query = params?.q || "";
     const sort = params?.sort || "recent";
     const tag = params?.tag || "";
+    const page = Math.max(1, parseInt(params?.page || "1", 10));
 
     const session = await auth();
     const userId = session?.user?.id || null;
@@ -97,13 +101,32 @@ export default async function ExplorePage({ searchParams }: Props) {
     } else if (sort === "oldest") {
         eventsWithMeta.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     }
-    // "recent" already sorted by createdAt desc from Prisma
+
+    // Pagination
+    const totalEvents = eventsWithMeta.length;
+    const totalPages = Math.max(1, Math.ceil(totalEvents / EVENTS_PER_PAGE));
+    const currentPage = Math.min(page, totalPages);
+    const paginatedEvents = eventsWithMeta.slice(
+        (currentPage - 1) * EVENTS_PER_PAGE,
+        currentPage * EVENTS_PER_PAGE
+    );
 
     return (
-        <main className="min-h-screen bg-black text-white pt-32 pb-24 px-6 relative overflow-hidden selection:bg-blue-500/30">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[800px] bg-blue-900/10 rounded-[100%] blur-[120px] pointer-events-none z-0" />
-            <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-purple-900/10 rounded-[100%] blur-[120px] pointer-events-none z-0" />
-            <ExploreClient events={eventsWithMeta} isLoggedIn={!!userId} currentTag={tag} currentSort={sort} />
+        <main className="min-h-screen bg-black text-white pt-32 pb-24 px-6 relative selection:bg-blue-500/30">
+            {/* Background blobs — isolated so they don't clip child scrolling */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[800px] bg-blue-900/10 rounded-[100%] blur-[120px]" />
+                <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-purple-900/10 rounded-[100%] blur-[120px]" />
+            </div>
+            <ExploreClient
+                events={paginatedEvents}
+                isLoggedIn={!!userId}
+                currentTag={tag}
+                currentSort={sort}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalEvents={totalEvents}
+            />
         </main>
     );
 }

@@ -94,7 +94,7 @@ export default function SearchFilters({
             </div>
 
             {/* Row 2: Sort chips */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none md:justify-center">
                 {SORT_OPTIONS.map(({ value, label, icon: Icon }) => {
                     const isActive = activeSort === value;
                     return (

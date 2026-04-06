@@ -1,8 +1,23 @@
 // app/api/admin/events/batch/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+    const session = await auth();
+    if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "MODERATOR")) {
+        return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    }
+
+    const { allowed, retryAfter } = rateLimit(`admin:events:batch:${session.user.id}`, 30);
+    if (!allowed) {
+        return NextResponse.json(
+            { error: "Demasiadas peticiones." },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        );
+    }
+
     try {
         const body = await req.json();
         const { action, ids, status } = body as {

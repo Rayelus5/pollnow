@@ -1,8 +1,18 @@
 // app/api/polls/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
+    const ip = getClientIp(req);
+    const { allowed, retryAfter } = rateLimit(`polls:create:${ip}`, 10);
+    if (!allowed) {
+        return NextResponse.json(
+            { error: 'Demasiadas peticiones.' },
+            { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+        );
+    }
+
     try {
         const body = await req.json();
         const { title, description, options, endAt } = body;

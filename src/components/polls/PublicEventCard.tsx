@@ -28,12 +28,12 @@ type EventSummary = {
 };
 
 const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 16 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: { type: "spring", stiffness: 50, damping: 15 }
-    }
+        transition: { type: "spring", stiffness: 60, damping: 18 }
+    },
 };
 
 export default function PublicEventCard({
@@ -152,7 +152,12 @@ export default function PublicEventCard({
     const scoreColor = voteScore > 0 ? "text-emerald-400" : voteScore < 0 ? "text-red-400" : "text-gray-500";
 
     return (
-        <motion.div variants={cardVariants} layout>
+        <motion.div
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            layout
+        >
             <Link
                 href={`/e/${event.slug}`}
                 onClick={handleClick}

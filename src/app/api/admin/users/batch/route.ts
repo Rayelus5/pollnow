@@ -1,11 +1,23 @@
 // app/api/admin/users/batch/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-// Opcional: importa tu auth() si la tienes y valida permisos admin
-// import { auth } from "@/auth";
+import { auth } from "@/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "ADMIN") {
+        return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    }
+
+    const { allowed, retryAfter } = rateLimit(`admin:users:batch:${session.user.id}`, 30);
+    if (!allowed) {
+        return NextResponse.json(
+            { error: "Demasiadas peticiones." },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        );
+    }
+
     try {
         const body = await req.json();
         const { action, ids, role, ban, plan } = body as {
@@ -16,16 +28,9 @@ export async function POST(req: Request) {
             plan?: string;
         };
 
-        // Validación básica
         if (!Array.isArray(ids) || ids.length === 0) {
             return NextResponse.json({ error: "No se recibieron ids." }, { status: 400 });
         }
-
-        // -> PROTEGE AQUÍ: comprobar que el usuario logueado es admin
-        // const session = await auth();
-        // if (!session?.user || !session.user.isAdmin) {
-        //   return NextResponse.json({ error: "No autorizado." }, { status: 403 });
-        // }
 
         if (action === "delete") {
             await prisma.user.deleteMany({ where: { id: { in: ids } } });
