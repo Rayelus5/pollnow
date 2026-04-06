@@ -412,11 +412,11 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
 // Subcomponente para la sección de logos
 function LogoGrid() {
     const companies = [
-        { name: "Empresa 1", logo: "/logos/rayelus_logo.webp" }, // Sustituir por tus rutas
-        { name: "Empresa 2", logo: "/logos/chaotic-loom_logo.webp" },
-        { name: "Empresa 3", logo: "/logos/tcg-shop-finder_logo.webp" },
-        { name: "Empresa 4", logo: "/logos/arandor_logo.webp" },
-        { name: "Empresa 5", logo: "https://placehold.co/800x200" },
+        { name: "Rayelus", logo: "/logos/rayelus_logo.webp" }, // Sustituir por tus rutas
+        { name: "Chaotic Loom", logo: "/logos/chaotic-loom_logo.webp" },
+        { name: "TCG Shop Finder", logo: "/logos/tcg-shop-finder_logo.webp" },
+        { name: "Arandor", logo: "/logos/arandor_logo.webp" },
+        { name: "Raimusic", logo: "/logos/raimusic_logo.webp" },
         { name: "Empresa 6", logo: "https://placehold.co/800x200" },
     ];
 
