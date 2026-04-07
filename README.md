@@ -1,4 +1,4 @@
-# Pollnow | v2.1
+# Pollnow | v2.2
 > https://www.pollnow.es/
 
 <!-- ![Next](https://img.shields.io/badge/-Next.js-20232a?logo=nextdotjs&logoColor=white) -->
@@ -49,6 +49,7 @@ The application revolves around **events** (award ceremonies, competitions, poll
   - Can authenticate via credentials or Google
   - Receives notifications and support messages
   - Can like and vote on public events
+  - Holds two email-preference flags (`emailNotifications`, `emailCollaborations`) that gate transactional email delivery and support one-click unsubscribe
 
 - **Event**
   - Represents a specific awards ceremony / poll session
@@ -422,10 +423,16 @@ All permission and membership changes broadcast over the private `private-event-
 
 #### Invitation flow
 
-1. Owner sends invitation → `CollaboratorInvitation` record created, notification stored, **collaboration invite email sent** via Resend (styled amber/gold template), Pusher event fires.
+1. Owner sends invitation → `CollaboratorInvitation` record created, notification stored, **collaboration invite email sent** via Resend (styled amber/gold template, only if the recipient has `emailCollaborations = true`), Pusher event fires.
 2. Invited user sees the pending invitation in their dashboard notifications tab.
 3. On accept → `EventCollaborator` created with all permissions `null` (inheriting event defaults); Pusher fires `collaborator-joined`.
 4. On reject → invitation marked `REJECTED`; owner can re-invite later.
+5. If a collaborator is later **removed** (DELETE), the `EventCollaborator` record is deleted but the `CollaboratorInvitation` remains. The invite route checks the actual collaborator table before blocking re-invites, so removed users can be re-invited without conflict.
+
+#### Access control
+
+* Owners and admins always have full access to an event page.
+* Non-collaborators hitting `/dashboard/event/[id]` receive a styled **"Sin acceso a este evento"** page instead of a generic 404.
 
 ---
 
@@ -451,15 +458,26 @@ Users can open support chats; admins reply via the admin interface.
 
 In addition to in-app notifications, users receive transactional emails via Resend for:
 
-| Trigger | Template |
-|---|---|
-| Account registration | Verification link (indigo theme) |
-| Password reset | Reset link (neutral dark theme) |
-| Event approved by admin | System notification (indigo theme) |
-| Event rejected by admin | System notification with rejection reason |
-| Collaboration invitation received | Special amber/gold template with event name |
+| Trigger | Template | Gated by preference |
+|---|---|---|
+| Account registration | Verification link (indigo theme) | No — always sent |
+| Password reset | Reset link (neutral dark theme) | No — always sent |
+| Event approved by admin | System notification (indigo theme) | `emailNotifications` |
+| Event rejected by admin | System notification with rejection reason | `emailNotifications` |
+| Collaboration invitation received | Special amber/gold template with event name | `emailCollaborations` |
 
 All notification emails are dispatched fire-and-forget (`.catch()`) so a delivery failure never interrupts the main flow.
+
+**Deliverability hardening:**
+
+Every email includes a `text` plain-text alternative (HTML-only emails are penalised by spam filters). Non-auth emails carry a `List-Unsubscribe` / `List-Unsubscribe-Post` header pointing to a signed unsubscribe URL, and use specific subject lines derived from the event title to avoid generic spam triggers.
+
+**Email preferences & unsubscribe** (`src/lib/unsubscribe.ts`, `src/app/unsubscribe/page.tsx`):
+
+* Users control both toggles from `/dashboard?tab=profile` → **Notificaciones por correo** section.
+* Every notification/collaboration email includes an **"Unsubscribe"** footer link.
+* The link encodes a signed, stateless token: `base64url(userId:type:HMAC-SHA256)` using `NEXTAUTH_SECRET`. No extra DB table required.
+* `GET /unsubscribe?token=...` verifies the token, sets the relevant preference to `false`, and renders a confirmation page with a link back to the profile to re-enable.
 
 ---
 
@@ -605,6 +623,7 @@ These scripts are used throughout the development workflow to iterate on both sc
 │   │   ├── api/             # API routes (auth, polls, events, support, webhooks, AI)
 │   │   ├── auth/            # Email verification flow
 │   │   ├── dashboard/       # User dashboard & event management
+│   │   ├── unsubscribe/     # Email unsubscribe confirmation page
 │   │   ├── e/[slug]/        # Public voting flow for events
 │   │   ├── polls/           # Public poll discovery & results (with filters + pagination)
 │   │   ├── login/           # Login page
@@ -628,7 +647,9 @@ These scripts are used throughout the development workflow to iterate on both sc
 │   │   ├── config.ts        # App configuration
 │   │   ├── plans.ts         # Plan definitions
 │   │   ├── tokens.ts        # Token generation helpers
-│   │   ├── mail.ts          # Email sending helpers
+│   │   ├── mail.ts          # Email sending helpers (all transactional templates)
+│   │   ├── unsubscribe.ts   # HMAC-signed unsubscribe token generation & verification
+│   │   ├── pusher.ts        # Pusher server/client + channel helpers + event names
 │   │   ├── validations.ts   # Zod schemas
 │   │   ├── countResults.ts  # Result aggregation helpers
 │   │   ├── rate-limit.ts    # Sliding-window in-memory rate limiter
@@ -671,13 +692,14 @@ This project served as a deep-dive into:
 * Designing a **community engagement layer**: event likes, upvote/downvote ratings, tag-based discovery, and sort/filter exploration.
 * Protecting a public API surface with **rate limiting** across all endpoints.
 * Building a **real-time collaborative editing system** with Pusher: granular permission inheritance, bidirectional live sync between event owner and collaborators, and instant UI updates without page reloads.
+* Designing a **transactional email system** with per-user opt-out preferences, stateless HMAC-signed unsubscribe tokens, and deliverability hardening (plain-text alternatives, specific subject lines, `List-Unsubscribe` headers).
 * Polishing UX with motion, dark theme, and consistent component patterns.
 
 This repository is intended as a **complete, production-style reference** for a modern SaaS-like voting platform, showcasing how all these pieces can work together coherently in a single codebase.
 
 ---
 
-Last update: 7/4/2026 — v2.1 (real-time team collaboration, email notifications)
+Last update: 7/4/2026 — v2.2 (email preferences, unsubscribe system, deliverability hardening, collaboration bug fixes)
 
 > Made with ♥️ by Rayelus
 > <br>

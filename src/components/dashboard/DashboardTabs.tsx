@@ -41,6 +41,8 @@ type DashboardTabsProps = {
         cancelAtPeriodEnd: boolean | null;
         createdAt: Date;
         hasPassword: boolean;
+        emailNotifications: boolean;
+        emailCollaborations: boolean;
     };
     plan: {
         slug: string;
@@ -411,6 +413,8 @@ function ProfileTab({
         image: user.image,
         email: user.email,
         hasPassword: user.hasPassword,
+        emailNotifications: user.emailNotifications,
+        emailCollaborations: user.emailCollaborations,
     };
 
     const subData = {

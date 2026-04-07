@@ -69,6 +69,8 @@ model User {
     subscriptionStatus   String?           @default("free")
     subscriptionEndDate  DateTime?
     cancelAtPeriodEnd    Boolean           @default(false)
+    emailNotifications   Boolean           @default(true)  // Recibir correos de notificaciones del sistema
+    emailCollaborations  Boolean           @default(true)  // Recibir correos de invitaciones de colaboración
     createdAt            DateTime          @default(now())
     updatedAt            DateTime          @updatedAt
 

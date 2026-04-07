@@ -109,6 +109,8 @@ export default async function DashboardPage() {
         cancelAtPeriodEnd: user.cancelAtPeriodEnd,
         createdAt: user.createdAt,
         hasPassword: !!user.passwordHash,
+        emailNotifications: user.emailNotifications,
+        emailCollaborations: user.emailCollaborations,
     };
 
     return (

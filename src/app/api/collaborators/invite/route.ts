@@ -4,6 +4,7 @@ import { getPlanFromUser } from "@/lib/plans";
 import { pusherServer, eventChannel, userChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendCollaborationInviteEmail } from "@/lib/mail";
+import { buildUnsubscribeUrl } from "@/lib/unsubscribe";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST /api/collaborators/invite
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
     // 3. Verificar que el invitado existe y no es ya colaborador
     const invitedUser = await prisma.user.findUnique({
         where: { id: invitedUserId },
-        select: { id: true, name: true, username: true, email: true },
+        select: { id: true, name: true, username: true, email: true, emailCollaborations: true },
     });
     if (!invitedUser) {
         return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
@@ -76,9 +77,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Ya existe una invitación pendiente para este usuario" }, { status: 409 });
         }
         if (existing.status === "ACCEPTED") {
-            return NextResponse.json({ error: "Este usuario ya es colaborador" }, { status: 409 });
+            // Verificar que el colaborador sigue activo (puede haber sido eliminado)
+            const stillCollaborator = await prisma.eventCollaborator.findUnique({
+                where: { eventId_userId: { eventId, userId: invitedUserId } },
+                select: { userId: true },
+            });
+            if (stillCollaborator) {
+                return NextResponse.json({ error: "Este usuario ya es colaborador" }, { status: 409 });
+            }
+            // Fue eliminado como colaborador → permitir re-invitar
         }
-        // Si fue rechazada, permitir re-invitar: actualizamos en lugar de crear
+        // Si fue rechazada o fue eliminado tras aceptar, permitir re-invitar: actualizamos en lugar de crear
         const updated = await prisma.collaboratorInvitation.update({
             where: { id: existing.id },
             data: { status: "PENDING", respondedAt: null, createdAt: new Date() },
@@ -106,14 +115,20 @@ export async function POST(req: NextRequest) {
             console.error("[Pusher] Error al notificar invitation-sent al usuario:", pusherErr);
         }
 
-        // Enviar correo de invitación de colaboración
-        if (invitedUser?.email) {
+        // Enviar correo de invitación de colaboración (solo si el usuario lo tiene activado)
+        if (invitedUser?.email && invitedUser.emailCollaborations) {
+            const unsubUrl = buildUnsubscribeUrl(
+                process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+                invitedUserId,
+                "collaborations"
+            );
             sendCollaborationInviteEmail(
                 invitedUser.email,
                 invitedUser.name ?? "Usuario",
                 owner.name ?? "Un usuario",
                 event.title,
-                "/dashboard?tab=events"
+                "/dashboard?tab=events",
+                unsubUrl
             ).catch((err) => console.error("[Mail] Error al enviar correo de re-invitación:", err));
         }
 

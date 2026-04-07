@@ -4,6 +4,7 @@ import { getPlanFromUser, PLANS } from "@/lib/plans";
 import { getEventStats } from "@/app/lib/stats-actions";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import EventTabs from "@/components/dashboard/EventTabs";
 import EventSettings from "@/components/dashboard/EventSettings";
 import ParticipantList from "@/components/dashboard/ParticipantList";
@@ -54,7 +55,25 @@ export default async function EventDashboardPage({ params }: Props) {
 
     // Acceso: dueño, admin del sistema, o colaborador
     if (!isOwner && !isAdmin && !collaborator) {
-        notFound();
+        return (
+            <main className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+                <div className="max-w-md w-full text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 border-2 border-white/10 flex items-center justify-center mx-auto mb-6">
+                        <Lock className="w-7 h-7 text-gray-500" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">Sin acceso a este evento</h1>
+                    <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+                        No tienes permiso para ver este evento. Es posible que hayas sido eliminado como colaborador o que el enlace no sea válido.
+                    </p>
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/8 hover:bg-white/12 border-2 border-white/10 text-sm font-semibold text-white transition-all"
+                    >
+                        Volver al dashboard
+                    </Link>
+                </div>
+            </main>
+        );
     }
 
     // 2. Obtener usuario y plan
