@@ -51,7 +51,16 @@ function SubmitButton() {
     );
 }
 
-export default function EventSettings({ event, planSlug }: { event: EventData, planSlug: string }) {
+type Permissions = {
+    canEditSettings: boolean;
+    canDeleteEvent: boolean;
+    canRegenerateKey: boolean;
+};
+
+export default function EventSettings({ event, planSlug, permissions }: { event: EventData, planSlug: string, permissions?: Permissions }) {
+    const canEdit = permissions?.canEditSettings !== false;
+    const canDelete = permissions?.canDeleteEvent !== false;
+    const canRotateKey = permissions?.canRegenerateKey !== false;
     const [currentEvent, setCurrentEvent] = useState(event);
     const [tags, setTags] = useState<string[]>(event.tags ?? []);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -194,17 +203,21 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
 
 
                 {/* FORMULARIO ORIGINAL */}
-                <form action={handleFormSubmit} className="space-y-6 p-6 bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-lg tour-event-settings-card">
-                    {/* ... (Mismo contenido del formulario que tenías: Título, Descripción, Fecha...) ... */}
-                    {/* COPIA AQUÍ EL RESTO DEL FORMULARIO QUE YA TENÍAS EN EL ARCHIVO PREVIO */}
+                {!canEdit && (
+                    <div className="px-4 py-2.5 rounded-lg bg-amber-500/10 border-2 border-amber-500/20 text-xs text-amber-400 font-medium">
+                        No tienes permiso para editar la configuración de este evento.
+                    </div>
+                )}
+
+                <form action={handleFormSubmit} className={`space-y-6 p-6 bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-lg tour-event-settings-card ${!canEdit ? "opacity-60 pointer-events-none" : ""}`}>
                     <h2 className="text-2xl font-bold text-white mb-4 border-b-2 border-neutral-700 pb-3">Configuración General</h2>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Nombre del Evento</label>
-                        <input name="title" maxLength={40} defaultValue={currentEvent.title} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required />
+                        <input name="title" maxLength={40} defaultValue={currentEvent.title} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required disabled={!canEdit} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
-                        <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" />
+                        <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" disabled={!canEdit} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">Etiquetas</label>
@@ -392,7 +405,7 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                         <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
                             {currentEvent.isPublic ? '🌍 Enlace Público' : '🔒 Enlace Privado (Con Clave)'}
                         </h3>
-                        {!currentEvent.isPublic && (
+                        {!currentEvent.isPublic && canRotateKey && (
                             <button onClick={handleRotateKey} disabled={isRegenerating} className="text-[10px] flex items-center gap-1 text-blue-300 hover:text-white transition-colors disabled:opacity-50 cursor-pointer">
                                 <RefreshCw size={12} className={isRegenerating ? "animate-spin" : ""} />
                                 {isRegenerating ? "Generando..." : "Regenerar Clave"}
@@ -422,15 +435,17 @@ export default function EventSettings({ event, planSlug }: { event: EventData, p
                     </div>
                 </div>
 
-                <div className="p-6 border-2 border-red-500/20 bg-red-500/5 rounded-xl">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-1"><AlertTriangle size={16} /> Eliminar Evento</h3>
-                            <p className="text-xs text-red-300/60">Esta acción es irreversible.</p>
+                {canDelete && (
+                    <div className="p-6 border-2 border-red-500/20 bg-red-500/5 rounded-xl">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="text-sm font-bold text-red-400 uppercase tracking-wider flex items-center gap-2 mb-1"><AlertTriangle size={16} /> Eliminar Evento</h3>
+                                <p className="text-xs text-red-300/60">Esta acción es irreversible.</p>
+                            </div>
+                            <button onClick={() => setIsDeleteModalOpen(true)} className="text-xs font-bold text-red-200 bg-red-500/20 border-2 border-red-500/30 px-4 py-3 rounded hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2 cursor-pointer"><Trash2 size={14} /> Eliminar</button>
                         </div>
-                        <button onClick={() => setIsDeleteModalOpen(true)} className="text-xs font-bold text-red-200 bg-red-500/20 border-2 border-red-500/30 px-4 py-3 rounded hover:bg-red-500 hover:text-white transition-colors flex items-center gap-2 cursor-pointer"><Trash2 size={14} /> Eliminar</button>
                     </div>
-                </div>
+                )}
                 {isDeleteModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
                         <div className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-red-500">

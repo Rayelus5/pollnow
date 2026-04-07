@@ -38,6 +38,17 @@ enum ReportReason {
     OTHER
 }
 
+enum InvitationStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
+enum NotificationType {
+    SYSTEM
+    COLLABORATION
+}
+
 // ===================================
 // MODELOS DE USUARIO Y CUENTA
 // ===================================
@@ -65,14 +76,19 @@ model User {
     accounts             Account[]
     events               Event[]
     sessions             Session[]
-    votes                Vote[]            @relation(name: "UserVotes")
-    notifications        Notification[]
-    supportChats         SupportChat[]     @relation(name: "UserSupportChats")
-    chatMessages         ChatMessage[]     @relation(name: "UserChatMessages")
-    moderationLogs       ModerationLog[]   @relation(name: "AdminActions")
-    reports              Report[]          @relation(name: "UserReports")
+    votes                Vote[]                    @relation(name: "UserVotes")
+    notifications        Notification[]            @relation("AdminNotifications")
+    receivedNotifications Notification[]           @relation("UserNotifications")
+    supportChats         SupportChat[]             @relation(name: "UserSupportChats")
+    chatMessages         ChatMessage[]             @relation(name: "UserChatMessages")
+    moderationLogs       ModerationLog[]           @relation(name: "AdminActions")
+    reports              Report[]                  @relation(name: "UserReports")
     eventLikes           EventLike[]
     eventVotes           EventVote[]
+    // Colaboración
+    collaborations       EventCollaborator[]       @relation("UserCollaborations")
+    sentInvitations      CollaboratorInvitation[]  @relation("SentInvitations")
+    receivedInvitations  CollaboratorInvitation[]  @relation("ReceivedInvitations")
 }
 
 model Account {
@@ -144,6 +160,14 @@ model Event {
     status            EventStatus     @default(DRAFT) // <--- CAMBIO: Por defecto nace como borrador
     reviewReason      String?   
 
+    // Permisos globales por defecto para todos los colaboradores
+    defaultCanEditSettings   Boolean @default(false)
+    defaultCanRegenerateKey  Boolean @default(false)
+    defaultCanDeleteEvent    Boolean @default(false)
+    defaultCanManageNominees Boolean @default(true)
+    defaultCanManagePolls    Boolean @default(true)
+    defaultCanViewStats      Boolean @default(true)
+
     // Relaciones
     user           User            @relation(fields: [userId], references: [id])
     participants   Participant[]
@@ -152,6 +176,8 @@ model Event {
     moderationLogs ModerationLog[]
     likes          EventLike[]
     eventVotes     EventVote[]
+    collaborators  EventCollaborator[]
+    invitations    CollaboratorInvitation[]
 
     @@index([userId])
     @@index([slug])
@@ -287,19 +313,69 @@ model ModerationLog {
 
 
 model Notification {
-    id          String   @id @default(uuid())
-    message     String   // El contenido de la notificación
-    link        String?  // Enlace directo a la acción (ej: /admin/review/event-id)
-    isRead      Boolean  @default(false)
-    createdAt   DateTime @default(now())
-    adminUserId String   // A qué administrador va dirigida
-    userId      String?
+    id           String           @id @default(uuid())
+    message      String           // El contenido de la notificación
+    link         String?          // Enlace directo a la acción
+    isRead       Boolean          @default(false)
+    createdAt    DateTime         @default(now())
+    adminUserId  String           // Remitente (admin del sistema o dueño del evento)
+    userId       String?          // Destinatario
+    type         NotificationType @default(SYSTEM)
+    invitationId String?          // Referencia a CollaboratorInvitation si type=COLLABORATION
 
-    admin User @relation(fields: [adminUserId], references: [id])
+    admin      User  @relation("AdminNotifications", fields: [adminUserId], references: [id])
+    targetUser User? @relation("UserNotifications", fields: [userId], references: [id])
 
     @@index([adminUserId])
+    @@index([userId])
     @@index([isRead])
     @@index([createdAt])
+    @@index([type])
+}
+
+// ===================================
+// MODELOS DE COLABORACIÓN
+// ===================================
+
+model EventCollaborator {
+    id        String   @id @default(uuid())
+    eventId   String
+    userId    String
+    createdAt DateTime @default(now())
+
+    // Permisos individuales (null = usa los defaults del evento)
+    canEditSettings   Boolean?
+    canRegenerateKey  Boolean?
+    canDeleteEvent    Boolean?
+    canManageNominees Boolean?
+    canManagePolls    Boolean?
+    canViewStats      Boolean?
+
+    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    user  User  @relation("UserCollaborations", fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([eventId, userId])
+    @@index([eventId])
+    @@index([userId])
+}
+
+model CollaboratorInvitation {
+    id            String           @id @default(uuid())
+    eventId       String
+    invitedById   String
+    invitedUserId String
+    status        InvitationStatus @default(PENDING)
+    createdAt     DateTime         @default(now())
+    respondedAt   DateTime?
+
+    event       Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+    invitedBy   User  @relation("SentInvitations", fields: [invitedById], references: [id])
+    invitedUser User  @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
+
+    @@unique([eventId, invitedUserId])
+    @@index([eventId])
+    @@index([invitedUserId])
+    @@index([status])
 }
 
 model SupportChat {

@@ -36,6 +36,8 @@
     "next": "^16.0.7",
     "next-auth": "^5.0.0-beta.30",
     "prisma": "^6.19.0",
+    "pusher": "^5.3.3",
+    "pusher-js": "^8.5.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "resend": "^6.5.2",

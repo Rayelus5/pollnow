@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import { getPusherClient, userChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import CreateEventButton from "@/components/dashboard/CreateEventButton";
 import CreateTicketButton from "@/components/dashboard/CreateTicketButton";
 import DashboardEventCard from "@/components/dashboard/DashboardEventCard";
@@ -12,9 +13,20 @@ import {
 } from "@/app/lib/user-notification-actions";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { BookCheck } from "lucide-react";
+import { BookCheck, Users, Mail } from "lucide-react";
 import ProfileForm from "@/components/dashboard/ProfileForm";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
+import PendingInviteCard from "@/components/dashboard/PendingInviteCard";
+
+type EventRow = {
+    id: string;
+    title: string;
+    description: string | null;
+    isPublic: boolean;
+    createdAt: Date;
+    status: "DRAFT" | "PENDING" | "APPROVED" | "DENIED";
+    _count: { polls: number; participants: number };
+};
 
 type DashboardTabsProps = {
     user: {
@@ -34,17 +46,16 @@ type DashboardTabsProps = {
         slug: string;
         name: string;
     };
-    events: {
-        id: string;
-        title: string;
-        description: string | null;
-        isPublic: boolean;
-        createdAt: Date;
-        status: "DRAFT" | "PENDING" | "APPROVED" | "DENIED";
-        _count: {
-            polls: number;
-            participants: number;
-        };
+    events: EventRow[];
+    /** Eventos en los que el usuario es colaborador (no dueño) */
+    sharedEvents: EventRow[];
+    /** IDs de eventos propios que tienen al menos 1 colaborador */
+    eventsWithCollaborators: string[];
+    /** Invitaciones pendientes de responder */
+    pendingInvitations: {
+        invitationId: string;
+        event: EventRow;
+        invitedBy: { name: string; username: string; image: string | null };
     }[];
     notifications: {
         id: string;
@@ -52,6 +63,8 @@ type DashboardTabsProps = {
         link: string | null;
         isRead: boolean;
         createdAt: Date;
+        type: "SYSTEM" | "COLLABORATION";
+        invitationId: string | null;
     }[];
     supportChats: {
         id: string;
@@ -70,25 +83,56 @@ export default function DashboardTabs({
     user,
     plan,
     events,
+    sharedEvents,
+    eventsWithCollaborators,
+    pendingInvitations,
     notifications,
     supportChats,
 }: DashboardTabsProps) {
     const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+    const [pendingInviteCount, setPendingInviteCount] = useState(pendingInvitations.length);
+    const router = useRouter();
+
+    // Sincronizar badge cuando los datos del servidor se actualizan
+    useEffect(() => {
+        setPendingInviteCount(pendingInvitations.length);
+    }, [pendingInvitations.length]);
+
+    // Suscribirse al canal personal del usuario para notificaciones en tiempo real
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            const pusher = getPusherClient();
+            const ch = pusher.subscribe(userChannel(user.id));
+            ch.bind(PUSHER_EVENTS.INVITATION_SENT, () => {
+                setPendingInviteCount((prev) => prev + 1);
+                router.refresh();
+            });
+        } catch {
+            // Pusher no disponible
+        }
+        return () => {
+            try { getPusherClient().unsubscribe(userChannel(user.id)); } catch { /* noop */ }
+        };
+    }, [user.id, router]);
 
     const tabs: { id: TabId; label: string; badge?: number }[] = [
-        { id: "events", label: "Eventos" },
+        {
+            id: "events",
+            label: "Eventos",
+            badge: pendingInviteCount || undefined,
+        },
         {
             id: "notifications",
             label: "Notificaciones",
-            badge: notifications.filter((n) => !n.isRead).length || undefined,
+            badge: notifications.filter((n) => !n.isRead && n.type === "SYSTEM").length || undefined,
         },
         { id: "support", label: "Soporte" },
         { id: "profile", label: "Mi Cuenta" },
     ];
 
-    // Nuevos hooks para manejar la URL
+    // Hooks para manejar la URL
     const searchParams = useSearchParams();
-    const router = useRouter();
     const pathname = usePathname();
 
     const initialTab = (searchParams.get("tab") as TabId) || "events";
@@ -163,6 +207,9 @@ export default function DashboardTabs({
                 {activeTab === "events" && (
                     <EventsTab
                         events={events}
+                        sharedEvents={sharedEvents}
+                        eventsWithCollaborators={eventsWithCollaborators}
+                        pendingInvitations={pendingInvitations}
                         planSlug={plan.slug}
                         user={user}
                         isCreating={isCreatingEvent}
@@ -178,7 +225,7 @@ export default function DashboardTabs({
 
                 {activeTab === "notifications" && (
                     <NotificationsTab
-                        notifications={notifications}
+                        initialNotifications={notifications}
                         page={notificationsPage}
                         setPage={setNotificationsPage}
                     />
@@ -198,8 +245,13 @@ export default function DashboardTabs({
 
 // ========== TAB: EVENTOS ==========
 
+type PendingInvite = DashboardTabsProps["pendingInvitations"][number];
+
 type EventsTabProps = {
     events: DashboardTabsProps["events"];
+    sharedEvents: DashboardTabsProps["sharedEvents"];
+    eventsWithCollaborators: DashboardTabsProps["eventsWithCollaborators"];
+    pendingInvitations: DashboardTabsProps["pendingInvitations"];
     planSlug: string;
     user: DashboardTabsProps["user"];
     isCreating: boolean;
@@ -210,6 +262,9 @@ type EventsTabProps = {
 
 function EventsTab({
     events,
+    sharedEvents,
+    eventsWithCollaborators,
+    pendingInvitations: initialPending,
     planSlug,
     user,
     isCreating,
@@ -217,6 +272,9 @@ function EventsTab({
     page,
     setPage,
 }: EventsTabProps) {
+    const router = useRouter();
+    const [pending, setPending] = useState<PendingInvite[]>(initialPending);
+
     const total = events.length;
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -225,8 +283,49 @@ function EventsTab({
         return events.slice(start, start + PAGE_SIZE);
     }, [events, page]);
 
+    const collaboratorSet = useMemo(() => new Set(eventsWithCollaborators), [eventsWithCollaborators]);
+
+    const handleAccepted = (invitationId: string) => {
+        setPending((prev) => prev.filter((i) => i.invitationId !== invitationId));
+        // Refrescar datos del servidor para que el evento aparezca en sharedEvents
+        router.refresh();
+    };
+
+    const handleRejected = (invitationId: string) => {
+        setPending((prev) => prev.filter((i) => i.invitationId !== invitationId));
+    };
+
     return (
         <section>
+            {/* Invitaciones pendientes */}
+            {pending.length > 0 && (
+                <div className="mb-10">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Mail className="w-5 h-5 text-amber-400" />
+                        <h3 className="text-lg font-bold text-white">Invitaciones pendientes</h3>
+                        <span className="ml-1 inline-flex items-center justify-center text-[10px] px-2 py-0.5 rounded-full bg-amber-500 text-black font-bold">
+                            {pending.length}
+                        </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-5">
+                        Te han invitado a colaborar en estos eventos. Acepta o rechaza la invitación.
+                    </p>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {pending.map((inv) => (
+                            <PendingInviteCard
+                                key={inv.invitationId}
+                                invitationId={inv.invitationId}
+                                event={inv.event}
+                                invitedBy={inv.invitedBy}
+                                onAccepted={() => handleAccepted(inv.invitationId)}
+                                onRejected={() => handleRejected(inv.invitationId)}
+                            />
+                        ))}
+                    </div>
+                    <div className="border-b-2 border-white/8 mt-10" />
+                </div>
+            )}
+
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h2 className="text-2xl font-bold">Mis Eventos</h2>
@@ -235,7 +334,6 @@ function EventsTab({
                     </p>
                 </div>
 
-                {/* Botón de crear evento con loader global */}
                 <div className="flex flex-col items-end gap-2">
                     {isCreating && (
                         <div className="flex items-center gap-2 text-xs text-blue-300">
@@ -258,27 +356,41 @@ function EventsTab({
                 )}
             >
                 {paged.map((event) => (
-                    <DashboardEventCard key={event.id} event={event} />
+                    <DashboardEventCard
+                        key={event.id}
+                        event={event}
+                        hasCollaborators={collaboratorSet.has(event.id)}
+                    />
                 ))}
 
                 {events.length === 0 && (
                     <div className="col-span-full py-16 border-2 border-dashed border-white/10 rounded-2xl text-center">
                         <p className="text-gray-500 mb-2">No tienes eventos activos.</p>
-                        <p className="text-sm text-gray-600">
-                            ¡Crea el primero para empezar la gala!
-                        </p>
+                        <p className="text-sm text-gray-600">¡Crea el primero para empezar la gala!</p>
                     </div>
                 )}
             </div>
 
-            {/* PAGINADOR */}
             {total > PAGE_SIZE && (
-                <Pagination
-                    className="mt-8"
-                    page={page}
-                    setPage={setPage}
-                    totalPages={totalPages}
-                />
+                <Pagination className="mt-8" page={page} setPage={setPage} totalPages={totalPages} />
+            )}
+
+            {/* Eventos compartidos (invitaciones aceptadas) */}
+            {sharedEvents.length > 0 && (
+                <div className="mt-12">
+                    <div className="flex items-center gap-2 mb-4">
+                        <Users className="w-5 h-5 text-green-400" />
+                        <h3 className="text-lg font-bold text-white">Eventos en los que colaboras</h3>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-6">
+                        Eventos de otros usuarios donde has sido invitado como colaborador.
+                    </p>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {sharedEvents.map((event) => (
+                            <DashboardEventCard key={event.id} event={event} isShared />
+                        ))}
+                    </div>
+                </div>
             )}
         </section>
     );
@@ -322,14 +434,16 @@ function ProfileTab({
 // ========== TAB: NOTIFICACIONES ==========
 
 function NotificationsTab({
-    notifications,
+    initialNotifications,
     page,
     setPage,
 }: {
-    notifications: DashboardTabsProps["notifications"];
+    initialNotifications: DashboardTabsProps["notifications"];
     page: number;
     setPage: (n: number) => void;
 }) {
+    const notifications = initialNotifications;
+
     if (notifications.length === 0) {
         return (
             <div className="py-10 text-center text-sm text-gray-500 border-2 border-dashed border-white/10 rounded-2xl">
@@ -348,13 +462,10 @@ function NotificationsTab({
 
     return (
         <div className="space-y-4">
-            {/* Botón global: marcar todas como leídas */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h2 className="text-2xl font-bold">Mis Notificaciones</h2>
-                    <p className="text-gray-400 text-sm">
-                        Revisa tus notificaciones y actualizaciones.
-                    </p>
+                    <p className="text-gray-400 text-sm">Revisa tus notificaciones y actualizaciones.</p>
                 </div>
                 <div className="flex justify-end">
                     <form action={markAllUserNotificationsRead}>
@@ -369,59 +480,78 @@ function NotificationsTab({
             </div>
 
             <ul className="space-y-3">
-                {paged.map((n) => (
-                    <li
-                        key={n.id}
-                        className={clsx(
-                            "p-4 rounded-xl border-2 text-sm flex justify-between gap-4",
-                            n.isRead
-                                ? "border-white/10 bg-neutral-900/60 text-gray-300"
-                                : "border-blue-500/40 bg-blue-500/5 text-blue-100"
-                        )}
-                    >
-                        <div>
-                            <p>{n.message}</p>
-                            <p className="text-[11px] text-gray-400 mt-1">
-                                {formatDistanceToNow(n.createdAt, {
-                                    addSuffix: true,
-                                    locale: es,
-                                })}
-                            </p>
-                        </div>
+                {paged.map((n) => {
+                    const isCollaboration = n.type === "COLLABORATION";
 
-                        <div className="flex flex-col items-end gap-2">
-                            {n.link && (
-                                <a
-                                    href={n.link}
-                                    className="text-xs text-blue-400 hover:text-blue-200 underline underline-offset-2 whitespace-nowrap"
-                                >
-                                    Ver detalle
-                                </a>
+                    return (
+                        <li
+                            key={n.id}
+                            className={clsx(
+                                "p-4 rounded-xl border-2 text-sm",
+                                isCollaboration
+                                    ? n.isRead
+                                        ? "border-white/10 bg-neutral-900/60 text-gray-400"
+                                        : "border-amber-500/30 bg-amber-500/5 text-gray-200"
+                                    : n.isRead
+                                        ? "border-white/10 bg-neutral-900/60 text-gray-300"
+                                        : "border-blue-500/40 bg-blue-500/5 text-blue-100"
                             )}
+                        >
+                            <div className="flex items-start justify-between gap-4 flex-wrap">
+                                <div className="flex-1 min-w-0">
+                                    {isCollaboration && (
+                                        <div className="flex items-center gap-1.5 mb-2">
+                                            <Mail className="w-3.5 h-3.5 text-amber-400" />
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                                                Invitación de colaboración
+                                            </span>
+                                        </div>
+                                    )}
+                                    <p>{n.message}</p>
+                                    <p className="text-[11px] text-gray-500 mt-1">
+                                        {formatDistanceToNow(n.createdAt, { addSuffix: true, locale: es })}
+                                    </p>
+                                </div>
 
-                            {!n.isRead && (
-                                <form action={markUserNotificationRead.bind(null, n.id)}>
-                                    <button
-                                        type="submit"
-                                        className="text-[11px] px-2 py-1 rounded-full bg-white/10 hover:bg-white/20 text-gray-100 border-2 border-white/20 cursor-pointer whitespace-nowrap"
-                                    >
-                                        Marcar como leída
-                                    </button>
-                                </form>
-                            )}
-                        </div>
-                    </li>
-                ))}
+                                <div className="flex flex-col items-end gap-2 shrink-0">
+                                    {/* Colaboración pendiente → redirigir a eventos */}
+                                    {isCollaboration && !n.isRead && (
+                                        <a
+                                            href="/dashboard?tab=events"
+                                            className="text-xs font-semibold text-amber-400 hover:text-amber-300 underline underline-offset-2 whitespace-nowrap transition-colors"
+                                        >
+                                            Ver en Mis Eventos
+                                        </a>
+                                    )}
+                                    {isCollaboration && n.isRead && (
+                                        <span className="text-[11px] text-gray-600">Ya respondida</span>
+                                    )}
+
+                                    {/* Notificaciones de sistema */}
+                                    {!isCollaboration && n.link && (
+                                        <a href={n.link} className="text-xs text-blue-400 hover:text-blue-200 underline underline-offset-2 whitespace-nowrap">
+                                            Ver detalle
+                                        </a>
+                                    )}
+                                    {!isCollaboration && !n.isRead && (
+                                        <form action={markUserNotificationRead.bind(null, n.id)}>
+                                            <button
+                                                type="submit"
+                                                className="text-[11px] px-2 py-1 rounded-full bg-white/10 hover:bg-white/20 text-gray-100 border-2 border-white/20 cursor-pointer whitespace-nowrap"
+                                            >
+                                                Marcar como leída
+                                            </button>
+                                        </form>
+                                    )}
+                                </div>
+                            </div>
+                        </li>
+                    );
+                })}
             </ul>
 
-            {/* PAGINADOR */}
             {total > PAGE_SIZE && (
-                <Pagination
-                    className="mt-6"
-                    page={page}
-                    setPage={setPage}
-                    totalPages={totalPages}
-                />
+                <Pagination className="mt-6" page={page} setPage={setPage} totalPages={totalPages} />
             )}
         </div>
     );
