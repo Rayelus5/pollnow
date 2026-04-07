@@ -54,12 +54,20 @@ export default function EventTabs({
                     router.refresh();
                 }
             });
+
+            // Cuando el dueño cambia permisos, el colaborador actualiza su vista en tiempo real
+            channel.bind(PUSHER_EVENTS.PERMISSIONS_UPDATED, (data: { triggeredBy: string }) => {
+                if (data.triggeredBy !== currentUserId) {
+                    router.refresh();
+                }
+            });
         } catch {
             // Pusher no disponible
         }
 
         return () => {
             channel?.unbind(PUSHER_EVENTS.DATA_CHANGED);
+            channel?.unbind(PUSHER_EVENTS.PERMISSIONS_UPDATED);
             // Unsubscribe aquí es seguro: EventTabs solo se desmonta al salir
             // de la página del evento, por lo que ningún otro componente
             // necesitará el canal después de esto.

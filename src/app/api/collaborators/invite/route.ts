@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getPlanFromUser } from "@/lib/plans";
 import { pusherServer, eventChannel, userChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendCollaborationInviteEmail } from "@/lib/mail";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST /api/collaborators/invite
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     // 3. Verificar que el invitado existe y no es ya colaborador
     const invitedUser = await prisma.user.findUnique({
         where: { id: invitedUserId },
-        select: { id: true, name: true, username: true },
+        select: { id: true, name: true, username: true, email: true },
     });
     if (!invitedUser) {
         return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
@@ -104,6 +105,18 @@ export async function POST(req: NextRequest) {
         } catch (pusherErr) {
             console.error("[Pusher] Error al notificar invitation-sent al usuario:", pusherErr);
         }
+
+        // Enviar correo de invitación de colaboración
+        if (invitedUser?.email) {
+            sendCollaborationInviteEmail(
+                invitedUser.email,
+                invitedUser.name ?? "Usuario",
+                owner.name ?? "Un usuario",
+                event.title,
+                "/dashboard?tab=events"
+            ).catch((err) => console.error("[Mail] Error al enviar correo de re-invitación:", err));
+        }
+
         return NextResponse.json({ invitation: updated }, { status: 200 });
     }
 
@@ -124,6 +137,17 @@ export async function POST(req: NextRequest) {
             userId: invitedUserId,
         },
     });
+
+    // Enviar correo de invitación de colaboración
+    if (invitedUser?.email) {
+        sendCollaborationInviteEmail(
+            invitedUser.email,
+            invitedUser.name ?? "Usuario",
+            owner.name ?? "Un usuario",
+            event.title,
+            "/dashboard?tab=events"
+        ).catch((err) => console.error("[Mail] Error al enviar correo de invitación:", err));
+    }
 
     // 6. Avisar en tiempo real al canal del evento (no-throw)
     try {

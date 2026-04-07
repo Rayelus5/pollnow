@@ -68,12 +68,12 @@ export async function GET(req: NextRequest, { params }: Params) {
         collaborators,
         pendingInvitations,
         eventDefaults: {
-            defaultCanEditSettings: event.defaultCanEditSettings,
-            defaultCanRegenerateKey: event.defaultCanRegenerateKey,
-            defaultCanDeleteEvent: event.defaultCanDeleteEvent,
-            defaultCanManageNominees: event.defaultCanManageNominees,
-            defaultCanManagePolls: event.defaultCanManagePolls,
-            defaultCanViewStats: event.defaultCanViewStats,
+            canEditSettings: event.defaultCanEditSettings,
+            canRegenerateKey: event.defaultCanRegenerateKey,
+            canDeleteEvent: event.defaultCanDeleteEvent,
+            canManageNominees: event.defaultCanManageNominees,
+            canManagePolls: event.defaultCanManagePolls,
+            canViewStats: event.defaultCanViewStats,
         },
     });
 }
