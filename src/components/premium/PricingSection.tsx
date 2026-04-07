@@ -72,7 +72,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
     return (
-        <div className="max-w-7xl mx-auto text-center w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto text-center w-full">
 
             {/* HERO TEXT ANIMADO */}
             <motion.div
