@@ -1,14 +1,16 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlanFromUser } from "@/lib/plans";
+import { getPlanFromUser, PLANS } from "@/lib/plans";
 import { getEventStats } from "@/app/lib/stats-actions";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import EventTabs from "@/components/dashboard/EventTabs";
 import EventSettings from "@/components/dashboard/EventSettings";
 import ParticipantList from "@/components/dashboard/ParticipantList";
 import PollList from "@/components/dashboard/PollList";
 import EventStatistics from "@/components/dashboard/EventStatistics";
+import TeamTab from "@/components/dashboard/TeamTab";
 import { Folders, UsersRound } from "lucide-react";
 import clsx from "clsx";
 
@@ -25,7 +27,7 @@ export default async function EventDashboardPage({ params }: Props) {
     const isAdmin =
         session.user.role === "ADMIN" || session.user.role === "MODERATOR";
 
-    // 1. Buscar evento
+    // 1. Buscar evento (incluye todos los campos escalares para permisos)
     const event = await prisma.event.findUnique({
         where: { id },
         include: {
@@ -40,19 +42,68 @@ export default async function EventDashboardPage({ params }: Props) {
         },
     });
 
-    // Si no existe -> 404
-    // Si existe PERO no es dueño Y no es admin -> 404
-    if (!event || (event.userId !== session.user.id && !isAdmin)) {
-        notFound();
+    if (!event) notFound();
+
+    const isOwner = event.userId === session.user.id;
+
+    // Verificar si es colaborador (con todos los campos de permisos)
+    const collaborator = !isOwner
+        ? await prisma.eventCollaborator.findUnique({
+              where: { eventId_userId: { eventId: id, userId: session.user.id } },
+          })
+        : null;
+
+    // Acceso: dueño, admin del sistema, o colaborador
+    if (!isOwner && !isAdmin && !collaborator) {
+        return (
+            <main className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+                <div className="max-w-md w-full text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 border-2 border-white/10 flex items-center justify-center mx-auto mb-6">
+                        <Lock className="w-7 h-7 text-gray-500" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">Sin acceso a este evento</h1>
+                    <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+                        No tienes permiso para ver este evento. Es posible que hayas sido eliminado como colaborador o que el enlace no sea válido.
+                    </p>
+                    <Link
+                        href="/dashboard"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/8 hover:bg-white/12 border-2 border-white/10 text-sm font-semibold text-white transition-all"
+                    >
+                        Volver al dashboard
+                    </Link>
+                </div>
+            </main>
+        );
     }
 
-    // 2. Obtener usuario (viewer) y plan
+    // 2. Obtener usuario y plan
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
     });
-    const plan = user ? getPlanFromUser(user) : { slug: "free", name: "Free" };
+    const plan = user ? getPlanFromUser(user) : { slug: "free", name: "Free", limits: PLANS.FREE.limits };
 
-    // 3. Obtener estadísticas del evento
+    const collaboratorLimit = plan.limits.collaboratorsPerEvent;
+
+    // 3. Calcular permisos efectivos para colaboradores
+    const permissions = {
+        canEditSettings: true,
+        canDeleteEvent: true,
+        canRegenerateKey: true,
+        canManageNominees: true,
+        canManagePolls: true,
+        canViewStats: true,
+    };
+
+    if (!isOwner && !isAdmin && collaborator) {
+        permissions.canEditSettings = collaborator.canEditSettings ?? event.defaultCanEditSettings;
+        permissions.canDeleteEvent = collaborator.canDeleteEvent ?? event.defaultCanDeleteEvent;
+        permissions.canRegenerateKey = collaborator.canRegenerateKey ?? event.defaultCanRegenerateKey;
+        permissions.canManageNominees = collaborator.canManageNominees ?? event.defaultCanManageNominees;
+        permissions.canManagePolls = collaborator.canManagePolls ?? event.defaultCanManagePolls;
+        permissions.canViewStats = collaborator.canViewStats ?? event.defaultCanViewStats;
+    }
+
+    // 4. Obtener estadísticas del evento
     const stats = await getEventStats(event.id);
 
     return (
@@ -68,7 +119,7 @@ export default async function EventDashboardPage({ params }: Props) {
                         </Link>
                         <span>/</span>
                         <span className="truncate max-w-50">{event.title}</span>
-                        {/* Badge de Plan (del usuario logueado) */}
+                        {/* Badge de Plan */}
                         <span
                             className={clsx(
                                 "ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase",
@@ -76,13 +127,21 @@ export default async function EventDashboardPage({ params }: Props) {
                                     ? "bg-indigo-500/10 text-indigo-400"
                                     : plan.name.toUpperCase() === "UNLIMITED"
                                         ? "bg-purple-500/10 text-purple-400"
-                                        : "bg-white/10 text-gray-400"
+                                        : plan.name.toUpperCase() === "PLUS"
+                                            ? "bg-blue-500/10 text-blue-400"
+                                            : "bg-white/10 text-gray-400"
                             )}
                         >
                             Plan {plan.name}
                         </span>
+                        {/* Badge colaborador */}
+                        {!isOwner && collaborator && (
+                            <span className="ml-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-green-500/10 text-green-400">
+                                Colaborador
+                            </span>
+                        )}
                     </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tight truncate ">
+                    <h1 className="text-4xl font-bold text-white tracking-tight truncate">
                         {event.title}
                     </h1>
                 </div>
@@ -90,49 +149,60 @@ export default async function EventDashboardPage({ params }: Props) {
 
             <div className="max-w-7xl mx-auto px-6 py-8">
                 <EventTabs
-                    // PESTAÑA 1: Configuración
+                    eventId={event.id}
+                    currentUserId={session.user.id}
                     settings={
-                        <EventSettings event={event} planSlug={plan.slug} />
+                        <EventSettings
+                            event={event}
+                            planSlug={plan.slug}
+                            permissions={permissions}
+                        />
                     }
-                    // PESTAÑA 2: Participantes
                     participants={
                         <div className="max-w-7xl tour-participants-section">
                             <div className="mb-6 flex gap-2 items-center">
                                 <UsersRound className="w-6 h-6 text-gray-400" />
-                                <h2 className="text-xl font-bold">
-                                    Participantes del Evento
-                                </h2>
+                                <h2 className="text-xl font-bold">Participantes del Evento</h2>
                             </div>
                             <ParticipantList
                                 initialData={event.participants}
                                 eventId={event.id}
                                 planSlug={plan.slug}
+                                canManageNominees={permissions.canManageNominees}
                             />
                         </div>
                     }
-                    // PESTAÑA 3: Encuestas
                     polls={
                         <div className="max-w-7xl tour-polls-section">
                             <div className="mb-6 flex gap-2 items-center">
                                 <Folders className="w-6 h-6 text-gray-400" />
-                                <h2 className="text-xl font-bold">
-                                    Categorías del Evento
-                                </h2>
+                                <h2 className="text-xl font-bold">Categorías del Evento</h2>
                             </div>
                             <PollList
                                 initialPolls={event.polls}
                                 allParticipants={event.participants}
                                 eventId={event.id}
                                 planSlug={plan.slug}
+                                canManagePolls={permissions.canManagePolls}
                             />
                         </div>
                     }
-                    // PESTAÑA 4: Estadísticas
                     stats={
                         <EventStatistics
                             stats={stats}
                             planSlug={plan.slug}
                             isAdmin={isAdmin}
+                            canViewStats={permissions.canViewStats}
+                        />
+                    }
+                    team={
+                        <TeamTab
+                            eventId={event.id}
+                            eventTitle={event.title}
+                            planSlug={plan.slug}
+                            collaboratorLimit={collaboratorLimit}
+                            isOwner={isOwner}
+                            currentUserId={session.user.id}
                         />
                     }
                 />

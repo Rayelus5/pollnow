@@ -3,7 +3,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
-import { redirect } from "next/navigation";
 
 // Inicialización de Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -100,10 +99,8 @@ export async function createCheckoutSession(priceId: string) {
         return { error: "Error al conectar con la pasarela de pago." };
     }
 
-    // --- REDIRECCIÓN SEGURA (Fuera del try/catch) ---
-    // Esto evita que el `redirect` sea capturado como un error y muestre el alert.
     if (redirectUrl) {
-        redirect(redirectUrl);
+        return redirectUrl;
     }
 }
 
@@ -135,6 +132,6 @@ export async function createCustomerPortalSession() {
     }
 
     if (redirectUrl) {
-        redirect(redirectUrl);
+        return redirectUrl;
     }
 }

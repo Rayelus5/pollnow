@@ -80,6 +80,25 @@ export async function updateProfile(formData: FormData) {
 
 
 
+export async function updateEmailPreferences(prefs: {
+    emailNotifications: boolean;
+    emailCollaborations: boolean;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No autorizado" };
+
+    await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+            emailNotifications: prefs.emailNotifications,
+            emailCollaborations: prefs.emailCollaborations,
+        },
+    });
+
+    revalidatePath("/dashboard");
+    return { success: "Preferencias de correo guardadas." };
+}
+
 export async function changePassword(formData: FormData) {
     const session = await auth();
     if (!session?.user?.id) return { error: "No autorizado" };

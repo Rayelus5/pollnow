@@ -5,7 +5,9 @@ export const PLANS = {
         quota: 1,
         limits: {
             pollsPerEvent: 5,
-            participantsPerEvent: 12
+            participantsPerEvent: 12,
+            collaboratorsPerEvent: 0,  // No puede invitar
+            maxSharedEvents: 2,        // Puede aceptar invitaciones de hasta 2 eventos ajenos
         },
         price: 0,
     },
@@ -15,7 +17,9 @@ export const PLANS = {
         quota: 5,
         limits: {
             pollsPerEvent: 10,
-            participantsPerEvent: 30
+            participantsPerEvent: 30,
+            collaboratorsPerEvent: 1,
+            maxSharedEvents: Infinity,
         },
         price: 2.99,
         priceId: "price_1T1tQSAnnRNk3k0PKQVAbjnb",
@@ -26,7 +30,9 @@ export const PLANS = {
         quota: 10,
         limits: {
             pollsPerEvent: 15,
-            participantsPerEvent: 50
+            participantsPerEvent: 50,
+            collaboratorsPerEvent: 5,
+            maxSharedEvents: Infinity,
         },
         price: 8.99,
         priceId: "price_1T1tRmAnnRNk3k0PLPBcN1Pk",
@@ -37,7 +43,9 @@ export const PLANS = {
         quota: 20,
         limits: {
             pollsPerEvent: 30,
-            participantsPerEvent: 100
+            participantsPerEvent: 100,
+            collaboratorsPerEvent: 15,
+            maxSharedEvents: Infinity,
         },
         price: 12.99,
         priceId: "price_1SVz24AnnRNk3k0PvSjAEVQA",

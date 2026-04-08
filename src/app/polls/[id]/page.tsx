@@ -21,7 +21,7 @@ export default async function PollPage({ params }: Props) {
                 orderBy: { order: 'asc' },
                 include: { participant: true }
             },
-            event: { select: { id: true, slug: true } } // Necesitamos el ID del evento padre
+            event: { select: { id: true, slug: true, isPublic: true, accessKey: true } } // Necesitamos el ID del evento padre
         },
     });
 
@@ -76,6 +76,10 @@ export default async function PollPage({ params }: Props) {
         }))
     };
 
+    const lobbyHref = poll.event.isPublic
+        ? `/e/${poll.event.slug}`
+        : `/e/${poll.event.slug}?key=${poll.event.accessKey}`;
+
     return (
         <main className="min-h-screen bg-black text-white selection:bg-blue-500/30">
             <VotingForm
@@ -84,6 +88,7 @@ export default async function PollPage({ params }: Props) {
                 initialHasVoted={hasVoted}
                 initialSelected={initialSelectedOptions}
                 eventSlug={poll.event.slug}
+                lobbyHref={lobbyHref}
                 showAds={showAds}
             />
         </main>

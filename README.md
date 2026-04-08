@@ -1,4 +1,4 @@
-# Pollnow | v2.0
+# Pollnow | v2.2
 > https://www.pollnow.es/
 
 <!-- ![Next](https://img.shields.io/badge/-Next.js-20232a?logo=nextdotjs&logoColor=white) -->
@@ -22,9 +22,10 @@ The application combines:
 
 - A **public-facing voting experience** (anonymous, device-bound, anti-duplicate),
 - A **multi-tenant user dashboard** for event owners,
+- A **real-time collaborative event editing system** with granular permission control,
 - A **moderation-oriented admin panel**,
 - A **subscription system** based on Stripe, and
-- Supporting modules for **support tickets**, **notifications**, **analytics**, and **AI-powered features**.
+- Supporting modules for **support tickets**, **notifications** (in-app + email), **analytics**, and **AI-powered features**.
 
 The goal of this project is not just to "make something work", but to explore how a modern SaaS-style system can be built with:
 
@@ -48,6 +49,7 @@ The application revolves around **events** (award ceremonies, competitions, poll
   - Can authenticate via credentials or Google
   - Receives notifications and support messages
   - Can like and vote on public events
+  - Holds two email-preference flags (`emailNotifications`, `emailCollaborations`) that gate transactional email delivery and support one-click unsubscribe
 
 - **Event**
   - Represents a specific awards ceremony / poll session
@@ -121,6 +123,7 @@ High-level view:
 Client (React/Tailwind)  ➡️  Next.js App Router
                          ➡️  Server Components & Actions
                          ➡️  Prisma (PostgreSQL)
+                         ➡️  Pusher (real-time WebSocket layer)
                          ➡️  External services (Stripe, Resend, Gemini AI, Pollinations AI)
 ```
 
@@ -366,7 +369,74 @@ Admins have elevated visibility and control:
 
 ---
 
-### 9. Support & Notifications
+### 9. Real-Time Team Collaboration
+
+Event owners can invite collaborators and manage their access with granular, real-time permissions.
+
+Key files:
+
+* `src/app/api/collaborators/[eventId]/route.ts` — GET (fetch team), PATCH (update permissions), DELETE (remove collaborator)
+* `src/app/api/collaborators/invite/route.ts` — Send collaboration invitation
+* `src/app/api/collaborators/respond/route.ts` — Accept / reject invitation
+* `src/components/dashboard/TeamTab.tsx` — Owner-side team management panel
+* `src/components/dashboard/CollaboratorCard.tsx` — Per-collaborator permission editor
+* `src/lib/pusher.ts` — WebSocket channel definitions and event names
+
+#### Collaboration model
+
+* Each event can have multiple `EventCollaborator` records (plan-limited: Premium=1, Plus=5, Unlimited=15).
+* Each collaborator entry holds **6 nullable boolean** permission fields:
+  * `canEditSettings` — Edit event name, description, date, privacy
+  * `canRegenerateKey` — Rotate the private access key
+  * `canDeleteEvent` — Permanently delete the event
+  * `canManageNominees` — Create and edit participants
+  * `canManagePolls` — Create and edit voting categories
+  * `canViewStats` — View event statistics and results
+* `null` = **inherit from event defaults** (set separately per event).
+* Event defaults ship with `canManageNominees`, `canManagePolls`, and `canViewStats` enabled by default.
+
+#### Permission inheritance
+
+Effective permission = individual override ?? event-level default:
+
+```
+null (inherit) → resolves to event default
+true / false   → explicit override (wins over default)
+```
+
+When an owner toggles a permission back to the value that matches the event default, it automatically resets to `null` (inherit), keeping the model clean.
+
+#### Real-time sync (Pusher)
+
+All permission and membership changes broadcast over the private `private-event-{id}` channel:
+
+| Pusher Event | Trigger |
+|---|---|
+| `invitation-sent` | A new invitation is created |
+| `collaborator-joined` | A user accepts an invitation |
+| `collaborator-left` | A collaborator is removed |
+| `permissions-updated` | Global defaults or individual overrides change |
+| `data-changed` | Participants, polls, or event settings change |
+
+* **Owner side** (`TeamTab`): updates collaborator list and permission toggles in real time without a full page reload.
+* **Collaborator side** (`EventTabs`): listens for `permissions-updated` and calls `router.refresh()` — Next.js re-fetches the server component with updated permissions, instantly showing or hiding action buttons, forms, and entire sections.
+
+#### Invitation flow
+
+1. Owner sends invitation → `CollaboratorInvitation` record created, notification stored, **collaboration invite email sent** via Resend (styled amber/gold template, only if the recipient has `emailCollaborations = true`), Pusher event fires.
+2. Invited user sees the pending invitation in their dashboard notifications tab.
+3. On accept → `EventCollaborator` created with all permissions `null` (inheriting event defaults); Pusher fires `collaborator-joined`.
+4. On reject → invitation marked `REJECTED`; owner can re-invite later.
+5. If a collaborator is later **removed** (DELETE), the `EventCollaborator` record is deleted but the `CollaboratorInvitation` remains. The invite route checks the actual collaborator table before blocking re-invites, so removed users can be re-invited without conflict.
+
+#### Access control
+
+* Owners and admins always have full access to an event page.
+* Non-collaborators hitting `/dashboard/event/[id]` receive a styled **"Sin acceso a este evento"** page instead of a generic 404.
+
+---
+
+### 10. Support & Notifications
 
 **Support system**:
 
@@ -382,10 +452,36 @@ Users can open support chats; admins reply via the admin interface.
 * `src/app/lib/user-notification-actions.ts`
 * Rendered in the dashboard `Notifications` tab.
 * Allow marking single notifications as read or all at once.
+* Two types: `SYSTEM` (event approvals/rejections) and `COLLABORATION` (invitations).
+
+**Email notifications** (`src/lib/mail.ts`):
+
+In addition to in-app notifications, users receive transactional emails via Resend for:
+
+| Trigger | Template | Gated by preference |
+|---|---|---|
+| Account registration | Verification link (indigo theme) | No — always sent |
+| Password reset | Reset link (neutral dark theme) | No — always sent |
+| Event approved by admin | System notification (indigo theme) | `emailNotifications` |
+| Event rejected by admin | System notification with rejection reason | `emailNotifications` |
+| Collaboration invitation received | Special amber/gold template with event name | `emailCollaborations` |
+
+All notification emails are dispatched fire-and-forget (`.catch()`) so a delivery failure never interrupts the main flow.
+
+**Deliverability hardening:**
+
+Every email includes a `text` plain-text alternative (HTML-only emails are penalised by spam filters). Non-auth emails carry a `List-Unsubscribe` / `List-Unsubscribe-Post` header pointing to a signed unsubscribe URL, and use specific subject lines derived from the event title to avoid generic spam triggers.
+
+**Email preferences & unsubscribe** (`src/lib/unsubscribe.ts`, `src/app/unsubscribe/page.tsx`):
+
+* Users control both toggles from `/dashboard?tab=profile` → **Notificaciones por correo** section.
+* Every notification/collaboration email includes an **"Unsubscribe"** footer link.
+* The link encodes a signed, stateless token: `base64url(userId:type:HMAC-SHA256)` using `NEXTAUTH_SECRET`. No extra DB table required.
+* `GET /unsubscribe?token=...` verifies the token, sets the relevant preference to `false`, and renders a confirmation page with a link back to the profile to re-enable.
 
 ---
 
-### 10. API Rate Limiting
+### 11. API Rate Limiting
 
 All API routes are protected by a **sliding-window in-memory rate limiter** (`src/lib/rate-limit.ts`). The store is cleaned automatically every 5 minutes to prevent unbounded growth.
 
@@ -405,6 +501,10 @@ All API routes are protected by a **sliding-window in-memory rate limiter** (`sr
 | `POST /api/admin/events/batch` | 30 / min | userId |
 | `POST /api/admin/users/batch` | 30 / min | userId |
 | `POST /api/webhooks/stripe` | — | Stripe signature (exempt) |
+| `GET /api/collaborators/[eventId]` | 60 / min | IP |
+| `PATCH /api/collaborators/[eventId]` | 30 / min | IP |
+| `DELETE /api/collaborators/[eventId]` | 20 / min | IP |
+| `POST /api/collaborators/invite` | 10 / min | IP |
 
 All rate-limited endpoints return `429 Too Many Requests` with a `Retry-After` header on violation.
 
@@ -412,7 +512,7 @@ All rate-limited endpoints return `429 Too Many Requests` with a `Retry-After` h
 
 ---
 
-### 11. Billing & Subscription Plans
+### 12. Billing & Subscription Plans
 
 Billing logic is spread across:
 
@@ -447,7 +547,8 @@ Core stack:
 * **Database:** PostgreSQL
 * **Auth:** NextAuth + @auth/prisma-adapter
 * **Payments:** Stripe
-* **Mail:** Resend (email verification, transactional emails)
+* **Mail:** Resend (email verification, transactional emails, notification emails)
+* **Real-time:** Pusher (WebSocket channels for collaborative editing, permission sync)
 * **AI (Chat):** Google Gemini (`gemini-2.5-flash-lite`) via `@google/generative-ai`
 * **AI (Images):** Pollinations AI (multi-model fallback: zimage → p-image → flux)
 * **3D / Visuals:** `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`
@@ -522,6 +623,7 @@ These scripts are used throughout the development workflow to iterate on both sc
 │   │   ├── api/             # API routes (auth, polls, events, support, webhooks, AI)
 │   │   ├── auth/            # Email verification flow
 │   │   ├── dashboard/       # User dashboard & event management
+│   │   ├── unsubscribe/     # Email unsubscribe confirmation page
 │   │   ├── e/[slug]/        # Public voting flow for events
 │   │   ├── polls/           # Public poll discovery & results (with filters + pagination)
 │   │   ├── login/           # Login page
@@ -545,7 +647,9 @@ These scripts are used throughout the development workflow to iterate on both sc
 │   │   ├── config.ts        # App configuration
 │   │   ├── plans.ts         # Plan definitions
 │   │   ├── tokens.ts        # Token generation helpers
-│   │   ├── mail.ts          # Email sending helpers
+│   │   ├── mail.ts          # Email sending helpers (all transactional templates)
+│   │   ├── unsubscribe.ts   # HMAC-signed unsubscribe token generation & verification
+│   │   ├── pusher.ts        # Pusher server/client + channel helpers + event names
 │   │   ├── validations.ts   # Zod schemas
 │   │   ├── countResults.ts  # Result aggregation helpers
 │   │   ├── rate-limit.ts    # Sliding-window in-memory rate limiter
@@ -587,14 +691,16 @@ This project served as a deep-dive into:
 * Integrating **AI features**: Gemini-powered chat assistant and Pollinations AI image generation with multi-model fallback.
 * Designing a **community engagement layer**: event likes, upvote/downvote ratings, tag-based discovery, and sort/filter exploration.
 * Protecting a public API surface with **rate limiting** across all endpoints.
+* Building a **real-time collaborative editing system** with Pusher: granular permission inheritance, bidirectional live sync between event owner and collaborators, and instant UI updates without page reloads.
+* Designing a **transactional email system** with per-user opt-out preferences, stateless HMAC-signed unsubscribe tokens, and deliverability hardening (plain-text alternatives, specific subject lines, `List-Unsubscribe` headers).
 * Polishing UX with motion, dark theme, and consistent component patterns.
 
 This repository is intended as a **complete, production-style reference** for a modern SaaS-like voting platform, showcasing how all these pieces can work together coherently in a single codebase.
 
 ---
 
-Last update: 7/4/2026
+Last update: 7/4/2026 — v2.2 (email preferences, unsubscribe system, deliverability hardening, collaboration bug fixes)
 
 > Made with ♥️ by Rayelus
 > <br>
-> <a href="https://pollnow.es">Pollnow</a> © 2025 by <a href="https://rayelus.com">Raimundo Palma</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+> <a href="https://pollnow.es">Pollnow</a> © 2026 by <a href="https://dev.rayelus.com">Raimundo Palma</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">

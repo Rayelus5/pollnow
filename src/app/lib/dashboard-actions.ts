@@ -3,9 +3,52 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlanFromUser } from "@/lib/plans";
+import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+async function triggerDataChanged(eventId: string, triggeredBy: string, dataType: string) {
+    try {
+        await pusherServer.trigger(eventChannel(eventId), PUSHER_EVENTS.DATA_CHANGED, {
+            dataType,
+            triggeredBy,
+        });
+    } catch {
+        // no-op
+    }
+}
+
+async function getCollaboratorPermission(
+    eventId: string,
+    userId: string,
+    permission: "canEditSettings" | "canDeleteEvent" | "canRegenerateKey"
+): Promise<{ isOwner: boolean; allowed: boolean }> {
+    const [event, collab] = await Promise.all([
+        prisma.event.findUnique({
+            where: { id: eventId },
+            select: {
+                userId: true,
+                defaultCanEditSettings: true,
+                defaultCanRegenerateKey: true,
+                defaultCanDeleteEvent: true,
+            },
+        }),
+        prisma.eventCollaborator.findUnique({
+            where: { eventId_userId: { eventId, userId } },
+        }),
+    ]);
+    if (!event) return { isOwner: false, allowed: false };
+    if (event.userId === userId) return { isOwner: true, allowed: true };
+
+    const defaultMap = {
+        canEditSettings: event.defaultCanEditSettings,
+        canRegenerateKey: event.defaultCanRegenerateKey,
+        canDeleteEvent: event.defaultCanDeleteEvent,
+    };
+    const allowed = !!(collab && (collab[permission] ?? defaultMap[permission]));
+    return { isOwner: false, allowed };
+}
 
 // Esquema de validación
 const eventSchema = z.object({
@@ -92,28 +135,26 @@ export async function createEvent(formData: FormData) {
 // --- ACTUALIZAR EVENTO ---
 export async function updateEvent(eventId: string, formData: FormData) {
   const session = await auth();
-  if (!session?.user) return;
+  if (!session?.user?.id) return;
 
   const isAdmin =
     session.user.role === "ADMIN" || session.user.role === "MODERATOR";
 
-  // 1) Buscar evento según permisos
-  const event = await prisma.event.findFirst({
-    where: isAdmin
-      ? { id: eventId }
-      : {
-          id: eventId,
-          userId: session.user.id,
-        },
-    select: { id: true, status: true },
+  // 1) Verificar permisos (dueño, admin o colaborador con canEditSettings)
+  const { isOwner, allowed } = await getCollaboratorPermission(eventId, session.user.id, "canEditSettings");
+  if (!isAdmin && !allowed) {
+    console.warn("Intento de actualizar evento sin permisos", { eventId, userId: session.user.id });
+    return;
+  }
+
+  // 2) Buscar evento
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { id: true, status: true, userId: true },
   });
 
   if (!event) {
-    console.warn("Intento de actualizar evento sin permisos o inexistente", {
-      eventId,
-      userId: session.user.id,
-      role: session.user.role,
-    });
+    console.warn("Evento inexistente", { eventId });
     return;
   }
 
@@ -160,55 +201,32 @@ export async function updateEvent(eventId: string, formData: FormData) {
   revalidatePath(`/dashboard/event/${eventId}`);
   if (newIsPublic) revalidatePath("/polls");
   if (isAdmin) {
-    // Por si tienes un listado de eventos para admins
     revalidatePath("/admin/events");
   }
+
+  await triggerDataChanged(eventId, session.user.id, "settings");
 }
 
 // --- BORRAR EVENTO ---
 export async function deleteEvent(eventId: string) {
   const session = await auth();
-  if (!session?.user) return;
+  if (!session?.user?.id) return;
 
   const isAdmin =
     session.user.role === "ADMIN" || session.user.role === "MODERATOR";
 
-  // 1) Buscar evento según permisos
-  const event = await prisma.event.findFirst({
-    where: isAdmin
-      ? { id: eventId } // Admin/Moderador: puede borrar cualquier evento
-      : {
-          id: eventId,
-          userId: session.user.id, // Usuario normal: sólo sus propios eventos
-        },
-    select: { id: true },
-  });
-
-  if (!event) {
-    console.warn("Intento de borrar evento no encontrado o sin permisos", {
-      eventId,
-      userId: session.user.id,
-      role: session.user.role,
-    });
+  const { allowed } = await getCollaboratorPermission(eventId, session.user.id, "canDeleteEvent");
+  if (!isAdmin && !allowed) {
+    console.warn("Intento de borrar evento sin permisos", { eventId, userId: session.user.id });
     return;
   }
 
-  // 2) Borrar dependencias en transacción para no romper FKs
   await prisma.$transaction(async (tx) => {
-    await tx.report.deleteMany({
-      where: { eventId },
-    });
-
-    await tx.moderationLog.deleteMany({
-      where: { eventId },
-    });
-
-    await tx.event.delete({
-      where: { id: eventId },
-    });
+    await tx.report.deleteMany({ where: { eventId } });
+    await tx.moderationLog.deleteMany({ where: { eventId } });
+    await tx.event.delete({ where: { id: eventId } });
   });
 
-  // 3) Refrescar UI según contexto
   if (isAdmin) {
     revalidatePath("/admin/events");
     redirect("/admin/events");
@@ -221,28 +239,14 @@ export async function deleteEvent(eventId: string) {
 // --- ROTAR CLAVE PRIVADA ---
 export async function rotateEventKey(eventId: string) {
   const session = await auth();
-  if (!session?.user) return;
+  if (!session?.user?.id) return;
 
   const isAdmin =
     session.user.role === "ADMIN" || session.user.role === "MODERATOR";
 
-  // Verificar permisos
-  const event = await prisma.event.findFirst({
-    where: isAdmin
-      ? { id: eventId }
-      : {
-          id: eventId,
-          userId: session.user.id,
-        },
-    select: { id: true },
-  });
-
-  if (!event) {
-    console.warn("Intento de rotar clave sin permisos o evento inexistente", {
-      eventId,
-      userId: session.user.id,
-      role: session.user.role,
-    });
+  const { allowed } = await getCollaboratorPermission(eventId, session.user.id, "canRegenerateKey");
+  if (!isAdmin && !allowed) {
+    console.warn("Intento de rotar clave sin permisos", { eventId, userId: session.user.id });
     return;
   }
 
@@ -255,6 +259,8 @@ export async function rotateEventKey(eventId: string) {
   if (isAdmin) {
     revalidatePath("/admin/events");
   }
+
+  await triggerDataChanged(eventId, session.user.id, "settings");
 }
 
 // --- SOLICITAR PUBLICACIÓN (NUEVO) ---

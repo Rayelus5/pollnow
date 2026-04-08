@@ -545,10 +545,12 @@ export default function ParticipantList({
     initialData,
     eventId,
     planSlug,
+    canManageNominees = true,
 }: {
     initialData: Participant[];
     eventId: string;
     planSlug: string;
+    canManageNominees?: boolean;
 }) {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
@@ -610,12 +612,14 @@ export default function ParticipantList({
                             className="w-full bg-neutral-900 border-2 border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
                         />
                     </div>
-                    <button
-                        onClick={handleCreateClick}
-                        className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer"
-                    >
-                        <Plus size={14} /> Nuevo
-                    </button>
+                    {canManageNominees && (
+                        <button
+                            onClick={handleCreateClick}
+                            className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                            <Plus size={14} /> Nuevo
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -756,17 +760,19 @@ export default function ParticipantList({
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-                                        <button
-                                            onClick={() => setEditingId(p.id)}
-                                            className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all cursor-pointer"
-                                        >
-                                            <Pencil size={15} />
-                                        </button>
-                                        <form action={deleteEventParticipant.bind(null, p.id, eventId)}>
-                                            <DeleteButton />
-                                        </form>
-                                    </div>
+                                    {canManageNominees && (
+                                        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+                                            <button
+                                                onClick={() => setEditingId(p.id)}
+                                                className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all cursor-pointer"
+                                            >
+                                                <Pencil size={15} />
+                                            </button>
+                                            <form action={deleteEventParticipant.bind(null, p.id, eventId)}>
+                                                <DeleteButton />
+                                            </form>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </motion.div>

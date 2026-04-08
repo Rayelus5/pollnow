@@ -44,9 +44,23 @@ type Props = {
     stats: StatsData | null;
     planSlug: string;
     isAdmin?: boolean;
+    canViewStats?: boolean;
 };
 
-export default function EventStatistics({ stats, planSlug, isAdmin }: Props) {
+export default function EventStatistics({ stats, planSlug, isAdmin, canViewStats = true }: Props) {
+    if (!canViewStats) {
+        return (
+            <div className="tour-stats-section flex flex-col items-center justify-center py-20 border-2 border-dashed border-white/10 rounded-2xl text-center">
+                <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+                    <Lock className="w-7 h-7 text-gray-500" />
+                </div>
+                <h3 className="font-bold text-white mb-2">Sin acceso a estadísticas</h3>
+                <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                    No tienes permiso para ver las estadísticas de este evento.
+                </p>
+            </div>
+        );
+    }
     const isAdminViewer = !!isAdmin;
 
     // 👇 Para admins, nunca se considera "free" (no hay paywall ni mock)
