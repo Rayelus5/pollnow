@@ -10,9 +10,6 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    // Use the direct (unpooled) connection for migrations — Neon's pooled
-    // connection goes through PgBouncer which doesn't support the advisory
-    // locks that `prisma migrate deploy` requires.
-    url: env("DATABASE_URL_UNPOOLED"),
+    url: env("DATABASE_URL"),
   },
 });
