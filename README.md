@@ -1,4 +1,4 @@
-# Pollnow | v2.2
+# Pollnow | v2.3
 > https://www.pollnow.es/
 
 <!-- ![Next](https://img.shields.io/badge/-Next.js-20232a?logo=nextdotjs&logoColor=white) -->
@@ -550,7 +550,8 @@ Core stack:
 * **Mail:** Resend (email verification, transactional emails, notification emails)
 * **Real-time:** Pusher (WebSocket channels for collaborative editing, permission sync)
 * **AI (Chat):** Google Gemini (`gemini-2.5-flash-lite`) via `@google/generative-ai`
-* **AI (Images):** Pollinations AI (multi-model fallback: zimage → p-image → flux)
+* **AI (Images):** Pollinations AI (parallel free models: klein · flux · zimage, fallback to p-image)
+* **Guided tours:** Shepherd.js (step-by-step interactive onboarding)
 * **3D / Visuals:** `@react-three/fiber`, `@react-three/drei`, `@react-three/postprocessing`
 * **Validation:** Zod
 * **Utilities:** date-fns, clsx, use-debounce, canvas-confetti, bcryptjs, ldrs
@@ -699,7 +700,50 @@ This repository is intended as a **complete, production-style reference** for a 
 
 ---
 
-Last update: 7/4/2026 — v2.2 (email preferences, unsubscribe system, deliverability hardening, collaboration bug fixes)
+Last update: 8/4/2026 — v2.3 (help & onboarding system, AI image acceleration, legal pages rewrite, admin broadcast emails, Prisma migration fix)
+
+### v2.3 — 8/4/2026
+
+#### Help & Onboarding system
+
+A floating **help button** (bottom-right, authenticated users only) provides three entry points:
+
+* **Tour por la web** — 7-step Shepherd.js walkthrough of the main dashboard sections (tabs, events, notifications, profile). Works whether the user is already on `/dashboard` or navigating from elsewhere, using a custom browser event (`pollnow:tour`) to avoid soft-navigation issues.
+* **Tutorial visual** (`/help/create-event`) — static step-by-step guide with a videogame-themed example event ("Premios Videojuegos del Año"), visual mockups for each creation step, and 6 real-world event type ideas.
+* **Tour guiado** — interactive Shepherd.js walkthrough that walks the user through the create-event form in real time (opens modal, highlights name/description/submit). Locked if the user has reached their event quota.
+
+Implementation details:
+
+* `HelpButtonWrapper` (server component) checks auth + plan quota; passes `canCreateMore` to the client `HelpButton`.
+* `DashboardGuidedTour` (headless client component inside `DashboardTabs`) handles both URL-param (`?tour=web/create`) and custom-event triggers.
+* All tour target elements are decorated with `tour-*` CSS classes and `data-tour-tab` attributes.
+
+#### AI image generation acceleration
+
+Free models (`klein`, `flux`, `zimage`) now run **in parallel** via a custom `Promise`-based race (not `Promise.race`, to handle the "all failed" case). The first successful response wins; `p-image` is used as a paid fallback only if all free models fail. Generation loading animation replaced with animated gradient blobs.
+
+#### Legal pages rewrite (Spanish/EU law)
+
+`/legal/terms`, `/legal/privacy`, and `/legal/cookies` fully rewritten to comply with **LSSI-CE**, **LOPDGDD**, and **GDPR**:
+
+* Terms: 15 sections covering AI policy, age minimum 14, force majeure, ODR link.
+* Privacy: subprocessors table (Neon, Vercel, Pusher, Resend, Stripe, Pollinations), 72h breach notification, AEPD complaint section, data retention periods.
+* Cookies: complete cookie tables with all fields, browser-specific management links.
+
+#### Admin broadcast emails (`/admin/emails`)
+
+New ADMIN-only section in the admin panel:
+
+* Rich email composer with 5 visual templates (indigo, amber, emerald, rose, slate).
+* Live HTML preview in an iframe using the same `buildBroadcastEmailHtml()` function used server-side.
+* Recipient filters: all users, premium only, free only, or custom user search with autocomplete.
+* Confirmation modal before sending; results banner with sent/failed counts.
+* Sends in chunks of 100 via `resend.batch.send()`; logs to `ModerationLog` with `actionType: "BROADCAST_EMAIL"`.
+* Rate-limited to 5 req/min.
+
+#### Prisma migration fix (Neon advisory lock)
+
+`prisma.config.ts` updated to use `DATABASE_URL_UNPOOLED` for the `datasource` block. Neon's pooled connection (PgBouncer) does not support `pg_advisory_lock`, which caused `prisma migrate deploy` to time out. The direct connection bypasses the pooler and resolves the issue.
 
 > Made with ♥️ by Rayelus
 > <br>
