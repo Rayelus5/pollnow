@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { BroadcastTemplate, buildBroadcastEmailHtml } from './email-broadcast';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -367,4 +368,49 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 </html>
         `
   });
+}
+
+// ─── Admin broadcast (batch) ─────────────────────────────────────────────────
+
+const BATCH_SIZE = 100;
+
+export async function sendAdminBroadcastBatch(
+  emails: string[],
+  subject: string,
+  body: string,
+  template: BroadcastTemplate,
+  ctaLabel?: string,
+  ctaUrl?: string,
+): Promise<{ sent: number; failed: number }> {
+  const html = buildBroadcastEmailHtml(template, subject, body, ctaLabel, ctaUrl);
+  const text = [
+    subject,
+    '',
+    body,
+    ...(ctaLabel && ctaUrl ? ['', `${ctaLabel}: ${ctaUrl}`] : []),
+    '',
+    '---',
+    'pollnow.es',
+  ].join('\n');
+
+  let sent = 0;
+  let failed = 0;
+
+  for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+    const chunk = emails.slice(i, i + BATCH_SIZE);
+    try {
+      const result = await resend.batch.send(
+        chunk.map(to => ({ from: EMAIL_FROM, to, subject, text, html }))
+      );
+      if (result.error) {
+        failed += chunk.length;
+      } else {
+        sent += chunk.length;
+      }
+    } catch {
+      failed += chunk.length;
+    }
+  }
+
+  return { sent, failed };
 }

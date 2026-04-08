@@ -11,7 +11,8 @@ import {
     ShieldAlert,
     LogOut,
     Logs,
-    MessageCircleMore
+    MessageCircleMore,
+    Mail,
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -54,6 +55,13 @@ export default async function AdminLayout({
                         <NavLink href="/admin/users" icon={<Users size={18} />} label="Usuarios" />
                         <NavLink href="/admin/events" icon={<Calendar size={18} />} label="Eventos" />
 
+                        {role === 'ADMIN' && (
+                            <>
+                                <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-600 uppercase tracking-wider">Comunicaciones</div>
+                                <NavLink href="/admin/emails" icon={<Mail size={18} />} label="Emails" adminOnly />
+                            </>
+                        )}
+
                         <div className="mt-4 absolute top-0 left-50 2xl:left-65 bg-neutral-900/50 backdrop-blur-50 p-2 rounded-full border-2 border-white/20">
                             <AdminNotifications userId={session?.user?.id} />
                         </div>
@@ -86,17 +94,30 @@ export default async function AdminLayout({
     );
 }
 
-function NavLink({ href, icon, label, highlight }: any) {
+function NavLink({ href, icon, label, highlight, adminOnly }: {
+    href: string;
+    icon: React.ReactNode;
+    label: string;
+    highlight?: boolean;
+    adminOnly?: boolean;
+}) {
     return (
         <Link
             href={href}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group ${highlight
                 ? "text-amber-400 hover:bg-amber-400/10 hover:text-amber-300"
+                : adminOnly
+                ? "text-red-400 hover:bg-red-400/10 hover:text-red-300"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
                 }`}
         >
             {icon}
             <span className="text-sm font-medium">{label}</span>
+            {adminOnly && (
+                <span className="ml-auto text-[9px] font-bold uppercase tracking-wider text-red-500/60 bg-red-500/10 px-1.5 py-0.5 rounded">
+                    admin
+                </span>
+            )}
         </Link>
     )
 }
