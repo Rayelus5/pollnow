@@ -68,6 +68,7 @@ export default function VotingForm({
     initialHasVoted = false,
     initialSelected = [],
     eventSlug,
+    lobbyHref,
     showAds = true, // <- de momento sólo lo recibimos; lo puedes usar luego para banners laterales
 }: {
     poll: PollData;
@@ -75,6 +76,7 @@ export default function VotingForm({
     initialHasVoted?: boolean;
     initialSelected?: string[];
     eventSlug: string;
+    lobbyHref?: string;
     showAds?: boolean;
 }) {
     const router = useRouter();
@@ -222,7 +224,7 @@ export default function VotingForm({
                 className="flex justify-start mb-8"
             >
                 <Link
-                    href={`/e/${eventSlug}`}
+                    href={lobbyHref ?? `/e/${eventSlug}`}
                     className="group flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 border-2 border-transparent hover:border-white/10"
                 >
                     <svg

@@ -20,6 +20,7 @@ export async function sendVerificationEmail(email: string, token: string) {
     from: EMAIL_FROM,
     to: email,
     subject: "Confirma tu cuenta en POLLNOW",
+    text: `Bienvenido a POLLNOW.\n\nConfirma tu dirección de correo haciendo clic en el enlace:\n${confirmLink}\n\n---\nSi no has creado una cuenta, puedes ignorar este mensaje.\npollnow.es`,
     html: `
 <!DOCTYPE html>
 <html lang="es">
@@ -93,6 +94,199 @@ export async function sendVerificationEmail(email: string, token: string) {
   });
 }
 
+export async function sendSystemNotificationEmail(
+  email: string,
+  message: string,
+  link: string,
+  unsubscribeUrl: string
+) {
+  const actionUrl = `${BASE_URL}${link}`;
+  // Asunto específico: eliminar emojis y truncar el mensaje real
+  const cleanMessage = message.replace(/^[^\w¡¿]+/, '').trim();
+  const subject = cleanMessage.length > 60
+    ? `${cleanMessage.slice(0, 57)}… – POLLNOW`
+    : `${cleanMessage} – POLLNOW`;
+
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: email,
+    subject,
+    headers: {
+      'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:contacto@rayelus.com?subject=unsubscribe>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      'X-Entity-Ref-ID': `pollnow-notification-${Date.now()}`,
+    },
+    text: `${message}\n\nVer en POLLNOW: ${actionUrl}\n\n---\nRecibes este correo porque tienes una cuenta en POLLNOW.\nCancelar suscripción: ${unsubscribeUrl}\npollnow.es`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+  <body style="margin:0; padding:24px 0; background-color:#020617;">
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width:600px; margin:0 auto; padding:0 16px;">
+
+      <div style="border-radius:24px; background-color:#020617; box-shadow:0 18px 45px rgba(15,23,42,0.85); padding:32px 28px;">
+
+        <!-- Badge superior -->
+        <div style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; background:rgba(37,99,235,0.12); border:1px solid rgba(99,102,241,0.4); margin-bottom:20px;">
+          <span style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#a5b4fc; font-weight:600;">
+            Aviso de cuenta
+          </span>
+        </div>
+
+        <!-- Cabecera -->
+        <h2 style="margin:0 0 8px 0; font-size:22px; line-height:1.2; color:#f9fafb; font-weight:800;">
+          Actividad en tu evento
+        </h2>
+        <p style="margin:0 0 16px 0; font-size:14px; line-height:1.6; color:#9ca3af;">
+          Ha ocurrido algo en uno de tus eventos en POLLNOW.
+        </p>
+
+        <!-- Bloque del mensaje -->
+        <div style="margin:20px 0 24px 0; padding:16px 18px; border-radius:16px; background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9);">
+          <p style="margin:0; font-size:14px; line-height:1.6; color:#e5e7eb;">
+            ${message}
+          </p>
+        </div>
+
+        <!-- Botón principal -->
+        <a href="${actionUrl}"
+           style="
+             display:inline-block;
+             padding:12px 26px;
+             font-size:14px;
+             font-weight:600;
+             text-decoration:none;
+             border-radius:999px;
+             background:linear-gradient(135deg,#4f46e5,#6366f1);
+             color:#ffffff;
+             text-align:center;
+             margin:4px 0 18px 0;
+           ">
+          Ver en POLLNOW
+        </a>
+
+        <!-- Footer legal -->
+        <p style="margin:0 0 16px 0; font-size:11px; line-height:1.6; color:#4b5563;">
+          Recibes este correo porque tienes una cuenta en POLLNOW. Si no reconoces esta actividad, puedes ignorar este mensaje.
+        </p>
+
+        <!-- Unsubscribe -->
+        <div style="padding-top:16px; border-top:1px solid rgba(255,255,255,0.06); text-align:center;">
+          <a href="${unsubscribeUrl}"
+             style="font-size:11px; color:#4b5563; text-decoration:underline;">
+            Cancelar suscripción a este tipo de correos
+          </a>
+        </div>
+      </div>
+
+      <!-- Pie pequeño -->
+      <p style="margin:16px 0 0 0; font-size:11px; line-height:1.6; color:#6b7280; text-align:center;">
+        POLLNOW · Gestión de eventos y galas interactivas
+      </p>
+    </div>
+  </body>
+</html>
+    `,
+  });
+}
+
+export async function sendCollaborationInviteEmail(
+  email: string,
+  invitedUserName: string,
+  ownerName: string,
+  eventTitle: string,
+  link: string,
+  unsubscribeUrl: string
+) {
+  const actionUrl = `${BASE_URL}${link}`;
+
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: email,
+    subject: `${ownerName} te ha dado acceso a "${eventTitle}" en POLLNOW`,
+    headers: {
+      'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:contacto@rayelus.com?subject=unsubscribe>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      'X-Entity-Ref-ID': `pollnow-collab-${Date.now()}`,
+    },
+    text: `Hola ${invitedUserName},\n\n${ownerName} te ha dado acceso para cogestionar el evento "${eventTitle}" en POLLNOW.\n\nVer en POLLNOW: ${actionUrl}\n\n---\nSi no esperabas este acceso, puedes ignorar este correo.\nCancelar suscripción: ${unsubscribeUrl}\npollnow.es`,
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+  <body style="margin:0; padding:24px 0; background-color:#020617;">
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width:600px; margin:0 auto; padding:0 16px;">
+
+      <div style="border-radius:24px; background-color:#020617; box-shadow:0 18px 45px rgba(15,23,42,0.85); padding:32px 28px; border:1px solid rgba(217,119,6,0.2);">
+
+        <!-- Badge superior -->
+        <div style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; background:rgba(217,119,6,0.12); border:1px solid rgba(251,191,36,0.4); margin-bottom:20px;">
+          <span style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#fcd34d; font-weight:600;">
+            Invitación de colaboración
+          </span>
+        </div>
+
+        <!-- Cabecera -->
+        <h2 style="margin:0 0 8px 0; font-size:24px; line-height:1.2; color:#f9fafb; font-weight:800;">
+          ¡Te han invitado a colaborar!
+        </h2>
+        <p style="margin:0 0 20px 0; font-size:14px; line-height:1.6; color:#9ca3af;">
+          Hola <strong style="color:#e5e7eb;">${invitedUserName}</strong>, <strong style="color:#e5e7eb;">${ownerName}</strong> te ha invitado a colaborar en su evento en POLLNOW.
+        </p>
+
+        <!-- Bloque del evento -->
+        <div style="margin:0 0 24px 0; padding:18px 20px; border-radius:16px; background:rgba(217,119,6,0.06); border:1px solid rgba(217,119,6,0.25);">
+          <p style="margin:0 0 4px 0; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#92400e; font-weight:600;">Evento</p>
+          <p style="margin:0; font-size:18px; font-weight:700; color:#fde68a; line-height:1.3;">
+            ${eventTitle}
+          </p>
+        </div>
+
+        <!-- Descripción -->
+        <p style="margin:0 0 24px 0; font-size:13px; line-height:1.7; color:#9ca3af;">
+          Como colaborador podrás gestionar el evento junto a su propietario. Acepta o rechaza la invitación desde tu panel de control.
+        </p>
+
+        <!-- Botón principal -->
+        <a href="${actionUrl}"
+           style="
+             display:inline-block;
+             padding:13px 28px;
+             font-size:14px;
+             font-weight:700;
+             text-decoration:none;
+             border-radius:999px;
+             background:linear-gradient(135deg,#d97706,#f59e0b);
+             color:#0c0a00;
+             text-align:center;
+             margin:4px 0 20px 0;
+           ">
+          Ver invitación
+        </a>
+
+        <!-- Footer legal -->
+        <p style="margin:0 0 16px 0; font-size:11px; line-height:1.6; color:#4b5563;">
+          Si no esperabas este acceso, puedes ignorar este correo. No se realizará ninguna acción si no respondes.
+        </p>
+
+        <!-- Unsubscribe -->
+        <div style="padding-top:16px; border-top:1px solid rgba(217,119,6,0.12); text-align:center;">
+          <a href="${unsubscribeUrl}"
+             style="font-size:11px; color:#78350f; text-decoration:underline;">
+            No quiero recibir más correos de colaboración
+          </a>
+        </div>
+      </div>
+
+      <!-- Pie pequeño -->
+      <p style="margin:16px 0 0 0; font-size:11px; line-height:1.6; color:#6b7280; text-align:center;">
+        POLLNOW · Gestión de eventos y galas interactivas
+      </p>
+    </div>
+  </body>
+</html>
+    `,
+  });
+}
+
 export async function sendPasswordResetEmail(email: string, token: string) {
   const resetLink = `${BASE_URL}/auth/new-password?token=${token}`;
 
@@ -100,6 +294,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     from: EMAIL_FROM,
     to: email,
     subject: "Restablecer contraseña - POLLNOW",
+    text: `Restablece tu contraseña de POLLNOW:\n${resetLink}\n\nEste enlace es válido durante 1 hora.\n\n---\nSi no has solicitado este cambio, ignora este correo.\npollnow.es`,
     html: `
 <!DOCTYPE html>
 <html lang="es">

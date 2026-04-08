@@ -4,6 +4,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs"; // 👈 Añade esto si no estaba
+import { sendSystemNotificationEmail } from "@/lib/mail";
+import { buildUnsubscribeUrl } from "@/lib/unsubscribe";
 
 // Helper para verificar permisos de admin
 async function checkAdminPermissions() {
@@ -44,6 +46,21 @@ export async function approveEvent(eventId: string) {
         }
     });
 
+    // Enviar correo al propietario del evento (solo si tiene activadas las notificaciones)
+    if (event.user.email && event.user.emailNotifications) {
+        const unsubUrl = buildUnsubscribeUrl(
+            process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+            event.userId,
+            "notifications"
+        );
+        sendSystemNotificationEmail(
+            event.user.email,
+            `✅ Tu evento "${event.title}" ha sido aprobado y publicado en el directorio.`,
+            `/dashboard/event/${event.id}`,
+            unsubUrl
+        ).catch((err) => console.error("[Mail] Error al enviar notificación de aprobación:", err));
+    }
+
     revalidatePath('/admin/reviews');
     revalidatePath('/polls'); // Actualizar el explorador público
 }
@@ -71,6 +88,21 @@ export async function rejectEvent(eventId: string, reason: string) {
             isRead: false
         }
     });
+
+    // Enviar correo al propietario del evento (solo si tiene activadas las notificaciones)
+    if (event.user.email && event.user.emailNotifications) {
+        const unsubUrl = buildUnsubscribeUrl(
+            process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+            event.userId,
+            "notifications"
+        );
+        sendSystemNotificationEmail(
+            event.user.email,
+            `⚠️ Tu evento "${event.title}" ha sido rechazado. Motivo: ${reason}`,
+            `/dashboard/event/${event.id}`,
+            unsubUrl
+        ).catch((err) => console.error("[Mail] Error al enviar notificación de rechazo:", err));
+    }
 
     revalidatePath('/admin/reviews');
 }

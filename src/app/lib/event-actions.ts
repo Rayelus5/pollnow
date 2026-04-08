@@ -4,7 +4,64 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getPlanFromUser } from "@/lib/plans"; // <--- Importamos los planes
+import { getPlanFromUser } from "@/lib/plans";
+import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
+
+// ─── Helper: verifica acceso colaborador con permiso específico ───────────────
+
+type CollabPermission =
+    | "canManageNominees"
+    | "canManagePolls"
+    | "canEditSettings"
+    | "canDeleteEvent"
+    | "canRegenerateKey";
+
+async function checkEventAccess(
+    eventId: string,
+    userId: string,
+    permission: CollabPermission
+): Promise<boolean> {
+    const [event, collab] = await Promise.all([
+        prisma.event.findUnique({
+            where: { id: eventId },
+            select: {
+                userId: true,
+                defaultCanEditSettings: true,
+                defaultCanRegenerateKey: true,
+                defaultCanDeleteEvent: true,
+                defaultCanManageNominees: true,
+                defaultCanManagePolls: true,
+            },
+        }),
+        prisma.eventCollaborator.findUnique({
+            where: { eventId_userId: { eventId, userId } },
+        }),
+    ]);
+    if (!event) return false;
+    if (event.userId === userId) return true;
+    if (!collab) return false;
+
+    const defaultMap: Record<CollabPermission, boolean> = {
+        canEditSettings: event.defaultCanEditSettings,
+        canRegenerateKey: event.defaultCanRegenerateKey,
+        canDeleteEvent: event.defaultCanDeleteEvent,
+        canManageNominees: event.defaultCanManageNominees,
+        canManagePolls: event.defaultCanManagePolls,
+    };
+
+    return collab[permission] ?? defaultMap[permission] ?? false;
+}
+
+async function triggerDataChanged(eventId: string, triggeredBy: string, dataType: string) {
+    try {
+        await pusherServer.trigger(eventChannel(eventId), PUSHER_EVENTS.DATA_CHANGED, {
+            dataType,
+            triggeredBy,
+        });
+    } catch {
+        // no-op: Pusher failures must never break the action
+    }
+}
 
 // --- EVENTO PRINCIPAL ---
 
@@ -39,32 +96,20 @@ export async function deleteEvent(eventId: string, isAdmin: boolean = false) {
     const session = await auth();
     if (!session?.user) return;
 
-    // Seguridad extra: verificar rol cuando viene como admin
     if (isAdmin && session.user.role !== "ADMIN" && session.user.role !== "MODERATOR") {
         return;
     }
 
     await prisma.$transaction(async (tx) => {
-        // 1) Borrar reports relacionados (bloquean el delete)
-        await tx.report.deleteMany({
-            where: { eventId },
-        });
-
-        // 2) Opcional: si quieres mantener logs, simplemente despega el eventId
+        await tx.report.deleteMany({ where: { eventId } });
         await tx.moderationLog.updateMany({
             where: { eventId },
             data: { eventId: null },
         });
-
-        // 3) Borrar el evento (participants, polls, options, votes ya tienen onDelete: Cascade)
         if (isAdmin) {
-            await tx.event.delete({
-                where: { id: eventId },
-            });
+            await tx.event.delete({ where: { id: eventId } });
         } else {
-            await tx.event.delete({
-                where: { id: eventId, userId: session.user.id },
-            });
+            await tx.event.delete({ where: { id: eventId, userId: session.user.id } });
         }
     });
 
@@ -77,15 +122,6 @@ export async function deleteEvent(eventId: string, isAdmin: boolean = false) {
     }
 }
 
-
-// export async function deleteEvent(eventId: string) {
-//     const session = await auth();
-//     if (!session?.user) return;
-//     await prisma.event.delete({ where: { id: eventId, userId: session.user.id } });
-//     revalidatePath('/dashboard');
-//     redirect('/dashboard');
-// }
-
 export async function rotateEventKey(eventId: string) {
     const session = await auth();
     if (!session?.user) return;
@@ -96,59 +132,75 @@ export async function rotateEventKey(eventId: string) {
     revalidatePath(`/dashboard/event/${eventId}`);
 }
 
-// --- PARTICIPANTES (CON LÍMITE) ---
+// --- PARTICIPANTES (CON LÍMITE Y SOPORTE COLABORADORES) ---
 
 export async function createEventParticipant(eventId: string, formData: FormData) {
     const session = await auth();
-    if (!session?.user) return;
+    if (!session?.user?.id) return;
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManageNominees");
+    if (!hasAccess) return;
 
     const name = formData.get('name') as string;
     const imageUrl = formData.get('imageUrl') as string;
     if (!name) return;
 
-    // 1. OBTENER PLAN Y LÍMITES
-    const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        include: { _count: { select: { events: true } } } // Necesario para getPlanFromUser si usara eventos, pero aquí usaremos el user directo
+    // Obtener el plan del dueño del evento (no del colaborador)
+    const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { userId: true },
     });
-    if (!user) return;
-    const plan = getPlanFromUser(user);
+    if (!event) return;
 
-    // 2. CONTAR PARTICIPANTES ACTUALES
-    const currentParticipantsCount = await prisma.participant.count({
-        where: { eventId }
-    });
+    const owner = await prisma.user.findUnique({ where: { id: event.userId } });
+    if (!owner) return;
+    const plan = getPlanFromUser(owner);
 
+    const currentParticipantsCount = await prisma.participant.count({ where: { eventId } });
     if (currentParticipantsCount >= plan.limits.participantsPerEvent) {
-        // Como estamos en un server action void, no podemos devolver error fácilmente al toast.
-        // En un refactor futuro, idealmente devolveríamos { error: ... }
         console.error("Límite de participantes alcanzado");
         return;
     }
 
-    await prisma.participant.create({
-        data: { name, imageUrl, eventId }
-    });
+    await prisma.participant.create({ data: { name, imageUrl, eventId } });
     revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "participants");
 }
 
 export async function updateEventParticipant(participantId: string, eventId: string, formData: FormData) {
+    const session = await auth();
+    if (!session?.user?.id) return;
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManageNominees");
+    if (!hasAccess) return;
+
     const name = formData.get('name') as string;
     const imageUrl = formData.get('imageUrl') as string;
     await prisma.participant.update({ where: { id: participantId }, data: { name, imageUrl } });
     revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "participants");
 }
 
 export async function deleteEventParticipant(participantId: string, eventId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return;
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManageNominees");
+    if (!hasAccess) return;
+
     await prisma.participant.delete({ where: { id: participantId } });
     revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "participants");
 }
 
-// --- ENCUESTAS (CON LÍMITE Y OPCIONES) ---
+// --- ENCUESTAS (CON LÍMITE Y SOPORTE COLABORADORES) ---
 
 export async function createEventPoll(eventId: string, formData: FormData) {
     const session = await auth();
-    if (!session?.user) return;
+    if (!session?.user?.id) return;
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManagePolls");
+    if (!hasAccess) return;
 
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
@@ -164,12 +216,18 @@ export async function createEventPoll(eventId: string, formData: FormData) {
 
     if (!title) return;
 
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-    if (!user) return;
-    const plan = getPlanFromUser(user);
+    // Plan del dueño del evento
+    const event = await prisma.event.findUnique({
+        where: { id: eventId },
+        select: { userId: true },
+    });
+    if (!event) return;
+
+    const owner = await prisma.user.findUnique({ where: { id: event.userId } });
+    if (!owner) return;
+    const plan = getPlanFromUser(owner);
 
     const currentPollsCount = await prisma.poll.count({ where: { eventId } });
-
     if (currentPollsCount >= plan.limits.pollsPerEvent) {
         console.error("Límite de categorías alcanzado");
         return;
@@ -180,7 +238,6 @@ export async function createEventPoll(eventId: string, formData: FormData) {
         orderBy: { order: "desc" },
     });
     const newOrder = (lastPoll?.order ?? 0) + 1;
-
     const optionsCount = participantIds.length;
 
     await prisma.poll.create({
@@ -190,30 +247,30 @@ export async function createEventPoll(eventId: string, formData: FormData) {
             order: newOrder,
             isPublished: true,
             votingType: votingType || "SINGLE",
-            // 👇 lógica correcta:
             maxOptions:
                 votingType === "LIMITED_MULTIPLE"
-                    ? (maxOptionsFromForm ?? 2)         // usa lo del formulario
+                    ? (maxOptionsFromForm ?? 2)
                     : votingType === "SINGLE"
-                        ? 1                              // SINGLE -> siempre 1
-                        : optionsCount || 1,             // MULTIPLE -> todas las opciones
-            event: {
-                connect: { id: eventId },
-            },
+                        ? 1
+                        : optionsCount || 1,
+            event: { connect: { id: eventId } },
             options: {
-                create: participantIds.map((pId) => ({
-                    participantId: pId,
-                })),
+                create: participantIds.map((pId) => ({ participantId: pId })),
             },
         },
     });
 
     revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "polls");
 }
 
-
-
 export async function updateEventPoll(pollId: string, eventId: string, formData: FormData) {
+    const session = await auth();
+    if (!session?.user?.id) return;
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManagePolls");
+    if (!hasAccess) return;
+
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const participantIds = formData.getAll("participantIds") as string[];
@@ -226,14 +283,10 @@ export async function updateEventPoll(pollId: string, eventId: string, formData:
     const maxOptionsStr = formData.get("maxOptions") as string | null;
     const maxOptionsFromForm = maxOptionsStr ? parseInt(maxOptionsStr, 10) : null;
 
-    // Opciones actuales
     const currentOptions = await prisma.option.findMany({ where: { pollId } });
-
-    // Para MULTIPLE: número total de nominados
     const optionsCount =
         participantIds.length > 0 ? participantIds.length : currentOptions.length;
 
-    // 1) Actualizar la Poll
     await prisma.poll.update({
         where: { id: pollId },
         data: {
@@ -242,14 +295,13 @@ export async function updateEventPoll(pollId: string, eventId: string, formData:
             votingType: votingType || "SINGLE",
             maxOptions:
                 votingType === "LIMITED_MULTIPLE"
-                    ? (maxOptionsFromForm ?? 2)        // limitado
+                    ? (maxOptionsFromForm ?? 2)
                     : votingType === "SINGLE"
-                        ? 1                            // single
-                        : optionsCount || 1,           // multiple -> todas
+                        ? 1
+                        : optionsCount || 1,
         },
     });
 
-    // 2) Sincronizar participantes (options)
     const toDelete = currentOptions.filter(
         (o) => !participantIds.includes(o.participantId)
     );
@@ -259,27 +311,36 @@ export async function updateEventPoll(pollId: string, eventId: string, formData:
 
     const currentIds = currentOptions.map((o) => o.participantId);
     const toCreate = participantIds.filter((pId) => !currentIds.includes(pId));
-
     for (const pId of toCreate) {
-        await prisma.option.create({
-            data: {
-                pollId,
-                participantId: pId,
-            },
-        });
+        await prisma.option.create({ data: { pollId, participantId: pId } });
     }
 
     revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "polls");
 }
 
-
-
 export async function deleteEventPoll(pollId: string, eventId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return;
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManagePolls");
+    if (!hasAccess) return;
+
     await prisma.poll.delete({ where: { id: pollId } });
     revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "polls");
 }
 
 export async function reorderEventPolls(items: { id: string, order: number }[], eventId: string) {
-    await prisma.$transaction(items.map((item) => prisma.poll.update({ where: { id: item.id }, data: { order: item.order } })));
+    const session = await auth();
+    if (!session?.user?.id) return;
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManagePolls");
+    if (!hasAccess) return;
+
+    await prisma.$transaction(items.map((item) =>
+        prisma.poll.update({ where: { id: item.id }, data: { order: item.order } })
+    ));
     revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "polls");
 }
