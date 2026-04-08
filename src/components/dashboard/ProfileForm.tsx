@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { updateProfile, changePassword } from "@/app/lib/user-actions";
-import { User, Lock, Save, Camera, UploadCloud, X } from "lucide-react";
+import { updateProfile, changePassword, updateEmailPreferences } from "@/app/lib/user-actions";
+import { User, Lock, Save, Camera, UploadCloud, X, Bell } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,6 +13,8 @@ type UserData = {
     image: string | null;
     email: string | null;
     hasPassword: boolean;
+    emailNotifications: boolean;
+    emailCollaborations: boolean;
 };
 
 type Toast = {
@@ -23,6 +25,9 @@ type Toast = {
 
 export default function ProfileForm({ user }: { user: UserData }) {
     const [loading, setLoading] = useState(false);
+    const [emailNotifications, setEmailNotifications] = useState(user.emailNotifications);
+    const [emailCollaborations, setEmailCollaborations] = useState(user.emailCollaborations);
+    const [savingPrefs, setSavingPrefs] = useState(false);
 
     // Notificaciones flotantes
     const [toasts, setToasts] = useState<Toast[]>([]);
@@ -134,6 +139,14 @@ export default function ProfileForm({ user }: { user: UserData }) {
 
         setLoading(false);
     }
+
+    const handleSavePrefs = async () => {
+        setSavingPrefs(true);
+        const res = await updateEmailPreferences({ emailNotifications, emailCollaborations });
+        if (res?.error) pushToast(res.error, "error");
+        else if (res?.success) pushToast(res.success, "success");
+        setSavingPrefs(false);
+    };
 
     // computed flag: ¿hay cambios respecto al user original?
     const hasChanged = (
@@ -332,7 +345,77 @@ export default function ProfileForm({ user }: { user: UserData }) {
                     </form>
                 </div>
 
-                {/* TARJETA 2: SEGURIDAD */}
+                {/* TARJETA 2: PREFERENCIAS DE CORREO */}
+                <div className="bg-neutral-900/50 border-2 border-white/15 rounded-2xl p-8">
+                    <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                        <Bell className="text-blue-500" size={20} /> Notificaciones por correo
+                    </h2>
+                    <p className="text-sm text-gray-500 mb-6">
+                        Elige qué correos quieres recibir de POLLNOW. Los correos de seguridad (verificación, cambio de contraseña) siempre se envían.
+                    </p>
+
+                    <div className="space-y-3">
+                        {/* Toggle notificaciones del sistema */}
+                        <button
+                            type="button"
+                            onClick={() => setEmailNotifications((v) => !v)}
+                            className={`w-full flex items-center justify-between gap-4 px-5 py-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                emailNotifications
+                                    ? "border-blue-500/30 bg-blue-500/6"
+                                    : "border-white/8 bg-neutral-800/40"
+                            }`}
+                        >
+                            <div>
+                                <p className={`text-sm font-semibold ${emailNotifications ? "text-white" : "text-gray-400"}`}>
+                                    Notificaciones del sistema
+                                </p>
+                                <p className="text-xs text-gray-600 mt-0.5">
+                                    Aprobación o rechazo de tus eventos por parte del equipo de POLLNOW
+                                </p>
+                            </div>
+                            <div className={`shrink-0 w-10 h-5 rounded-full relative transition-colors ${emailNotifications ? "bg-blue-500" : "bg-neutral-700"}`}>
+                                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${emailNotifications ? "left-5" : "left-0.5"}`} />
+                            </div>
+                        </button>
+
+                        {/* Toggle invitaciones de colaboración */}
+                        <button
+                            type="button"
+                            onClick={() => setEmailCollaborations((v) => !v)}
+                            className={`w-full flex items-center justify-between gap-4 px-5 py-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                                emailCollaborations
+                                    ? "border-amber-500/30 bg-amber-500/6"
+                                    : "border-white/8 bg-neutral-800/40"
+                            }`}
+                        >
+                            <div>
+                                <p className={`text-sm font-semibold ${emailCollaborations ? "text-white" : "text-gray-400"}`}>
+                                    Invitaciones de colaboración
+                                </p>
+                                <p className="text-xs text-gray-600 mt-0.5">
+                                    Cuando otro usuario te dé acceso para cogestionar uno de sus eventos
+                                </p>
+                            </div>
+                            <div className={`shrink-0 w-10 h-5 rounded-full relative transition-colors ${emailCollaborations ? "bg-amber-500" : "bg-neutral-700"}`}>
+                                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${emailCollaborations ? "left-5" : "left-0.5"}`} />
+                            </div>
+                        </button>
+                    </div>
+
+                    <div className="pt-5 flex justify-end">
+                        <button
+                            type="button"
+                            onClick={handleSavePrefs}
+                            disabled={savingPrefs}
+                            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-bold text-sm flex gap-2 items-center disabled:opacity-50 transition-all cursor-pointer"
+                        >
+                            <Save size={16} />
+                            {savingPrefs ? "Guardando..." : "Guardar preferencias"}
+                        </button>
+                    </div>
+                </div>
+
+                {/* TARJETA 3: SEGURIDAD */}
                 {user.hasPassword && (
                     <div className="bg-neutral-900/50 border-2 border-white/15 rounded-2xl p-8">
                         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">

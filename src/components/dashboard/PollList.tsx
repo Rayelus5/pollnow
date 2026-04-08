@@ -95,11 +95,13 @@ export default function PollList({
     allParticipants,
     eventId,
     planSlug,
+    canManagePolls = true,
 }: {
     initialPolls: Poll[];
     allParticipants: Participant[];
     eventId: string;
     planSlug: string;
+    canManagePolls?: boolean;
 }) {
     const [polls, setPolls] = useState(initialPolls);
     const [editingPoll, setEditingPoll] = useState<Poll | null>(null);
@@ -190,12 +192,14 @@ export default function PollList({
                             className="w-full bg-neutral-900 border-2 border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
                         />
                     </div>
-                    <button
-                        onClick={handleCreateClick}
-                        className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer"
-                    >
-                        <Plus size={14} /> Nueva
-                    </button>
+                    {canManagePolls && (
+                        <button
+                            onClick={handleCreateClick}
+                            className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                            <Plus size={14} /> Nueva
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -280,13 +284,10 @@ export default function PollList({
                                         isDragDisabled={searchQuery.length > 0}
                                     >
                                         {(provided, snapshot) => (
-                                            <motion.div
+                                            <div
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
-                                                initial={{ opacity: 0, y: 4 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.04 }}
-                                                className={`group flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all
+                                                className={`group flex items-center gap-3 p-3.5 rounded-xl border-2 transition-colors
                                                     ${snapshot.isDragging
                                                         ? "border-blue-500/60 bg-neutral-800 shadow-xl shadow-black/40"
                                                         : "bg-neutral-900/60 border-white/8 hover:border-white/15"
@@ -328,18 +329,20 @@ export default function PollList({
                                                 </div>
 
                                                 {/* Actions */}
-                                                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-                                                    <button
-                                                        onClick={() => openEdit(poll)}
-                                                        className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all cursor-pointer"
-                                                    >
-                                                        <Pencil size={15} />
-                                                    </button>
-                                                    <form action={deleteEventPoll.bind(null, poll.id, eventId)}>
-                                                        <DeleteButton />
-                                                    </form>
-                                                </div>
-                                            </motion.div>
+                                                {canManagePolls && (
+                                                    <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+                                                        <button
+                                                            onClick={() => openEdit(poll)}
+                                                            className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all cursor-pointer"
+                                                        >
+                                                            <Pencil size={15} />
+                                                        </button>
+                                                        <form action={deleteEventPoll.bind(null, poll.id, eventId)}>
+                                                            <DeleteButton />
+                                                        </form>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </Draggable>
                                 );
