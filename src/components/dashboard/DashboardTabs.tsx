@@ -17,6 +17,7 @@ import { BookCheck, Users, Mail } from "lucide-react";
 import ProfileForm from "@/components/dashboard/ProfileForm";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import PendingInviteCard from "@/components/dashboard/PendingInviteCard";
+import DashboardGuidedTour from "@/components/dashboard/DashboardGuidedTour";
 
 type EventRow = {
     id: string;
@@ -175,11 +176,14 @@ export default function DashboardTabs({
 
     return (
         <div>
+            <DashboardGuidedTour />
+
             {/* Tabs */}
-            <div className="flex border-b-2 border-white/10 mb-6 overflow-x-auto">
+            <div className="tour-dashboard-tabs flex border-b-2 border-white/10 mb-6 overflow-x-auto">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
+                        data-tour-tab={tab.id}
                         // Usamos la nueva función en el onClick
                         onClick={() => handleTabChange(tab.id)}
                         className={clsx(
@@ -298,7 +302,7 @@ function EventsTab({
     };
 
     return (
-        <section>
+        <section className="tour-events-section">
             {/* Invitaciones pendientes */}
             {pending.length > 0 && (
                 <div className="mb-10">

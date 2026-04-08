@@ -83,7 +83,7 @@ export default function CreateEventButton({
             {/* Botón principal que abre el modal */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2 cursor-pointer"
+                className="tour-create-btn bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2 cursor-pointer"
             >
                 <Plus size={20} /> Nuevo Evento
             </button>
@@ -155,7 +155,7 @@ export default function CreateEventButton({
                                             value={title}
                                             onChange={handleTitleChange}
                                             placeholder="Ej: Premios Verano 2025"
-                                            className="w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors"
+                                            className="tour-modal-title w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors"
                                             autoFocus
                                             disabled={isSubmitting}
                                         />
@@ -173,7 +173,7 @@ export default function CreateEventButton({
                                             rows={3}
                                             maxLength={100}
                                             placeholder="¿De qué va esta gala?"
-                                            className="w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none"
+                                            className="tour-modal-description w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none"
                                             disabled={isSubmitting}
                                         />
                                     </div>
@@ -210,7 +210,7 @@ export default function CreateEventButton({
                                         <button
                                             type="submit"
                                             disabled={isSubmitting || title.trim().length < 3}
-                                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 rounded text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                            className="tour-modal-submit flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-500 rounded text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                         >
                                             {isSubmitting ? (
                                                 <Bouncy size="32" speed="1.75" color="#fff" />

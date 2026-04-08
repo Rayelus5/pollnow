@@ -65,14 +65,14 @@ export default async function AdminNotificationsPage({
                     <div
                         key={notif.id}
                         className={`p-4 rounded-xl border-2 transition-all flex gap-4 items-start ${notif.isRead
-                                ? "bg-transparent border-white/5 opacity-60"
-                                : "bg-neutral-900 border-blue-500/30 shadow-lg shadow-blue-900/5"
+                            ? "bg-transparent border-white/5 opacity-60"
+                            : "bg-neutral-900 border-blue-500/30 shadow-lg shadow-blue-900/5"
                             }`}
                     >
                         <div
                             className={`p-2 rounded-lg shrink-0 ${notif.isRead
-                                    ? "bg-white/5 text-gray-500"
-                                    : "bg-blue-500/10 text-blue-400"
+                                ? "bg-white/5 text-gray-500"
+                                : "bg-blue-500/10 text-blue-400"
                                 }`}
                         >
                             <Bell size={20} />
@@ -82,8 +82,8 @@ export default async function AdminNotificationsPage({
                             <div className="flex justify-between items-start">
                                 <p
                                     className={`text-sm ${notif.isRead
-                                            ? "text-gray-400"
-                                            : "text-white font-medium"
+                                        ? "text-gray-400"
+                                        : "text-white font-medium"
                                         }`}
                                 >
                                     {notif.message}
@@ -102,7 +102,7 @@ export default async function AdminNotificationsPage({
                                         href={notif.link}
                                         className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1"
                                     >
-                                        Ver detalles →
+                                        Ver detalles
                                     </Link>
                                 )}
                                 {!notif.isRead && (

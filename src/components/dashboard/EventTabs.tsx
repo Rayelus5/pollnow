@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import Shepherd from "shepherd.js";
@@ -88,7 +88,7 @@ export default function EventTabs({
         []
     );
 
-    const handleStartTour = () => {
+    const handleStartTour = useCallback(() => {
         if (typeof window === "undefined" || !Shepherd) return;
 
         const tour = new Shepherd.Tour(tourOptions);
@@ -202,7 +202,9 @@ export default function EventTabs({
         });
 
         tour.start();
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tourOptions]);
+
 
     return (
         <div>

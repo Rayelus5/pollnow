@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import { MAINTENANCE_MODE } from "@/lib/config";
 import ChatBot from "@/components/ia/ChatBot";
 import CookieConsent from "@/components/CookieConsent";
+import HelpButtonWrapper from "@/components/HelpButtonWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -35,6 +36,7 @@ export default function RootLayout({
 
         <ChatBot />
         <CookieConsent />
+        {showUI && <HelpButtonWrapper />}
 
         {/* FOOTER (solo si no está en mantenimiento) */}
         {showUI && (

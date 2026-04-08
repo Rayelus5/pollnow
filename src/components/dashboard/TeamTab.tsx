@@ -364,7 +364,7 @@ export default function TeamTab({ eventId, eventTitle, planSlug, collaboratorLim
                                     onClick={() => setShowInviteModal(true)}
                                     className="mt-3 text-xs text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
                                 >
-                                    Invitar al primer colaborador →
+                                    Invitar al primer colaborador
                                 </button>
                             )}
                         </motion.div>
