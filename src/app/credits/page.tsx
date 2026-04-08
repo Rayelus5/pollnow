@@ -356,7 +356,7 @@ export default function CreditsPage() {
                     </p>
 
                     <p className="text-zinc-400 text-xs leading-relaxed pt-2">
-                        Recuerda que puedes encontrar el repositorio público en <Link href="https://github.com/Rayelus5/pollnow" className="text-amber-600/60 hover:text-amber-500/80 transition-colors">
+                        Puedes encontrar más proyectos míos en <Link href="https://github.com/Rayelus5" className="text-amber-600/60 hover:text-amber-500/80 transition-colors">
                             GitHub
                         </Link>. La monetización de este proyecto es principalmente para apoyarme y cubrir los gastos de los servidores y el dominio.
                     </p>
