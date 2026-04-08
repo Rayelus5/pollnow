@@ -58,7 +58,7 @@ export default function HelpButton({ canCreateMore }: Props) {
     };
 
     return (
-        <div className="fixed top-25 right-10 z-50" ref={menuRef}>
+        <div className="fixed top-20 right-5 md:top-25 md:right-10 z-50" ref={menuRef}>
             {/* ── Floating menu ─────────────────────────────────────── */}
             <AnimatePresence>
                 {isOpen && (
