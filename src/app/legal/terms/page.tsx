@@ -52,7 +52,7 @@ export default function TermsPage() {
                     extendidas como generación de imágenes con inteligencia artificial, estadísticas
                     avanzadas, colaboración en tiempo real y eliminación de anuncios. Las
                     características exactas de cada plan se detallan en la{" "}
-                    <a href="/#pricing" className="underline text-violet-400">
+                    <a href="https://www.pollnow.es/premium" className="underline text-violet-400">
                         página de precios
                     </a>
                     .
