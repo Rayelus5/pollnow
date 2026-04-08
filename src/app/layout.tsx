@@ -7,12 +7,57 @@ import { MAINTENANCE_MODE } from "@/lib/config";
 import ChatBot from "@/components/ia/ChatBot";
 import CookieConsent from "@/components/CookieConsent";
 import HelpButtonWrapper from "@/components/HelpButtonWrapper";
+import AnnouncementBarWrapper from "@/components/AnnouncementBarWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "POLLNOW - Create your own event",
-  description: "Crea tu propia gala digital.",
+  title: {
+    default: "POLLNOW - Crea tu propia gala digital",
+    template: "%s | POLLNOW"
+  },
+  description: "La plataforma definitiva para crear, gestionar y disfrutar de tus propias galas digitales y eventos interactivos en tiempo real.",
+  keywords: ["POLLNOW", "gala digital", "eventos online", "crear eventos", "votaciones en vivo", "Rayelus"],
+  authors: [{ name: "Rayelus" }],
+  creator: "Rayelus",
+  metadataBase: new URL("https://pollnow.es"), // Sustituye por tu URL real
+
+  // Open Graph (Para Facebook, LinkedIn, Discord)
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    url: "https://pollnow.es",
+    siteName: "POLLNOW",
+    title: "POLLNOW - Crea tu propia gala digital",
+    description: "Organiza eventos interactivos y galas digitales con facilidad. ¡Haz que tu audiencia participe!",
+    images: [
+      {
+        url: "/og-image.webp", // Asegúrate de tener esta imagen en tu carpeta /public
+        width: 1920,
+        height: 800,
+        alt: "POLLNOW - Preview de la plataforma",
+      },
+    ],
+  },
+
+  // Twitter (X)
+  twitter: {
+    card: "summary_large_image",
+    title: "POLLNOW - Crea tu propia gala digital",
+    description: "Crea tu propia gala digital en minutos.",
+    creator: "@rayelus5",
+    images: ["/og-image.webp"],
+  },
+
+  // Robots y Favicons
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: "/logo.webp",
+    apple: "/logo.webp",
+  },
 };
 
 export default function RootLayout({
@@ -25,6 +70,9 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <body className={`${inter.className} bg-black text-white antialiased`}>
+
+        {/* ANNOUNCEMENT BAR (solo si no está en mantenimiento) */}
+        {showUI && <AnnouncementBarWrapper />}
 
         {/* NAVBAR (solo si no está en mantenimiento) */}
         {showUI && <Navbar />}

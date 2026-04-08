@@ -6,8 +6,8 @@ export const PLANS = {
         limits: {
             pollsPerEvent: 5,
             participantsPerEvent: 12,
-            collaboratorsPerEvent: 0,  // No puede invitar
-            maxSharedEvents: 2,        // Puede aceptar invitaciones de hasta 2 eventos ajenos
+            collaboratorsPerEvent: 0,
+            maxSharedEvents: 2,
         },
         price: 0,
     },
@@ -52,14 +52,35 @@ export const PLANS = {
     },
 };
 
-export function getPlanFromUser(user: { subscriptionStatus: string | null; stripePriceId: string | null }) {
-    // Si la suscripción no está activa, es FREE
-    if (user.subscriptionStatus !== 'active') return PLANS.FREE;
+export function getPlanFromUser(user: {
+    subscriptionStatus: string | null;
+    stripePriceId: string | null;
+    subscriptionEndDate?: Date | null;
+    stripeSubscriptionId?: string | null;
+}) {
+    if (user.subscriptionStatus !== "active") return PLANS.FREE;
 
-    // Si es activa, miramos qué precio está pagando
+    // Si no hay Stripe real y la fecha de fin ha pasado, tratar como FREE
+    // (el cron expira en batch, pero esto evita que el usuario vea perks caducados)
+    if (
+        !user.stripeSubscriptionId &&
+        user.subscriptionEndDate &&
+        user.subscriptionEndDate < new Date()
+    ) {
+        return PLANS.FREE;
+    }
+
     if (user.stripePriceId === PLANS.UNLIMITED.priceId) return PLANS.UNLIMITED;
     if (user.stripePriceId === PLANS.PLUS.priceId) return PLANS.PLUS;
     if (user.stripePriceId === PLANS.PREMIUM.priceId) return PLANS.PREMIUM;
 
     return PLANS.FREE;
+}
+
+/** Devuelve el priceId de Stripe para un slug de plan dado. */
+export function getPriceIdForSlug(slug: string): string | null {
+    for (const plan of Object.values(PLANS)) {
+        if (plan.slug === slug && "priceId" in plan) return plan.priceId;
+    }
+    return null;
 }

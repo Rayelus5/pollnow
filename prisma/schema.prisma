@@ -50,6 +50,12 @@ enum NotificationType {
     COLLABORATION
 }
 
+enum RaffleStatus {
+    ACTIVE
+    CLOSED
+    WINNER_SELECTED
+}
+
 // ===================================
 // MODELOS DE USUARIO Y CUENTA
 // ===================================
@@ -70,6 +76,7 @@ model User {
     subscriptionStatus   String?           @default("free")
     subscriptionEndDate  DateTime?
     cancelAtPeriodEnd    Boolean           @default(false)
+    welcomeBonusApplied  Boolean           @default(false)
     emailNotifications   Boolean           @default(true)  // Recibir correos de notificaciones del sistema
     emailCollaborations  Boolean           @default(true)  // Recibir correos de invitaciones de colaboración
     createdAt            DateTime          @default(now())
@@ -92,6 +99,8 @@ model User {
     collaborations       EventCollaborator[]       @relation("UserCollaborations")
     sentInvitations      CollaboratorInvitation[]  @relation("SentInvitations")
     receivedInvitations  CollaboratorInvitation[]  @relation("ReceivedInvitations")
+    // Sorteos
+    wonRaffles           Raffle[]                  @relation("RaffleWinner")
 }
 
 model Account {
@@ -441,4 +450,45 @@ model EventVote {
     @@unique([eventId, userId])
     @@index([eventId])
     @@index([userId])
+}
+
+// ===================================
+// PROMOCIONES Y SORTEOS
+// ===================================
+
+model PromotionConfig {
+    id           String   @id @default("singleton")
+    isActive     Boolean  @default(false)
+    planSlug     String   @default("plus")
+    durationDays Int      @default(30)
+    updatedAt    DateTime @updatedAt
+}
+
+model Raffle {
+    id              String       @id @default(uuid())
+    title           String       @db.VarChar(150)
+    description     String       @db.Text
+    deadline        DateTime
+    showCounter     Boolean      @default(true)
+    maxParticipants Int?
+    condition       String       @default("all_users")
+    status          RaffleStatus @default(ACTIVE)
+    winnerId        String?
+    winner          User?        @relation("RaffleWinner", fields: [winnerId], references: [id])
+    bannerText      String?      @db.VarChar(300)
+    showInBanner    Boolean      @default(false)
+    createdAt       DateTime     @default(now())
+    updatedAt       DateTime     @updatedAt
+
+    @@index([status])
+    @@index([deadline])
+}
+
+model AnnouncementBar {
+    id        String   @id @default("global")
+    text      String   @db.VarChar(300)
+    link      String?  @db.VarChar(500)
+    linkText  String?  @db.VarChar(100)
+    isActive  Boolean  @default(false)
+    updatedAt DateTime @updatedAt
 }

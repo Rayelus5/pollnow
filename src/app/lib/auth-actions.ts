@@ -7,6 +7,7 @@ import { generateVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail } from "@/lib/mail";
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
+import { applyWelcomeBonus } from "@/lib/promotion-utils";
 
 // --- SCHEMAS ---
 const strictNameRegex = /^[a-z]+$/;
@@ -63,7 +64,7 @@ export async function registerUser(prevState: string | undefined, formData: Form
         const randomSuffix = Math.floor(Math.random() * 1000);
         const username = `${data.name}${randomSuffix}`;
 
-        await prisma.user.create({
+        const newUser = await prisma.user.create({
             data: {
                 name: data.name,
                 email: data.email,
@@ -73,6 +74,12 @@ export async function registerUser(prevState: string | undefined, formData: Form
                 image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
             },
         });
+
+        // Aplicar bono de bienvenida si está activo
+        const promo = await prisma.promotionConfig.findUnique({ where: { id: "singleton" } });
+        if (promo?.isActive) {
+            await applyWelcomeBonus(newUser.id, promo.planSlug, promo.durationDays);
+        }
 
         const verificationToken = await generateVerificationToken(data.email);
         await sendVerificationEmail(verificationToken.email, verificationToken.token);

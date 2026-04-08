@@ -1,4 +1,4 @@
-# Pollnow | v2.3
+# Pollnow | v2.4
 > https://www.pollnow.es/
 
 <!-- ![Next](https://img.shields.io/badge/-Next.js-20232a?logo=nextdotjs&logoColor=white) -->
@@ -700,7 +700,7 @@ This repository is intended as a **complete, production-style reference** for a 
 
 ---
 
-Last update: 8/4/2026 — v2.3 (help & onboarding system, AI image acceleration, legal pages rewrite, admin broadcast emails, Prisma migration fix)
+Last update: 8/4/2026 — v2.4 (admin promotions system, welcome bonus, subscription expiry cron, raffles, announcement bar, /empresas B2B page)
 
 ### v2.3 — 8/4/2026
 
@@ -744,6 +744,63 @@ New ADMIN-only section in the admin panel:
 #### Prisma migration fix (Neon advisory lock)
 
 `prisma.config.ts` updated to use `DATABASE_URL_UNPOOLED` for the `datasource` block. Neon's pooled connection (PgBouncer) does not support `pg_advisory_lock`, which caused `prisma migrate deploy` to time out. The direct connection bypasses the pooler and resolves the issue.
+
+---
+
+### v2.4 — 8/4/2026
+
+#### Admin Promotions system (`/admin/promotions`)
+
+New ADMIN-only section in the admin panel with three independent tools:
+
+**Welcome bonus**
+
+* Toggle to enable/disable a global welcome bonus applied to every new user at registration.
+* Configurable plan (`premium`, `plus`, `unlimited`) and duration (days).
+* Applied automatically in `auth-actions.ts` after `prisma.user.create` — checks `PromotionConfig` singleton and calls `applyWelcomeBonus()` if active.
+* Sets `subscriptionEndDate`, `subscriptionStatus: "active"`, `welcomeBonusApplied: true` on the new user row.
+
+**Subscription expiry cron**
+
+* New API route `GET /api/cron/expire-subscriptions` authenticated via `Authorization: Bearer CRON_SECRET`.
+* Runs **daily at 04:00 UTC** via Vercel Cron Jobs (`vercel.json` `"crons"` array).
+* Bulk-updates users where `stripeSubscriptionId` is null, `subscriptionStatus = "active"`, and `subscriptionEndDate < now()` → resets them to free tier.
+* `getPlanFromUser` in `src/lib/plans.ts` also checks expiry **in real time** (no DB call — uses the already-loaded user object) so plan downgrades are instant even between cron runs.
+
+**Raffles**
+
+* Full CRUD for raffles: title, description, deadline, participation condition (`all_users` / `registered_before_deadline`), optional max participants, optional counter display.
+* Status lifecycle: `ACTIVE` → `WINNER_SELECTED` → `CLOSED`.
+* Winner selection: random pick from eligible users or manual override from the eligible-users list.
+* Each raffle can optionally show a custom message in the global announcement bar.
+
+**New `CRON_SECRET` env var required in Vercel** to authenticate cron requests.
+
+#### Global Announcement Bar
+
+* Singleton `AnnouncementBar` DB record (id `"global"`), managed from the promotions panel.
+* Configurable text (up to 300 chars), optional link + link label, active/inactive toggle.
+* Rendered via `AnnouncementBarWrapper` (server component, ISR cached 60 s with tag `"announcement"`) above the Navbar in the root layout.
+* `AnnouncementBarClient` shows a red scrolling marquee; users can dismiss it (stored in `localStorage` keyed by record ID). Cache invalidated instantly via `revalidateTag("announcement")` on any admin update.
+
+#### /empresas B2B page
+
+New public marketing page targeting corporate clients:
+
+* **Hero** section with orange/red gradient, tagline, and two CTAs (contact + live demo).
+* **UseCases** — 6 illustrated business scenarios (team awards, hackathons, employee recognition, etc.).
+* **HowItWorks** — 3-step visual guide.
+* **WhatsIncluded** — feature checklist with Lucide icons.
+* **Pricing** — single 499 € one-time corporate licence card with mailto CTA.
+* **PrivateNegotiation** — prompt for large orgs to reach out for custom pricing.
+* **FAQ** — animated accordion with common enterprise questions.
+* All CTAs use `mailto:contacto@pollnow.es` with pre-filled subject/body.
+
+**New `NEXT_PUBLIC_DEMO_EVENT_URL` env var** points the demo CTA to a live event URL.
+
+#### Icon polish
+
+All literal `←` arrow characters across the codebase replaced with the Lucide `<ArrowLeft />` icon for consistent sizing and hover animations (`/login`, `/register`, `/logout`, `ResultsClient`, `ProfileForm`).
 
 > Made with ♥️ by Rayelus
 > <br>
