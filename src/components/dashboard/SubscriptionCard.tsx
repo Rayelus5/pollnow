@@ -10,12 +10,16 @@ type UserSubscription = {
     subscriptionStatus: string | null;
     stripePriceId: string | null;
     subscriptionEndDate: Date | null;
-    cancelAtPeriodEnd: boolean; // <--- NUEVO TIPO
+    cancelAtPeriodEnd: boolean;
+    stripeSubscriptionId: string | null;
 };
 
 export default function SubscriptionCard({ user }: { user: UserSubscription }) {
     const plan = getPlanFromUser(user);
     const isFree = plan.slug === 'free';
+
+    // Suscripción de promoción: activa pero sin Stripe (bono de bienvenida, manual, etc.)
+    const isPromo = !user.stripeSubscriptionId;
 
     // Formatear fecha
     const renewalDate = user.subscriptionEndDate
@@ -39,10 +43,15 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                             "px-3 py-1 text-xs font-bold rounded-full border-2 flex items-center gap-2",
                             user.cancelAtPeriodEnd
                                 ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                : "bg-green-500/10 text-green-400 border-green-500/20"
+                                : isPromo
+                                    ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
+                                    : "bg-green-500/10 text-green-400 border-green-500/20"
                         )}>
-                            <span className={clsx("w-2 h-2 rounded-full", user.cancelAtPeriodEnd ? "bg-amber-500" : "bg-green-500 animate-pulse")}></span>
-                            {user.cancelAtPeriodEnd ? "Cancelación Programada" : "Activa"}
+                            <span className={clsx(
+                                "w-2 h-2 rounded-full",
+                                user.cancelAtPeriodEnd ? "bg-amber-500" : isPromo ? "bg-violet-400" : "bg-green-500 animate-pulse"
+                            )}></span>
+                            {user.cancelAtPeriodEnd ? "Cancelación Programada" : isPromo ? "Promoción" : "Activa"}
                         </span>
                     )}
                 </div>
@@ -66,11 +75,11 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                         {!isFree && renewalDate && (
                             <div className={clsx(
                                 "flex items-center gap-2 mt-4 text-xs",
-                                user.cancelAtPeriodEnd ? "text-amber-400/80" : "text-gray-500"
+                                user.cancelAtPeriodEnd || isPromo ? "text-amber-400/80" : "text-gray-500"
                             )}>
-                                {user.cancelAtPeriodEnd ? <AlertTriangle size={12} /> : <Calendar size={12} />}
+                                {user.cancelAtPeriodEnd || isPromo ? <AlertTriangle size={12} /> : <Calendar size={12} />}
                                 <span>
-                                    {user.cancelAtPeriodEnd
+                                    {user.cancelAtPeriodEnd || isPromo
                                         ? `Finaliza el ${renewalDate}`
                                         : `Se renueva el ${renewalDate}`
                                     }
@@ -80,12 +89,12 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                     </div>
 
                     <div className="w-full md:w-auto flex flex-col gap-3 min-w-[200px]">
-                        {isFree ? (
+                        {isFree || isPromo ? (
                             <Link
                                 href="/premium"
                                 className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors"
                             >
-                                Mejorar Plan
+                                {isFree ? "Mejorar Plan" : "Ver Planes"}
                             </Link>
                         ) : (
                             <ManageButton />

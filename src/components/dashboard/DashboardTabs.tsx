@@ -40,6 +40,7 @@ type DashboardTabsProps = {
         stripePriceId: string | null;
         subscriptionEndDate: Date | null;
         cancelAtPeriodEnd: boolean | null;
+        stripeSubscriptionId: string | null;
         createdAt: Date;
         hasPassword: boolean;
         emailNotifications: boolean;
@@ -426,6 +427,7 @@ function ProfileTab({
         stripePriceId: user.stripePriceId,
         subscriptionEndDate: user.subscriptionEndDate,
         cancelAtPeriodEnd: user.cancelAtPeriodEnd,
+        stripeSubscriptionId: user.stripeSubscriptionId,
     };
 
     return (

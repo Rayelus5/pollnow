@@ -107,6 +107,7 @@ export default async function DashboardPage() {
         stripePriceId: user.stripePriceId,
         subscriptionEndDate: user.subscriptionEndDate,
         cancelAtPeriodEnd: user.cancelAtPeriodEnd,
+        stripeSubscriptionId: user.stripeSubscriptionId,
         createdAt: user.createdAt,
         hasPassword: !!user.passwordHash,
         emailNotifications: user.emailNotifications,

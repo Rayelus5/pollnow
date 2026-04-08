@@ -159,6 +159,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
     },
 
+    events: {
+        // Aplicar bono de bienvenida a usuarios OAuth (Google, etc.)
+        // Los usuarios de credenciales reciben el bono en registerUser (auth-actions.ts)
+        async createUser({ user }) {
+            if (!user.id) return;
+            try {
+                const promo = await prisma.promotionConfig.findUnique({ where: { id: "singleton" } });
+                if (promo?.isActive) {
+                    const { applyWelcomeBonus } = await import("./lib/promotion-utils");
+                    await applyWelcomeBonus(user.id, promo.planSlug, promo.durationDays);
+                }
+            } catch (e) {
+                console.error("[auth] createUser bonus error:", e);
+            }
+        },
+    },
+
     // Debug solo en desarrollo para ver trazas completas
     debug: process.env.NODE_ENV === "development",
 })
