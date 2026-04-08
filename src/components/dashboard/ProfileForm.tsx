@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { updateProfile, changePassword, updateEmailPreferences } from "@/app/lib/user-actions";
-import { User, Lock, Save, Camera, UploadCloud, X, Bell } from "lucide-react";
+import { User, Lock, Save, Camera, UploadCloud, X, Bell, ArrowLeft } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -276,8 +276,8 @@ export default function ProfileForm({ user }: { user: UserData }) {
 
                             <div className="flex-1 w-full space-y-4">
                                 <div>
-                                    <label className="block text-xs uppercase text-gray-500 mb-2">
-                                        URL de Avatar (o sube una imagen ←)
+                                    <label className="block text-xs uppercase text-gray-500 mb-2 flex items-center gap-1">
+                                        URL de Avatar (o sube una imagen <ArrowLeft size={12} />)
                                     </label>
                                     <div className="relative">
                                         <UploadCloud className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />

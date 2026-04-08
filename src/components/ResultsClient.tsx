@@ -4,6 +4,7 @@ import { motion, Variants } from "framer-motion";
 import Link from "next/link";
 import WinnerConfetti from "@/components/WinnerConfetti";
 import { clsx } from "clsx";
+import { ArrowLeft } from "lucide-react";
 import { CustomAdBannerVertical } from "./ads/CustomAdBannerVertical";
 
 type Result = {
@@ -82,7 +83,7 @@ export default function ResultsClient({
                             href={backUrl}
                             className="text-sm text-gray-500 hover:text-white transition-colors border-b-2 border-transparent hover:border-white pb-0.5"
                         >
-                            ← Volver a la Ceremonia
+                            <ArrowLeft size={14} className="inline-block mr-1" /> Volver a la Ceremonia
                         </Link>
                     </motion.header>
 

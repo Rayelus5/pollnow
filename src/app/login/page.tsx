@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import LoginForm from '@/components/LoginForm';
 import GoogleForm from '@/components/GoogleForm';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export default async function LoginPage() {
     const session = await auth();
@@ -25,7 +26,7 @@ export default async function LoginPage() {
                 <div className="text-center mb-10">
                     <Link href="/" className="inline-block mb-6 group">
                         <div className="flex items-center gap-2 text-blue-500 font-mono text-xs tracking-[0.2em] uppercase group-hover:text-blue-400 transition-colors">
-                            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+                            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                             Volver al inicio
                         </div>
                     </Link>
