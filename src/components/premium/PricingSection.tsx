@@ -16,7 +16,7 @@ const PRICING_DATA = [
         title: "Free",
         price: "GRATIS",
         description: "Prueba la experiencia sin compromiso.",
-        features: ["1 Evento Activo", "5 Categorías máximo por evento", "12 Participantes máximo por evento", "Votación Anónima", "Resultados Modo Gala", "Con publicidad"],
+        features: ["1 Evento Activo", "5 Categorías máximo por evento", "12 Nominados máximo por evento", "Votación Anónima", "Resultados Modo Gala", "Con publicidad"],
         priceId: null
     },
     {
@@ -25,7 +25,7 @@ const PRICING_DATA = [
         price: "2.99€",
         period: "/mes",
         description: "Para grupos de amigos activos.",
-        features: ["5 Eventos Activos", "10 Categorías máximo por evento", "30 Participantes máximo por evento", "Generación de imágenes con IA", "Estadísticas básicas", "Todo lo de Free"],
+        features: ["5 Eventos Activos", "10 Categorías máximo por evento", "30 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas básicas"],
         priceId: PLANS.PREMIUM.priceId,
         highlight: true
     },
@@ -35,7 +35,7 @@ const PRICING_DATA = [
         price: "5.99€",
         period: "/mes",
         description: "Para disfrutar de eventos sin anuncios.",
-        features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Participantes máximo por evento", "Generación de imágenes con IA", "Soporte prioritario", "Estadísticas Avanzadas", "Sin publicidad"],
+        features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Sin publicidad"],
         priceId: PLANS.PLUS.priceId
     },
     {
@@ -44,7 +44,7 @@ const PRICING_DATA = [
         price: "12.99€",
         period: "/mes",
         description: "Para organizadores de eventos serios. Aumenta tus límites al máximo nivel, incluyendo desactivación de voto anónimo.",
-        features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Participantes máximo por evento", "Generación de imágenes con IA", "Soporte prioritario", "Estadísticas Avanzadas", "Sin publicidad", "Desactivación de voto anónimo"],
+        features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Sin publicidad", "Desactivación de voto anónimo"],
         priceId: PLANS.PLUS.priceId, // ajusta al id correcto si procede
         enterpriseLike: true // <- NUEVO: marca para render enterprise-style dentro del map
     },
@@ -353,7 +353,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
-                                    Límites de participantes a medida
+                                    Límites de Nominados a medida
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
@@ -411,14 +411,71 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 </div>
             </motion.div>
 
-            <motion.p
+            {/* <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1, duration: 1 }}
-                className="mt-16 text-sm text-gray-600"
+                className="mt-16 text-sm text-zinc-600"
             >
                 Pagos seguros procesados por Stripe. Puedes cancelar en cualquier momento.
-            </motion.p>
+            </motion.p> */}
+
+
+            {/* SECCIÓN DE ACLARACIONES MEJORADA */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5, duration: 1 }}
+                className="mt-15 pt-10 text-left"
+            >
+                <div className="grid md:grid-cols-2 gap-8 px-4">
+                    {/* Columna 1: Colaboración y Límites */}
+                    <div>
+                        <h4 className="text-white text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                            Uso y Colaboración
+                        </h4>
+                        <ul className="space-y-3 text-xs text-justify text-zinc-500 leading-relaxed">
+                            <li>
+                                <strong className="text-zinc-400">* Colaboración en tiempo real:</strong> La capacidad de invitación varía según el plan:
+                                <span className="text-zinc-300"> Premium</span> (1 invitado),
+                                <span className="text-zinc-300"> Plus</span> (hasta 5) y
+                                <span className="text-zinc-300"> Unlimited</span> (hasta 15).
+                                Los usuarios con cuenta <span className="text-zinc-300">Gratuita</span> pueden unirse como colaboradores a un máximo de 2 eventos.
+                            </li>
+                            <li>
+                                <strong>Límites de Eventos:</strong> Se consideran "Eventos Activos" aquellos que están publicados o no. Los eventos que se hayan eliminado no computan para el límite del plan.
+                            </li>
+                            <li>
+                                <strong>Monetización:</strong> Pollnow ofrece modelos de suscripción para que los usuarios puedan acceder a funciones y herramientas exclusivas. Los pagos realizados irán destinados completamente en apoyar directamente al desarrollador y mantener el proyecto.
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* Columna 2: Pagos y Legal */}
+                    <div>
+                        <h4 className="text-white text-sm text-justify font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <span className="w-1 h-4 bg-blue-500 rounded-full"></span>
+                            Suscripción y Pagos
+                        </h4>
+                        <ul className="space-y-3 text-xs text-zinc-500 leading-relaxed">
+                            <li>
+                                <strong>Procesamiento Seguro:</strong> Todos los pagos se realizan a través de <strong>Stripe</strong>. POLLNOW no almacena datos de tu tarjeta de crédito.
+                            </li>
+                            <li>
+                                <strong>Impuestos:</strong> Los precios mostrados incluyen el IVA aplicable según tu residencia, a menos que se indique lo contrario durante el checkout.
+                            </li>
+                            <li>
+                                <strong>Política de Cancelación:</strong> Puedes cancelar tu suscripción en cualquier momento desde tu panel de gestión de <strong>Stripe</strong>. Mantendrás el acceso a las funciones Premium hasta el final del periodo de facturación actual.
+                            </li>
+                            <li>
+                                <strong>Generación por IA:</strong> El uso de herramientas de IA está sujeto a políticas de uso justo y disponibilidad del proveedor del modelo.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </motion.div>
         </div>
     );
 }

@@ -16,6 +16,10 @@ import 'ldrs/react/Bouncy.css';
 import 'ldrs/react/Quantum.css';
 import { motion, AnimatePresence } from "framer-motion";
 
+// ─── AI Image Generation Cooldown (global, shared across all form instances) ──
+const AI_COOLDOWN_SECONDS = 30;
+let lastAiGenerationTime = 0;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Participant = {
@@ -154,8 +158,14 @@ function ImagePreview({
                 }`}
             >
                 {isGenerating ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60">
-                        <Quantum size={isEditMode ? "24" : "36"} speed="1.75" color="#a78bfa" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 overflow-hidden">
+                        {/* Gradient blobs */}
+                        <div className="absolute w-3/4 h-3/4 rounded-full bg-violet-600/50 blur-md animate-[ping_2s_ease-in-out_infinite] pointer-events-none" />
+                        <div className="absolute w-1/2 h-1/2 rounded-full bg-fuchsia-500/40 blur-sm animate-[pulse_1.5s_ease-in-out_infinite_0.5s] pointer-events-none" />
+                        {/* Quantum loader on top */}
+                        <div className="relative z-10">
+                            <Quantum size={isEditMode ? "30" : "50"} speed="1.75" color="#e3daffff" />
+                        </div>
                     </div>
                 ) : image ? (
                     <>
@@ -219,6 +229,8 @@ function ParticipantForm({
     const [aiPrompt, setAiPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiError, setAiError] = useState(false);
+    const [cooldownRemaining, setCooldownRemaining] = useState(0);
+    const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,14 +238,14 @@ function ParticipantForm({
         setName(val);
         // Auto-suggest prompt when name changes in AI mode
         if (mode === "ai" && !aiPrompt && val) {
-            setAiPrompt(`Retrato ultra-realista de ${val}, fondo neutro oscuro, iluminación dramática profesional, alta resolución, estilo fotográfico.`);
+            setAiPrompt(`Retrato ultra-realista de un ${val}, fondo neutro oscuro, iluminación dramática profesional, alta resolución, estilo fotográfico.`);
         }
     };
 
     const handleModeChange = (m: InputMode) => {
         setMode(m);
         if (m === "ai" && name && !aiPrompt) {
-            setAiPrompt(`Retrato ultra-realista de ${name}, fondo neutro oscuro, iluminación dramática profesional, alta resolución, estilo fotográfico.`);
+            setAiPrompt(`Retrato ultra-realista de un ${name}, fondo neutro oscuro, iluminación dramática profesional, alta resolución, estilo fotográfico.`);
         }
     };
 
@@ -249,8 +261,30 @@ function ParticipantForm({
         reader.readAsDataURL(file);
     };
 
+    const startCooldown = () => {
+        const elapsed = Math.floor((Date.now() - lastAiGenerationTime) / 1000);
+        const remaining = Math.max(0, AI_COOLDOWN_SECONDS - elapsed);
+        if (remaining <= 0) return;
+        setCooldownRemaining(remaining);
+        if (cooldownRef.current) clearInterval(cooldownRef.current);
+        cooldownRef.current = setInterval(() => {
+            setCooldownRemaining((prev) => {
+                if (prev <= 1) {
+                    if (cooldownRef.current) clearInterval(cooldownRef.current);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
     const generateAIImage = async () => {
         if (!name && !aiPrompt) return;
+        const elapsed = Date.now() - lastAiGenerationTime;
+        if (elapsed < AI_COOLDOWN_SECONDS * 1000) {
+            startCooldown();
+            return;
+        }
         setIsGenerating(true);
         setAiError(false);
         try {
@@ -265,6 +299,8 @@ function ParticipantForm({
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const { imageUrl } = await res.json();
             setImage(imageUrl);
+            lastAiGenerationTime = Date.now();
+            startCooldown();
         } catch (error) {
             console.error("Error generando imagen:", error);
             setAiError(true);
@@ -340,11 +376,17 @@ function ParticipantForm({
                                 <button
                                     type="button"
                                     onClick={generateAIImage}
-                                    disabled={isGenerating || (!name && !aiPrompt)}
+                                    disabled={isGenerating || cooldownRemaining > 0 || (!name && !aiPrompt)}
                                     className="px-3 py-2 bg-violet-600/20 text-violet-300 border-2 border-violet-500/30 rounded-lg hover:bg-violet-600/40 transition-colors disabled:opacity-40 flex items-center gap-1.5 text-xs font-semibold cursor-pointer shrink-0"
                                 >
-                                    <Wand2 size={12} />
-                                    <span className="hidden xs:inline">Generar</span>
+                                    {cooldownRemaining > 0 ? (
+                                        <span>{cooldownRemaining}s</span>
+                                    ) : (
+                                        <>
+                                            <Wand2 size={12} />
+                                            <span className="hidden xs:inline">Generar</span>
+                                        </>
+                                    )}
                                 </button>
                             </motion.div>
                         )}
@@ -414,9 +456,11 @@ function ParticipantForm({
                         <button
                             type="button"
                             onClick={generateAIImage}
-                            className="text-[10px] text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors cursor-pointer"
+                            disabled={cooldownRemaining > 0}
+                            className="text-[10px] text-violet-400 hover:text-violet-300 flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            <RefreshCw size={9} /> Regenerar
+                            <RefreshCw size={9} />
+                            {cooldownRemaining > 0 ? `${cooldownRemaining}s` : "Regenerar"}
                         </button>
                     )}
                 </div>
@@ -483,7 +527,7 @@ function ParticipantForm({
                                         onChange={(e) => setAiPrompt(e.target.value)}
                                         rows={3}
                                         className="w-full bg-violet-950/20 border-2 border-violet-500/25 rounded-xl px-3 py-2.5 text-white text-sm focus:border-violet-500/60 outline-none placeholder-violet-400/30 transition-colors resize-none leading-relaxed"
-                                        placeholder={`Ej: Retrato ultra-realista de ${name || "la persona"}, fondo oscuro, iluminación dramática...`}
+                                        placeholder={`Ej: Retrato ultra-realista de un ${name || "la persona"}, fondo oscuro, iluminación dramática...`}
                                     />
                                 </div>
 
@@ -491,14 +535,19 @@ function ParticipantForm({
                                 <button
                                     type="button"
                                     onClick={generateAIImage}
-                                    disabled={isGenerating || (!name && !aiPrompt)}
+                                    disabled={isGenerating || cooldownRemaining > 0 || (!name && !aiPrompt)}
                                     className="w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40
                                         bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-lg shadow-purple-900/30"
                                 >
                                     {isGenerating ? (
                                         <>
-                                            <Quantum size="18" speed="1.75" color="white" />
+                                            <Quantum size="20" speed="1.75" color="white" />
                                             <span>Generando imagen...</span>
+                                        </>
+                                    ) : cooldownRemaining > 0 ? (
+                                        <>
+                                            <RefreshCw size={14} />
+                                            <span>Espera {cooldownRemaining}s para generar otra</span>
                                         </>
                                     ) : (
                                         <>

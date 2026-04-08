@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
+import dotenv from 'dotenv';
+dotenv.config();
+
+const ip = process.env.IP_ADDRESS;
 const nextConfig = {
+  allowedDevOrigins: [ip],
   // 1. Configuración para ignorar errores en build (Ya la tenías)
   typescript: {
     ignoreBuildErrors: true,
@@ -8,13 +13,19 @@ const nextConfig = {
   //   ignoreDuringBuilds: true,
   // },
 
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb', // Aumenta el límite a 1MB para permitir imágenes más grandes
+    },
+  },
+
   // 2. NUEVA CONFIGURACIÓN DE IMÁGENES
   images: {
     // Permitir SVGs (DiceBear usa SVGs)
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    
+
     // Lista blanca de dominios externos
     remotePatterns: [
       {
