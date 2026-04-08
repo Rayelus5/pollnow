@@ -4,6 +4,7 @@ dotenv.config();
 
 const ip = process.env.IP_ADDRESS;
 const nextConfig = {
+  allowedDevOrigins: [ip],
   // 1. Configuración para ignorar errores en build (Ya la tenías)
   typescript: {
     ignoreBuildErrors: true,
@@ -72,10 +73,5 @@ const nextConfig = {
     ],
   },
 };
-
-// next.config.js
-module.exports = {
-  allowedDevOrigins: [ip],
-}
 
 export default nextConfig;

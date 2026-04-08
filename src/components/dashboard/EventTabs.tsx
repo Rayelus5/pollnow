@@ -240,11 +240,7 @@ export default function EventTabs({
 
             {/* CONTENIDO TABS */}
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                {activeTab === "stats" && stats}
-                {activeTab === "settings" && settings}
-                {activeTab === "participants" && participants}
-                {activeTab === "polls" && polls}
-                {activeTab === "team" && team}
+                {{ stats, settings, participants, polls, team }[activeTab]}
             </div>
         </div>
     );
