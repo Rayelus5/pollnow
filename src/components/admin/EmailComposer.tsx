@@ -55,6 +55,7 @@ export default function EmailComposer({ totalUsers, premiumUsers, freeUsers }: P
     const [showConfirm, setShowConfirm] = useState(false);
     const [result, setResult] = useState<{ sent: number; failed: number; total: number } | null>(null);
     const [activePanel, setActivePanel] = useState<"compose" | "preview">("compose");
+    const [mounted, setMounted] = useState(false);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const searchRef = useRef<HTMLDivElement>(null);
     const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,6 +126,9 @@ export default function EmailComposer({ totalUsers, premiumUsers, freeUsers }: P
         return () => document.removeEventListener("mousedown", handler);
     }, []);
 
+    // Mark as mounted (ensures server/client render parity on interactive state)
+    useEffect(() => { setMounted(true); }, []);
+
     // Update iframe preview
     useEffect(() => {
         if (!iframeRef.current) return;
@@ -170,8 +174,9 @@ export default function EmailComposer({ totalUsers, premiumUsers, freeUsers }: P
     };
 
     const canSend =
-        subject.trim() &&
-        messageBody.trim() &&
+        mounted &&
+        Boolean(subject.trim()) &&
+        Boolean(messageBody.trim()) &&
         recipientCount > 0 &&
         !isSending;
 
