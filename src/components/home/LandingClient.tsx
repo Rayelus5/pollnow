@@ -459,6 +459,25 @@ function LogoGrid() {
                         </motion.div>
                     ))}
                 </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="mt-20 flex flex-col items-center gap-8"
+                >
+                    <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight text-center">
+                        ¿Te gustaría colaborar <br /> con nosotros?
+                    </h2>
+                    <a
+                        href="https://pollnow.es/empresas"
+                        className="inline-flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full font-bold text-lg text-white shadow-lg shadow-orange-900/30 hover:scale-105 transition-transform group"
+                    >
+                        Soluciones para Empresas
+                        <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                    </a>
+                </motion.div>
             </div>
 
             {/* Adorno visual: línea sutil debajo */}
