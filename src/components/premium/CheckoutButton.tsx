@@ -27,11 +27,10 @@ export default function CheckoutButton({ priceId, highlight }: { priceId: string
             <button
                 onClick={handleCheckout}
                 disabled={loading}
-                className={`w-full py-3 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 ${
-                    highlight
+                className={`w-full py-3 px-12 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 ${highlight
                     ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-blue-900/20'
                     : 'bg-white text-black hover:bg-gray-200'
-                }`}
+                    }`}
             >
                 {loading ? "Cargando..." : "Suscribirse"}
             </button>

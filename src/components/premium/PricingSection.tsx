@@ -45,8 +45,8 @@ const PRICING_DATA = [
         period: "/mes",
         description: "Para organizadores de eventos serios. Aumenta tus límites al máximo nivel, incluyendo desactivación de voto anónimo.",
         features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Sin publicidad", "Desactivación de voto anónimo"],
-        priceId: PLANS.PLUS.priceId, // ajusta al id correcto si procede
-        enterpriseLike: true // <- NUEVO: marca para render enterprise-style dentro del map
+        priceId: PLANS.UNLIMITED.priceId,
+        enterpriseLike: true
     },
 ];
 
@@ -206,7 +206,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                                 plan.priceId ? (
                                                     <ManageButton />
                                                 ) : (
-                                                    <div className="w-full py-3 rounded-xl font-bold border-2 border-green-500/30 text-green-400 bg-green-500/5 cursor-default flex items-center justify-center gap-2">
+                                                    <div className="w-full py-3 px-8rounded-xl font-bold border-2 border-green-500/30 text-green-400 bg-green-500/5 cursor-default flex items-center justify-center gap-2">
                                                         <Check size={16} /> Plan Actual
                                                     </div>
                                                 )
