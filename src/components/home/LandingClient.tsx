@@ -119,24 +119,24 @@ export default function LandingClient({ session, showAds = true }: { session: an
     const currentTitle = specificIndexes.includes(index) ? TITLES[1] : TITLES[0];
     const currentWord = WORDS[index];
 
-    const [showPopup, setShowPopup] = useState(false);
+    // const [showPopup, setShowPopup] = useState(false);
 
-    useEffect(() => {
-        const AD_KEY = "ad_last_shown";
-        const COOLDOWN = 60 * 60 * 1000; // 1 hora en ms
+    // useEffect(() => {
+    //     const AD_KEY = "ad_last_shown";
+    //     const COOLDOWN = 60 * 60 * 1000; // 1 hora en ms
 
-        const lastShown = localStorage.getItem(AD_KEY);
-        const elapsed = lastShown ? Date.now() - parseInt(lastShown, 10) : Infinity;
+    //     const lastShown = localStorage.getItem(AD_KEY);
+    //     const elapsed = lastShown ? Date.now() - parseInt(lastShown, 10) : Infinity;
 
-        if (elapsed < COOLDOWN) return; // Todavía dentro del período de cooldown
+    //     if (elapsed < COOLDOWN) return; // Todavía dentro del período de cooldown
 
-        const timer = setTimeout(() => {
-            setShowPopup(true);
-            localStorage.setItem(AD_KEY, String(Date.now()));
-        }, 3000);
+    //     const timer = setTimeout(() => {
+    //         setShowPopup(true);
+    //         localStorage.setItem(AD_KEY, String(Date.now()));
+    //     }, 3000);
 
-        return () => clearTimeout(timer);
-    }, []);
+    //     return () => clearTimeout(timer);
+    // }, []);
 
     return (
         <div className="relative overflow-hidden bg-neutral-950">
@@ -317,10 +317,11 @@ export default function LandingClient({ session, showAds = true }: { session: an
             <LogoGrid />
 
             {/* --- POPUP DE PUBLICIDAD --- */}
+            {/* 
             <AnimatePresence>
                 {showPopup && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-10">
-                        {/* Backdrop: Fondo oscurecido */}
+                        
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -329,7 +330,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                         />
 
-                        {/* Contenedor del Anuncio */}
+                        
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -337,7 +338,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
                             className="relative w-full max-w-5xl z-10"
                         >
-                            {/* Botón de Cerrar (X) arriba a la izquierda */}
+                            
                             <button
                                 onClick={() => setShowPopup(false)}
                                 className="absolute -top-12 left-0 text-white/70 hover:text-white transition-colors flex items-center gap-2 group cursor-pointer"
@@ -348,7 +349,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                                 <span className="text-sm font-medium tracking-wide">Cerrar</span>
                             </button>
 
-                            {/* Banner */}
+                           
                             <div className="relative rounded-3xl border-2 border-white/20 bg-black overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] shadow-blue-500/20">
                                 {showAds ? (
                                     <CustomAdBanner />
@@ -360,6 +361,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                     </div>
                 )}
             </AnimatePresence>
+            */}
 
             {/* --- CTA FINAL --- */}
             <section className="py-32 px-6 text-center relative">
