@@ -27,9 +27,10 @@ type Props = {
     targetDate: Date;
     eventSlug: string;
     showAds?: boolean;
+    accessKey?: string;
 };
 
-export default function CompletedView({ targetDate, eventSlug, showAds = true }: Props) {
+export default function CompletedView({ targetDate, eventSlug, showAds = true, accessKey }: Props) {
     return (
         <div className="relative z-10 flex justify-center gap-6">
             {/* BANNER IZQUIERDO (solo desktop grande) */}
@@ -112,7 +113,7 @@ export default function CompletedView({ targetDate, eventSlug, showAds = true }:
 
                     <motion.div variants={itemVariants} className="pt-8">
                         <Link
-                            href={`/e/${eventSlug}`}
+                            href={`/e/${eventSlug}${accessKey ? `?key=${accessKey}` : ""}`}
                             className="group relative inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors"
                         >
                             <span className="absolute -bottom-1 left-0 w-0 h-px bg-blue-500 transition-all group-hover:w-full"></span>

@@ -5,17 +5,19 @@ import { getCurrentUserPlan } from "@/lib/user-plan";
 
 type Props = {
     params: Promise<{ slug: string }>
+    searchParams: Promise<{ key?: string }>
 }
 
 export const dynamic = "force-dynamic";
 
-export default async function EventCompletedPage({ params }: Props) {
+export default async function EventCompletedPage({ params, searchParams }: Props) {
     const { slug } = await params;
+    const { key } = await searchParams;
 
     // Buscar evento para obtener su fecha
     const event = await prisma.event.findUnique({
         where: { slug },
-        select: { galaDate: true, slug: true }
+        select: { galaDate: true, slug: true, isPublic: true, accessKey: true }
     });
 
     if (!event) notFound();
@@ -26,5 +28,7 @@ export default async function EventCompletedPage({ params }: Props) {
     const plan = await getCurrentUserPlan();
     const showAds = plan.slug === "free" || plan.slug === "premium"; // solo UNLIMITED NO ven anuncios
 
-    return <CompletedView targetDate={galaDate} eventSlug={event.slug} showAds={showAds} />;
+    const lobbyKey = !event.isPublic ? (key || event.accessKey || undefined) : undefined;
+
+    return <CompletedView targetDate={galaDate} eventSlug={event.slug} showAds={showAds} accessKey={lobbyKey} />;
 }
