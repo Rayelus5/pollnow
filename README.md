@@ -889,10 +889,6 @@ New public marketing page targeting corporate clients:
 
 **New `NEXT_PUBLIC_DEMO_EVENT_URL` env var** points the demo CTA to a live event URL.
 
-#### Icon polish
-
-All literal `←` arrow characters across the codebase replaced with the Lucide `<ArrowLeft />` icon for consistent sizing and hover animations (`/login`, `/register`, `/logout`, `ResultsClient`, `ProfileForm`).
-
 > Made with ♥️ by Rayelus
 > <br>
 > <a href="https://pollnow.es">Pollnow</a> © 2026 by <a href="https://dev.rayelus.com">Raimundo Palma</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
