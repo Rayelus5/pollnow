@@ -31,10 +31,11 @@ export async function POST(req: Request) {
         }
 
         if (action === "delete") {
-            // Borrado masivo
-            await prisma.event.deleteMany({
-                where: { id: { in: ids } },
-            });
+            await prisma.$transaction([
+                prisma.report.deleteMany({ where: { eventId: { in: ids } } }),
+                prisma.moderationLog.deleteMany({ where: { eventId: { in: ids } } }),
+                prisma.event.deleteMany({ where: { id: { in: ids } } }),
+            ]);
             return NextResponse.json({ success: true });
         }
 

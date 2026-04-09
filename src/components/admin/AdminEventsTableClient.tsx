@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { ExternalLink, Eye, Trash2 } from "lucide-react";
+import { ExternalLink, Eye, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -25,12 +25,16 @@ export default function AdminEventsTableClient({
     totalPages,
     query,
     status,
+    userFilter,
+    userId,
 }: {
     events: EventRow[];
     currentPage: number;
     totalPages: number;
     query?: string;
     status?: string;
+    userFilter?: string;
+    userId?: string;
 }) {
     const router = useRouter();
     const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -157,8 +161,22 @@ export default function AdminEventsTableClient({
                     </button>
                 </div>
 
-                <div className="text-sm text-gray-400">
-                    Página {currentPage} / {totalPages}
+                <div className="flex items-center gap-3">
+                    {userId && userFilter && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 max-w-[220px]">
+                            <span className="truncate" title={userFilter}>{userFilter}</span>
+                            <a
+                                href={`?${query ? `q=${encodeURIComponent(query)}&` : ""}${status ? `status=${status}&` : ""}`}
+                                className="hover:text-violet-200 transition-colors shrink-0"
+                                title="Quitar filtro de usuario"
+                            >
+                                <X size={11} />
+                            </a>
+                        </span>
+                    )}
+                    <div className="text-sm text-gray-400">
+                        Página {currentPage} / {totalPages}
+                    </div>
                 </div>
             </div>
 
