@@ -11,6 +11,19 @@ export const PLANS = {
         },
         price: 0,
     },
+    ENTERPRISE: {
+        name: "Enterprise",
+        slug: "enterprise",
+        quota: 150,
+        limits: {
+            pollsPerEvent: 50,
+            participantsPerEvent: 1000,
+            collaboratorsPerEvent: 30,
+            maxSharedEvents: Infinity,
+        },
+        price: 0,
+        priceId: "enterprise",
+    },
     PREMIUM: {
         name: "Premium",
         slug: "premium",
@@ -70,6 +83,7 @@ export function getPlanFromUser(user: {
         return PLANS.FREE;
     }
 
+    if (user.stripePriceId === PLANS.ENTERPRISE.priceId) return PLANS.ENTERPRISE;
     if (user.stripePriceId === PLANS.UNLIMITED.priceId) return PLANS.UNLIMITED;
     if (user.stripePriceId === PLANS.PLUS.priceId) return PLANS.PLUS;
     if (user.stripePriceId === PLANS.PREMIUM.priceId) return PLANS.PREMIUM;

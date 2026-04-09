@@ -1,0 +1,6 @@
+titulo,descripcion,tipo_votacion,max_opciones
+"Mejor Streamer del Año","El creador de contenido más destacado de este año","SINGLE",""
+"Mejor Comunidad","La comunidad más activa y participativa","MULTIPLE",""
+"Top 3 Clips del Año","Los mejores momentos capturados en vídeo","LIMITED_MULTIPLE","3"
+"Mejor Colaboración","La mejor colaboración entre creadores","SINGLE",""
+"Mejor Evento Online","El evento online más memorable del año","MULTIPLE",""

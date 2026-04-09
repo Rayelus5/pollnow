@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 const PREMIUM_PRICE_ID = "price_1T1tQSAnnRNk3k0PKQVAbjnb";
 const PLUS_PRICE_ID = "price_1T1tRmAnnRNk3k0PLPBcN1Pk";
 const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
+const ENTERPRISE_PRICE_ID = "enterprise";
 
 type User = {
     id: string;
@@ -49,7 +50,8 @@ type ProfileState = {
 
 function getPlanKeyFromProfile(profile: {
     stripePriceId: string | null;
-}): "free" | "premium" | "plus" | "unlimited" {
+}): "free" | "premium" | "plus" | "unlimited" | "enterprise" {
+    if (profile.stripePriceId === ENTERPRISE_PRICE_ID) return "enterprise";
     if (profile.stripePriceId === PREMIUM_PRICE_ID) return "premium";
     if (profile.stripePriceId === PLUS_PRICE_ID) return "plus";
     if (profile.stripePriceId === UNLIMITED_PRICE_ID) return "unlimited";
@@ -256,7 +258,8 @@ export default function UserActions({ user }: { user: User }) {
                                     | "free"
                                     | "premium"
                                     | "plus"
-                                    | "unlimited";
+                                    | "unlimited"
+                                    | "enterprise";
 
                                 setProfile((p) => {
                                     let stripePriceId: string | null = null;
@@ -266,6 +269,8 @@ export default function UserActions({ user }: { user: User }) {
                                         stripePriceId = PLUS_PRICE_ID;
                                     if (value === "unlimited")
                                         stripePriceId = UNLIMITED_PRICE_ID;
+                                    if (value === "enterprise")
+                                        stripePriceId = ENTERPRISE_PRICE_ID;
 
                                     return {
                                         ...p,
@@ -274,6 +279,9 @@ export default function UserActions({ user }: { user: User }) {
                                                 ? "free"
                                                 : "active",
                                         stripePriceId,
+                                        // Enterprise sin fecha = vitalicio
+                                        subscriptionEndDate:
+                                            value === "enterprise" ? "" : p.subscriptionEndDate,
                                     };
                                 });
                             }}
@@ -283,7 +291,14 @@ export default function UserActions({ user }: { user: User }) {
                             <option value="premium">Premium</option>
                             <option value="plus">Plus</option>
                             <option value="unlimited">Unlimited</option>
+                            <option value="enterprise">⭐ Enterprise</option>
                         </select>
+                        {currentPlan === "enterprise" && (
+                            <p className="text-[10px] text-amber-400/70 mt-1 flex items-center gap-1">
+                                <span>★</span>
+                                Plan asignado manualmente. Sin fecha = vitalicio. Con fecha = expira en esa fecha.
+                            </p>
+                        )}
                     </div>
 
                     <div>

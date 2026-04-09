@@ -123,16 +123,18 @@ export default async function EventDashboardPage({ params }: Props) {
                         <span
                             className={clsx(
                                 "ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-                                plan.name.toUpperCase() === "PREMIUM"
-                                    ? "bg-indigo-500/10 text-indigo-400"
-                                    : plan.name.toUpperCase() === "UNLIMITED"
+                                plan.slug === "enterprise"
+                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    : plan.slug === "unlimited"
                                         ? "bg-purple-500/10 text-purple-400"
-                                        : plan.name.toUpperCase() === "PLUS"
+                                        : plan.slug === "plus"
                                             ? "bg-blue-500/10 text-blue-400"
-                                            : "bg-white/10 text-gray-400"
+                                            : plan.slug === "premium"
+                                                ? "bg-indigo-500/10 text-indigo-400"
+                                                : "bg-white/10 text-gray-400"
                             )}
                         >
-                            Plan {plan.name}
+                            {plan.slug === "enterprise" ? "⭐ " : ""}Plan {plan.name}
                         </span>
                         {/* Badge colaborador */}
                         {!isOwner && collaborator && (

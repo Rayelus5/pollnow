@@ -52,13 +52,12 @@ export async function POST(req: Request) {
         }
 
         if (action === "setPlan") {
-            // plan puede ser "free" | "premium" | "plus" | "unlimited"
-            // Ajusta price IDs a tus constantes PLANS
             const PRICE_MAP: Record<string, string | null> = {
                 free: null,
                 premium: process.env.PRICE_PREMIUM_ID ?? null,
                 plus: process.env.PRICE_PLUS_ID ?? null,
                 unlimited: process.env.PRICE_UNLIMITED_ID ?? null,
+                enterprise: "enterprise",
             };
 
             if (!plan || !(plan in PRICE_MAP)) {

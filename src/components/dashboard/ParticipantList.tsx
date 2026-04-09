@@ -2,13 +2,16 @@
 
 import { useState, useRef } from "react";
 import { updateEventParticipant, deleteEventParticipant, createEventParticipant } from "@/app/lib/event-actions";
+import { bulkCreateParticipants, type BulkImportResult } from "@/app/lib/csv-actions";
 import {
     Pencil, Trash2, Save, X, Plus, Search, Upload, Wand2,
     Lock, Star, Crown, ChevronLeft, ChevronRight, Sparkles,
-    RefreshCw, User, Link2, AlertCircle
+    RefreshCw, User, Link2, AlertCircle, FileSpreadsheet,
+    Download, CheckCircle2, XCircle
 } from "lucide-react";
 import { useFormStatus } from 'react-dom';
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PLANS } from "@/lib/plans";
 import { Quantum } from 'ldrs/react';
 import { Bouncy } from 'ldrs/react';
@@ -601,15 +604,18 @@ export default function ParticipantList({
     planSlug: string;
     canManageNominees?: boolean;
 }) {
+    const router = useRouter();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [showCsvModal, setShowCsvModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6; // nominados por página
 
     const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
     const currentLimit = PLANS[planKey]?.limits?.participantsPerEvent || 12;
+    const canImportCsv = planSlug === "enterprise" || planSlug === "unlimited";
     const currentCount = initialData.length;
     const isAtLimit = currentCount >= currentLimit;
 
@@ -661,6 +667,14 @@ export default function ParticipantList({
                             className="w-full bg-neutral-900 border-2 border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
                         />
                     </div>
+                    {canManageNominees && canImportCsv && (
+                        <button
+                            onClick={() => setShowCsvModal(true)}
+                            className="bg-amber-500/10 text-amber-400 border-2 border-amber-500/20 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-amber-500/20 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                            <FileSpreadsheet size={14} /> CSV
+                        </button>
+                    )}
                     {canManageNominees && (
                         <button
                             onClick={handleCreateClick}
@@ -858,6 +872,281 @@ export default function ParticipantList({
                     </button>
                 </div>
             )}
+
+            {/* ── CSV Import Modal ── */}
+            {showCsvModal && canManageNominees && (
+                <CsvImportParticipantsModal
+                    eventId={eventId}
+                    onClose={(didCreate) => {
+                        setShowCsvModal(false);
+                        if (didCreate) router.refresh();
+                    }}
+                />
+            )}
         </div>
+    );
+}
+
+// ─── CSV Import Modal ─────────────────────────────────────────────────────────
+
+type ParsedParticipantRow = {
+    rowIndex: number;
+    name: string;
+    imageUrl: string;
+    valid: boolean;
+    validationError?: string;
+};
+
+function parseCSVLine(line: string): string[] {
+    const fields: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"') {
+            if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+            else { inQuotes = !inQuotes; }
+        } else if (line[i] === "," && !inQuotes) {
+            fields.push(current.trim());
+            current = "";
+        } else {
+            current += line[i];
+        }
+    }
+    fields.push(current.trim());
+    return fields;
+}
+
+function CsvImportParticipantsModal({
+    eventId,
+    onClose,
+}: {
+    eventId: string;
+    onClose: (didCreate: boolean) => void;
+}) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [parsedRows, setParsedRows] = useState<ParsedParticipantRow[]>([]);
+    const [parseError, setParseError] = useState<string | null>(null);
+    const [hasFile, setHasFile] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [result, setResult] = useState<BulkImportResult | null>(null);
+
+    const validRows = parsedRows.filter(r => r.valid);
+    const invalidRows = parsedRows.filter(r => !r.valid);
+
+    async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setParseError(null);
+        setResult(null);
+        setParsedRows([]);
+
+        if (!file.name.endsWith(".csv")) {
+            setParseError("El archivo debe tener extensión .csv");
+            return;
+        }
+
+        const text = await file.text();
+        const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+
+        if (lines.length < 2) {
+            setParseError("El archivo está vacío o solo contiene la cabecera.");
+            return;
+        }
+
+        const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/\s/g, "_"));
+        const nameIdx = headers.indexOf("nombre");
+        const imageIdx = headers.indexOf("imagen_url");
+
+        if (nameIdx === -1) {
+            setParseError('No se encontró la columna "nombre". Asegúrate de que la primera fila es: nombre,imagen_url');
+            return;
+        }
+
+        const parsed: ParsedParticipantRow[] = lines.slice(1).map((line, i) => {
+            const cols = parseCSVLine(line);
+            const name = cols[nameIdx] ?? "";
+            const imageUrl = imageIdx !== -1 ? (cols[imageIdx] ?? "") : "";
+            let valid = true;
+            let validationError: string | undefined;
+            if (!name.trim()) { valid = false; validationError = "El nombre es obligatorio"; }
+            else if (name.trim().length > 80) { valid = false; validationError = "Supera los 80 caracteres"; }
+            return { rowIndex: i + 2, name, imageUrl, valid, validationError };
+        });
+
+        setHasFile(true);
+        setParsedRows(parsed);
+    }
+
+    async function handleImport() {
+        if (!validRows.length || importing) return;
+        setImporting(true);
+        const res = await bulkCreateParticipants(eventId, validRows.map(r => ({ name: r.name, imageUrl: r.imageUrl || undefined })));
+        setResult(res);
+        setImporting(false);
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => !importing && onClose(!!result?.created)}
+        >
+            <motion.div
+                initial={{ scale: 0.97, opacity: 0, y: 8 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.97, opacity: 0, y: 8 }}
+                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                className="relative bg-zinc-950 border-2 border-white/10 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+                <div className="flex items-center justify-between px-6 py-4 border-b-2 border-white/8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center text-amber-400">
+                            <FileSpreadsheet size={15} />
+                        </div>
+                        <h2 className="text-base font-bold text-white">Importar Nominados (CSV)</h2>
+                    </div>
+                    <button onClick={() => !importing && onClose(!!result?.created)} className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer">
+                        <X size={16} />
+                    </button>
+                </div>
+
+                <div className="p-6 space-y-5">
+                    {result ? (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 p-4 bg-white/3 rounded-xl border-2 border-white/8">
+                                <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
+                                <div>
+                                    <p className="text-sm font-bold text-white">Importación completada</p>
+                                    <p className="text-xs text-emerald-400 mt-0.5">{result.created} nominado{result.created !== 1 ? "s" : ""} creado{result.created !== 1 ? "s" : ""} correctamente</p>
+                                </div>
+                            </div>
+                            {result.errors.length > 0 && (
+                                <div className="space-y-1.5">
+                                    <p className="text-xs font-semibold text-red-400 flex items-center gap-1.5">
+                                        <XCircle size={12} /> {result.errors.length} fila{result.errors.length !== 1 ? "s" : ""} no importada{result.errors.length !== 1 ? "s" : ""}:
+                                    </p>
+                                    <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                                        {result.errors.map((err, i) => (
+                                            <div key={i} className="flex items-start gap-2 px-3 py-2 bg-red-500/5 border border-red-500/15 rounded-lg text-xs">
+                                                <span className="font-mono text-gray-500 shrink-0">F{err.row}</span>
+                                                <span className="text-gray-300 truncate flex-1">{err.value || "—"}</span>
+                                                <span className="text-red-400 shrink-0 text-right ml-2">{err.reason}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <button onClick={() => onClose(!!result.created)} className="w-full py-2.5 bg-white/8 hover:bg-white/12 border-2 border-white/10 rounded-xl text-sm font-semibold text-white transition-colors cursor-pointer">
+                                Cerrar
+                            </button>
+                        </div>
+                    ) : !hasFile ? (
+                        <div className="space-y-5">
+                            <div className="p-4 bg-white/3 border-2 border-white/8 rounded-xl space-y-2">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Formato esperado</p>
+                                <pre className="text-xs text-amber-300/80 font-mono bg-black/40 rounded-lg px-3 py-2 overflow-x-auto">{`nombre,imagen_url\n"Rayelus",""\n"Chaotic Loom","https://..."`}</pre>
+                                <ul className="text-[11px] text-gray-500 space-y-1 mt-2">
+                                    <li>• <strong className="text-gray-400">nombre</strong>: obligatorio, máx. 80 caracteres</li>
+                                    <li>• <strong className="text-gray-400">imagen_url</strong>: opcional, URL de imagen</li>
+                                </ul>
+                            </div>
+                            <a href="/csv/ejemplo_nominados.csv" download className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border-2 border-white/10 rounded-xl text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white transition-colors w-fit cursor-pointer">
+                                <Download size={13} /> Descargar CSV de ejemplo
+                            </a>
+                            {parseError && (
+                                <div className="flex items-start gap-2 px-3 py-2.5 bg-red-500/8 border-2 border-red-500/20 rounded-xl text-xs text-red-400">
+                                    <AlertCircle size={13} className="shrink-0 mt-0.5" /><span>{parseError}</span>
+                                </div>
+                            )}
+                            <button onClick={() => fileInputRef.current?.click()} className="w-full py-10 border-2 border-dashed border-white/15 rounded-xl flex flex-col items-center gap-3 text-gray-500 hover:border-amber-500/30 hover:text-amber-400 transition-colors cursor-pointer group">
+                                <Upload size={24} className="group-hover:scale-110 transition-transform" />
+                                <span className="text-sm font-semibold">Seleccionar archivo .csv</span>
+                                <span className="text-xs">Haz clic o arrastra el archivo aquí</span>
+                            </button>
+                            <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
+                                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                                    <div>
+                                        <p className="text-xs font-bold text-emerald-400">{validRows.length} válidas</p>
+                                        <p className="text-[10px] text-gray-500">listas para importar</p>
+                                    </div>
+                                </div>
+                                <div className={`flex items-center gap-2 p-3 border rounded-xl ${invalidRows.length > 0 ? "bg-red-500/5 border-red-500/15" : "bg-white/3 border-white/8"}`}>
+                                    <XCircle size={16} className={invalidRows.length > 0 ? "text-red-400 shrink-0" : "text-gray-600 shrink-0"} />
+                                    <div>
+                                        <p className={`text-xs font-bold ${invalidRows.length > 0 ? "text-red-400" : "text-gray-500"}`}>{invalidRows.length} con errores</p>
+                                        <p className="text-[10px] text-gray-500">no se importarán</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {invalidRows.length > 0 && (
+                                <div className="space-y-1.5">
+                                    <p className="text-[11px] font-semibold text-red-400 uppercase tracking-wider">Errores de validación</p>
+                                    <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
+                                        {invalidRows.map((r, i) => (
+                                            <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-red-500/5 border border-red-500/10 rounded-lg text-xs">
+                                                <span className="font-mono text-gray-600 shrink-0">F{r.rowIndex}</span>
+                                                <span className="text-gray-400 truncate flex-1">{r.name || "—"}</span>
+                                                <span className="text-red-400 shrink-0">{r.validationError}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {validRows.length > 0 && (
+                                <div className="space-y-1.5">
+                                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                                        Previsualización {validRows.length > 5 ? "(primeras 5)" : ""}
+                                    </p>
+                                    <div className="border-2 border-white/8 rounded-xl overflow-hidden">
+                                        <table className="w-full text-xs">
+                                            <thead>
+                                                <tr className="bg-white/5 text-gray-500 uppercase text-[10px]">
+                                                    <th className="px-3 py-2 text-left font-semibold">Nombre</th>
+                                                    <th className="px-3 py-2 text-left font-semibold">Imagen URL</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5">
+                                                {validRows.slice(0, 5).map((r, i) => (
+                                                    <tr key={i} className="text-gray-300">
+                                                        <td className="px-3 py-2 font-medium truncate max-w-[160px]">{r.name}</td>
+                                                        <td className="px-3 py-2 text-gray-600 truncate max-w-[160px]">{r.imageUrl || "—"}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="flex gap-3 pt-1">
+                                <button
+                                    onClick={() => { setHasFile(false); setParsedRows([]); setParseError(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                                    disabled={importing}
+                                    className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border-2 border-white/10 rounded-xl text-sm font-semibold text-gray-300 transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                    Cambiar archivo
+                                </button>
+                                <button
+                                    onClick={handleImport}
+                                    disabled={!validRows.length || importing}
+                                    className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-900/30"
+                                >
+                                    {importing
+                                        ? <><RefreshCw size={14} className="animate-spin" /> Importando...</>
+                                        : <><FileSpreadsheet size={14} /> Importar {validRows.length} nominado{validRows.length !== 1 ? "s" : ""}</>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+        </motion.div>
     );
 }

@@ -35,7 +35,9 @@ const STEPS = [
 
 const FEATURES = [
     "Eventos ilimitados",
-    "Hasta 100 nominados por evento",
+    "Hasta 1000 nominados por evento",
+    "Hasta 50 categorías por evento",
+    "Hasta 30 colaboradores por evento",
     "Votación anónima opcional",
     "Resultados en tiempo real",
     "Enlace privado con clave de acceso",
@@ -45,7 +47,7 @@ const FEATURES = [
 ];
 
 const FAQ = [
-    { q: "¿Cuántos usuarios incluye la licencia?", a: "La licencia es para una cuenta Unlimited. Puedes invitar colaboradores a tus eventos (hasta 15 por evento) sin coste adicional. Los votantes no necesitan cuenta." },
+    { q: "¿Cuántos usuarios incluye la licencia?", a: "La licencia es para una cuenta Enterprise. Puedes invitar colaboradores a tus eventos para que te ayuden a crearlos (hasta 30 por evento) sin coste adicional. Los votantes no necesitan cuenta." },
     { q: "¿Pueden votar empleados sin cuenta en POLLNOW?", a: "Sí. Los votantes acceden al evento mediante un enlace (público o con clave privada) y votan sin necesidad de registrarse." },
     { q: "¿El pago es recurrente?", a: "No. La licencia corporativa es un pago único de 499 €. No hay cuotas mensuales ni anuales." },
     { q: "¿Qué incluye el soporte prioritario?", a: "Respuesta en menos de 24h por email, asistencia en la configuración inicial de tu primer evento y acceso a mejoras antes del lanzamiento público." },
@@ -194,7 +196,7 @@ function WhatsIncluded() {
         <section className="px-6 py-20 max-w-4xl mx-auto">
             <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <motion.div variants={fadeUp} className="text-center mb-12">
-                    <span className="text-xs font-bold uppercase tracking-widest text-orange-400">Plan Business Unlimited</span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-orange-400">Plan Business Enterprise</span>
                     <h2 className="text-3xl md:text-4xl font-black mt-3">Todo lo que incluye tu licencia</h2>
                 </motion.div>
 
@@ -231,7 +233,7 @@ function Pricing() {
                     <motion.div variants={fadeUp} className="text-center mb-10">
                         <span className="text-xs font-bold uppercase tracking-widest text-orange-400">Precios</span>
                         <h2 className="text-3xl md:text-4xl font-black mt-3">Sin sorpresas. Sin suscripciones.</h2>
-                        <p className="text-gray-500 mt-3">Un único pago. Acceso Unlimited de por vida.</p>
+                        <p className="text-gray-500 mt-3">Un único pago. Acceso de por vida.</p>
                     </motion.div>
 
                     <motion.div
@@ -247,7 +249,7 @@ function Pricing() {
                                     <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/15 border border-orange-500/30 rounded-full text-orange-300 text-xs font-bold mb-3">
                                         <Sparkles size={10} /> Licencia Corporativa
                                     </div>
-                                    <h3 className="text-2xl font-black text-white">Plan Business Unlimited</h3>
+                                    <h3 className="text-2xl font-black text-white">Plan Business Enterprise</h3>
                                     <p className="text-gray-500 text-sm mt-1">Para equipos que quieren lo mejor de lo mejor de forma permanente.</p>
                                 </div>
                                 <div className="text-right">
@@ -258,7 +260,7 @@ function Pricing() {
 
                             <div className="space-y-2 mb-8">
                                 {[
-                                    "Cuenta Unlimited para 1 usuario",
+                                    "Cuenta Enterprise para 1 usuario",
                                     "Eventos y categorías ilimitados",
                                     "Soporte prioritario incluido",
                                     "Ayuda en la creación de tus eventos",
