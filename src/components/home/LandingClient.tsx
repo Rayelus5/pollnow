@@ -419,7 +419,7 @@ function LogoGrid() {
         { name: "TCG Shop Finder", logo: "/logos/tcg-shop-finder_logo.webp" },
         { name: "Arandor", logo: "/logos/arandor_logo.webp" },
         { name: "Raimusic", logo: "/logos/raimusic_logo.webp" },
-        { name: "Empresa 6", logo: "https://placehold.co/800x200" },
+        { name: "Tu empresa", logo: "/logos/empresa_logo.webp" },
     ];
 
     return (
