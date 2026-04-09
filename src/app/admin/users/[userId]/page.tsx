@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 const PREMIUM_PRICE_ID = "price_1T1tQSAnnRNk3k0PKQVAbjnb";
 const PLUS_PRICE_ID = "price_1T1tRmAnnRNk3k0PLPBcN1Pk";
 const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
+const ENTERPRISE_PRICE_ID = "enterprise";
 
 export default async function AdminUserDetailPage({
     params,
@@ -31,15 +32,19 @@ export default async function AdminUserDetailPage({
 
     // --- Derivamos plan a partir de stripePriceId ---
     let planLabel = "Free";
-    if (user.stripePriceId === PREMIUM_PRICE_ID) planLabel = "Premium";
+    if (user.stripePriceId === ENTERPRISE_PRICE_ID) planLabel = "Enterprise";
+    else if (user.stripePriceId === PREMIUM_PRICE_ID) planLabel = "Premium";
     else if (user.stripePriceId === PLUS_PRICE_ID) planLabel = "Plus";
     else if (user.stripePriceId === UNLIMITED_PRICE_ID) planLabel = "Unlimited";
 
-    const isPaidPlan = planLabel === "Premium" || planLabel === "Plus" || planLabel === "Unlimited";
+    const isPaidPlan = planLabel !== "Free";
 
-    const planBadgeClasses = isPaidPlan
-        ? "bg-emerald-900/30 text-emerald-400 border-emerald-500/20"
-        : "bg-gray-800 text-gray-500 border-gray-700";
+    const planBadgeClasses =
+        planLabel === "Enterprise"
+            ? "bg-amber-900/20 text-amber-400 border-amber-500/30"
+            : isPaidPlan
+                ? "bg-emerald-900/30 text-emerald-400 border-emerald-500/20"
+                : "bg-gray-800 text-gray-500 border-gray-700";
 
     const roleBadgeClasses =
         user.role === "ADMIN"

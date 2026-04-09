@@ -101,6 +101,12 @@ export async function POST(req: Request) {
             }
 
             if (userToUpdate) {
+                // Proteger usuarios enterprise de ser sobreescritos por eventos de Stripe
+                if (userToUpdate.stripePriceId === "enterprise") {
+                    console.log(`⭐ SKIP: Usuario enterprise ${userToUpdate.email} ignorado en subscription.updated`);
+                    return new NextResponse("OK", { status: 200 });
+                }
+
                 // Lógica extra: Si el estado es 'canceled', forzamos cancelAtPeriodEnd a true (aunque ya sea tarde)
                 // para que la UI muestre "Finaliza" en lugar de "Renueva"
                 const isCanceling = freshSubscription.cancel_at_period_end || freshSubscription.status === 'canceled';
@@ -134,6 +140,12 @@ export async function POST(req: Request) {
             }
 
             if (userToUpdate) {
+                // Proteger usuarios enterprise de ser reseteados por eliminación de suscripción Stripe
+                if (userToUpdate.stripePriceId === "enterprise") {
+                    console.log(`⭐ SKIP: Usuario enterprise ${userToUpdate.email} ignorado en subscription.deleted`);
+                    return new NextResponse("OK", { status: 200 });
+                }
+
                 await prisma.user.update({
                     where: { id: userToUpdate.id },
                     data: {

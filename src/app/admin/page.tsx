@@ -130,8 +130,8 @@ export default async function AdminDashboardPage() {
                                     </div>
                                     <p className="text-xs text-gray-500">{u.email}</p>
                                 </div>
-                                <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${u.subscriptionStatus === 'active' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
-                                    {u.subscriptionStatus === 'active' ? 'PREMIUM' : 'FREE'}
+                                <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${u.stripePriceId === 'enterprise' ? 'bg-amber-900/20 text-amber-400' : u.subscriptionStatus === 'active' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                                    {u.stripePriceId === 'enterprise' ? '⭐ ENTERPRISE' : u.subscriptionStatus === 'active' ? 'PREMIUM' : 'FREE'}
                                 </span>
                                 <div className="p-2 bg-white/5 rounded-lg group-hover:bg-blue-600 transition-colors duration-400">
                                     <ArrowUpRight size={16} />
