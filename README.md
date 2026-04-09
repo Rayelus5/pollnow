@@ -1,4 +1,4 @@
-# Pollnow | v2.4
+# Pollnow | v2.5
 > https://www.pollnow.es/
 
 <!-- ![Next](https://img.shields.io/badge/-Next.js-20232a?logo=nextdotjs&logoColor=white) -->
@@ -194,7 +194,7 @@ The dashboard provides:
   * `EventTabs` wraps:
 
     * `EventSettings` — configuration, gala date, visibility, anonymous voting, and **editable tags** via `TagsInput`
-    * `ParticipantList` — add/edit/remove participants
+    * `ParticipantList` — add/edit/remove participants; **Enterprise/Unlimited** users can bulk-import via CSV
     * `PollList` — categories with:
       * Drag & drop reordering
       * Paginated participant selector (10 per page)
@@ -359,7 +359,9 @@ Supporting business logic:
 
 * `src/app/lib/admin-actions.ts` – Approvals, rejections, user updates, etc.
 * `src/app/api/admin/events/batch/route.ts` – Bulk event status updates / deletions (ADMIN + MODERATOR only, rate-limited).
-* `src/app/api/admin/users/batch/route.ts` – Bulk user role / ban / plan changes (ADMIN only, rate-limited).
+* `src/app/api/admin/users/batch/route.ts` – Bulk user role / ban / plan changes, including Enterprise assignment (ADMIN only, rate-limited).
+
+The user list table displays a **plan badge** (Free / Premium / Plus / Unlimited / Enterprise) derived from `stripePriceId`, replacing the generic `subscriptionStatus` text. The bulk-action toolbar includes an "⭐ Enterprise" button for batch-assigning the Enterprise plan.
 
 Admins have elevated visibility and control:
 
@@ -384,7 +386,7 @@ Key files:
 
 #### Collaboration model
 
-* Each event can have multiple `EventCollaborator` records (plan-limited: Premium=1, Plus=5, Unlimited=15).
+* Each event can have multiple `EventCollaborator` records (plan-limited: Premium=1, Plus=5, Unlimited=15, Enterprise=30).
 * Each collaborator entry holds **6 nullable boolean** permission fields:
   * `canEditSettings` — Edit event name, description, date, privacy
   * `canRegenerateKey` — Rotate the private access key
@@ -532,6 +534,23 @@ User subscription data is persisted in the `User` model:
 * `cancelAtPeriodEnd`
 
 The dashboard and event statistics use these fields to conditionally enable premium features.
+
+#### Plan tiers
+
+| Plan | Events | Categories/event | Nominees/event | Collaborators/event | Price | Assignment |
+|---|---|---|---|---|---|---|
+| Free | 1 | 5 | 12 | 0 | — | Default |
+| Premium | 5 | 10 | 30 | 1 | €2.99/mo | Stripe |
+| Plus | 10 | 15 | 50 | 5 | €8.99/mo | Stripe |
+| Unlimited | 20 | 30 | 100 | 15 | €12.99/mo | Stripe |
+| **Enterprise** | **150** | **50** | **1000** | **30** | Custom | **Manual (admin)** |
+
+The **Enterprise** plan (`priceId: "enterprise"`) is not linked to Stripe — it is assigned manually by an admin via `UserActions`. It supports two modes:
+
+* **Lifetime** — no `subscriptionEndDate` set; the cron job never touches it.
+* **Fixed term** — `subscriptionEndDate` is set; the cron expires it to Free automatically.
+
+`getPlanFromUser()` in `src/lib/plans.ts` correctly handles both cases in real time without a DB call.
 
 ---
 
@@ -700,7 +719,79 @@ This repository is intended as a **complete, production-style reference** for a 
 
 ---
 
-Last update: 8/4/2026 — v2.4 (admin promotions system, welcome bonus, subscription expiry cron, raffles, announcement bar, /empresas B2B page)
+Last update: 9/4/2026 — v2.5 (Enterprise plan, CSV bulk import, Landing B2B CTA, private event lobby fix)
+
+### v2.5 — 9/4/2026
+
+#### Enterprise plan
+
+A new top-tier plan (`slug: "enterprise"`, `priceId: "enterprise"`) has been added to `src/lib/plans.ts`. Unlike all other tiers it is **not Stripe-managed** — admins assign it manually.
+
+Limits: 150 events, 50 categories/event, 1 000 nominees/event, 30 collaborators/event, no ads.
+
+Two operating modes:
+
+* **Lifetime** — `subscriptionEndDate` left empty. The daily expiry cron never touches it (`subscriptionEndDate IS NULL` is excluded from the batch query).
+* **Fixed-term** — `subscriptionEndDate` set to a future date. When the date passes, the cron downgrades the user to Free automatically; `getPlanFromUser()` also enforces it in real time without waiting for the cron.
+
+**Admin panel changes:**
+
+* `UserActions` plan selector: new "⭐ Enterprise" option. Selecting it clears `subscriptionEndDate` (defaults to lifetime) and sets `subscriptionStatus: "active"`. A contextual hint explains the lifetime/expirable logic.
+* `AdminUsersTableClient` "Plan" column: replaced the raw `subscriptionStatus` text with styled plan badges — Enterprise (amber), Unlimited (indigo), Plus (blue), Premium (violet), Free (gray). A new "⭐ Enterprise" batch-action button is available in the toolbar.
+* `batch/route.ts`: `"enterprise"` added to the plan slug → price ID map.
+
+**Dashboard profile (`SubscriptionCard`):**
+
+* Enterprise users see a fully differentiated card: amber border + glow, gold gradient plan name, Crown badge labelled "Vitalicio" or "Activo", a 4-cell limits grid (events / categories / nominees / collaborators), and no Stripe upgrade or manage buttons.
+
+**Event dashboard header:**
+
+* The plan badge in the event breadcrumb uses `plan.slug` for comparisons (instead of `plan.name.toUpperCase()`) and adds "⭐ Plan Enterprise" with amber styling.
+
+---
+
+#### CSV bulk import (Enterprise & Unlimited)
+
+Enterprise and Unlimited users can import large batches of nominees and categories from CSV files directly in the event dashboard.
+
+**Server actions** (`src/app/lib/csv-actions.ts`):
+
+* `bulkCreateParticipants(eventId, rows[])` — validates each row (required name, max 80 chars), checks plan limits per row, creates records, calls `revalidatePath` and Pusher once at the end. Returns `{ created, errors[] }` with per-row reasons.
+* `bulkCreatePolls(eventId, rows[])` — same pattern for categories: validates title (required, max 100 chars), `votingType` (must be `SINGLE`, `MULTIPLE`, or `LIMITED_MULTIPLE`), `maxOptions` ≥ 2 for `LIMITED_MULTIPLE`. Assigns `order` sequentially from the current last poll.
+
+**UI** (both `ParticipantList` and `PollList`):
+
+* An amber "CSV" button appears in the header for Enterprise and Unlimited users only (next to the existing "Nuevo"/"Nueva" button).
+* Clicking it opens a 3-phase modal:
+  1. **File selection** — format documentation, downloadable example CSV, file picker (`.csv` only).
+  2. **Preview & validation** — summary of valid vs. invalid rows, validation-error list (with row number and reason), preview table of the first 5 valid rows, "Import N items" button (disabled if 0 valid rows).
+  3. **Result** — shows how many items were created and lists any rows that failed server-side (limit reached, DB error, etc.) with per-row reasons.
+* Backdrop click and the × button respect the importing state (disabled while a request is in flight).
+* On close after a successful import, `router.refresh()` is called to reload the server component data.
+
+**Example CSV files** (downloadable from the modal):
+
+* `public/csv/ejemplo_nominados.csv` — columns: `nombre`, `imagen_url`
+* `public/csv/ejemplo_categorias.csv` — columns: `titulo`, `descripcion`, `tipo_votacion`, `max_opciones`
+
+---
+
+#### Landing page — B2B collaboration CTA
+
+A new section has been added below the "Empresas que confían en nosotros" logo grid in `LandingClient.tsx`:
+
+* Heading: *"¿Te gustaría colaborar con nosotros?"* (same typographic scale as the final CTA section).
+* Button: **"Soluciones para Empresas"** with an orange → amber gradient (`from-orange-500 to-amber-500`), `shadow-orange-900/30` depth, and hover scale — links to `https://pollnow.es/empresas` (opens in a new tab).
+
+---
+
+#### Private event lobby fix (`e/[slug]/completed`)
+
+The **"Volver al Lobby del Evento"** button in `CompletedView` previously always linked to `/e/[slug]` without preserving the access key, causing private events to show an "Invalid Access Key" error.
+
+Fix: `completed/page.tsx` now reads `searchParams.key` and also queries `isPublic` + `accessKey` from the DB. If the event is private, the resolved key is passed down as the `accessKey` prop to `CompletedView`, which appends `?key={accessKey}` to the lobby link.
+
+---
 
 ### v2.3 — 8/4/2026
 

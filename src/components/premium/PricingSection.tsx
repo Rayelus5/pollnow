@@ -44,7 +44,7 @@ const PRICING_DATA = [
         price: "12.99€",
         period: "/mes",
         description: "Para organizadores de eventos serios. Aumenta tus límites al máximo nivel, incluyendo desactivación de voto anónimo.",
-        features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Sin publicidad", "Desactivación de voto anónimo"],
+        features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Creación de nominados con CSV", "Creación de categorías con CSV", "Sin publicidad", "Desactivación de voto anónimo"],
         priceId: PLANS.UNLIMITED.priceId,
         enterpriseLike: true
     },
@@ -347,13 +347,13 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
-                                    Eventos y categorías ilimitadas
+                                    Eventos ilimitadas*
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
-                                    Límites de Nominados a medida
+                                    Hasta 1000 nominados por evento
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
@@ -377,7 +377,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                     <div className="mt-0.5 p-1 rounded-full bg-indigo-600/20 text-indigo-400">
                                         <Check size={10} strokeWidth={3} />
                                     </div>
-                                    Adaptamos el servicio a tu presupuesto
+                                    Todo lo de UNLIMITED
                                 </li>
                             </ul>
                         </div>
@@ -438,11 +438,14 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                         </h4>
                         <ul className="space-y-3 text-xs text-justify text-zinc-500 leading-relaxed">
                             <li>
-                                <strong className="text-zinc-400">* Colaboración en tiempo real:</strong> La capacidad de invitación varía según el plan:
+                                <strong className="text-zinc-400">*Colaboración en tiempo real:</strong> La capacidad de invitación varía según el plan:
                                 <span className="text-zinc-300"> Premium</span> (1 invitado),
                                 <span className="text-zinc-300"> Plus</span> (hasta 5) y
                                 <span className="text-zinc-300"> Unlimited</span> (hasta 15).
                                 Los usuarios con cuenta <span className="text-zinc-300">Gratuita</span> pueden unirse como colaboradores a un máximo de 2 eventos.
+                            </li>
+                            <li>
+                                <strong className="text-zinc-400">*Eventos ilimitados:</strong> Los eventos ilimitados solo están disponibles para el plan <span className="text-zinc-300">Enterprise</span>. Y son un máximo exacto de 150 eventos activos.
                             </li>
                             <li>
                                 <strong>Límites de Eventos:</strong> Se consideran "Eventos Activos" aquellos que están publicados o no. Los eventos que se hayan eliminado no computan para el límite del plan.
@@ -471,6 +474,9 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                             </li>
                             <li>
                                 <strong>Generación por IA:</strong> El uso de herramientas de IA está sujeto a políticas de uso justo y disponibilidad del proveedor del modelo.
+                            </li>
+                            <li>
+                                <strong>Aceptación de los Términos:</strong> Al suscribirte a un plan Premium, aceptas los <a href="/legal/terms" className="text-indigo-500 hover:text-indigo-400">Términos de Servicio</a> y la <a href="/legal/privacy" className="text-indigo-500 hover:text-indigo-400">Política de Privacidad</a> de POLLNOW.
                             </li>
                         </ul>
                     </div>
