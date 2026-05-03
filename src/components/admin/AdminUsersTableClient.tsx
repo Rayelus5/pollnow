@@ -136,7 +136,7 @@ export default function AdminUsersTableClient({
                         disabled={!someSelected || loadingAction}
                         className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-purple-600/10 border-purple-600 text-purple-300")}
                     >
-                        Hacer Admin
+                        Admin
                     </button>
 
                     <button
@@ -144,7 +144,7 @@ export default function AdminUsersTableClient({
                         disabled={!someSelected || loadingAction}
                         className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-blue-600/10 border-blue-600 text-blue-300")}
                     >
-                        Hacer Moderador
+                        Moderador
                     </button>
 
                     <button
@@ -168,7 +168,7 @@ export default function AdminUsersTableClient({
                         disabled={!someSelected || loadingAction}
                         className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-white/5 border-white/20 text-gray-200")}
                     >
-                        Marcar Free
+                        Free
                     </button>
 
                     <button
@@ -176,7 +176,7 @@ export default function AdminUsersTableClient({
                         disabled={!someSelected || loadingAction}
                         className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-indigo-600/10 border-indigo-600 text-indigo-300")}
                     >
-                        Marcar Unlimited
+                        Unlimited
                     </button>
 
                     <button
@@ -184,7 +184,7 @@ export default function AdminUsersTableClient({
                         disabled={!someSelected || loadingAction}
                         className={clsx("px-3 py-1 text-sm rounded-md border-2", !someSelected ? "opacity-40 cursor-not-allowed" : "bg-amber-600/10 border-amber-600 text-amber-300")}
                     >
-                        ⭐ Enterprise
+                        Enterprise
                     </button>
 
                     <button
