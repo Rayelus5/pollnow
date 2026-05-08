@@ -889,6 +889,8 @@ New public marketing page targeting corporate clients:
 
 **New `NEXT_PUBLIC_DEMO_EVENT_URL` env var** points the demo CTA to a live event URL.
 
-> Made with ♥️ by Rayelus
-> <br>
-> <a href="https://pollnow.es">Pollnow</a> © 2026 by <a href="https://dev.rayelus.com">Raimundo Palma</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+> Made with ♥️ by Rayelus <br>
+> <a href="https://pollnow.es">Pollnow</a> © 2026 by <a href="https://dev.rayelus.com">Raimundo Palma Méndez</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
+<br><hr>
+> - Presentation: [POLLNOW - Presentación Proyecto Intermodular 2ºDAW (2025/2026)](https://docs.google.com/presentation/d/1OlF1R2meiaQoTlhb9ntCKZ3FpHWR3HviDFNW_Wtmzxs/edit?usp=sharing)
+> - Official Document: [POLLNOW - Proyecto Final 2ºDAW](https://docs.google.com/document/d/13D6PI8yCDM2vm7anoB7MSb0WIuAgu-bwTxlRh9vRC60/edit?usp=sharing)
