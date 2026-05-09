@@ -11,7 +11,7 @@ export async function markAllUserNotificationsRead() {
 
     await prisma.notification.updateMany({
         where: {
-            userId: session.user.id, // 👈 Notificaciones del usuario
+            userId: session.user.id, // Notificaciones del usuario
         },
         data: {
             isRead: true,

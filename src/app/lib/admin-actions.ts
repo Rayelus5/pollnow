@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import bcrypt from "bcryptjs"; // 👈 Añade esto si no estaba
+import bcrypt from "bcryptjs";
 import { sendSystemNotificationEmail } from "@/lib/mail";
 import { buildUnsubscribeUrl } from "@/lib/unsubscribe";
 

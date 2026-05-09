@@ -4,11 +4,6 @@ import { BroadcastTemplate, buildBroadcastEmailHtml } from './email-broadcast';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // --- CONFIGURACIÓN DEL REMITENTE ---
-// Opción A (Si ya verificaste tu dominio en Resend):
-// const EMAIL_FROM = 'Equipo POLLNOW <no-reply@pollnow.es>';
-
-// Opción B (Si aún estás en modo prueba con Resend):
-// Puedes cambiar el TEXTO, pero el correo debe ser onboarding@resend.dev
 const EMAIL_FROM = 'POLLNOW App <contacto@rayelus.com>';
 // ----------------------------------
 
