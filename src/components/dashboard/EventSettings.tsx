@@ -243,7 +243,7 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
                                 <input
                                     type="checkbox"
                                     name="isPublic"
-                                    disabled={!canEditVisibility} // 👈 AQUÍ SE BLOQUEA REALMENTE
+                                    disabled={!canEditVisibility} // AQUÍ SE BLOQUEA REALMENTE
                                     defaultChecked={currentEvent.isPublic}
                                     onChange={(e) => {
                                         if (!canEditVisibility) return; // doble seguridad
