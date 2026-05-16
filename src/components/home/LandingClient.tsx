@@ -28,27 +28,33 @@ const WORDS = [
         // Degradado de Texto
         gradient: "from-cyan-400 via-blue-500 to-indigo-600",
         // Degradado de la Sombra/Glow
-        shadow: "from-cyan-500/50 via-blue-500/50 to-indigo-500/50"
+        shadow: "from-cyan-500/50 via-blue-500/50 to-indigo-500/50",
+        // Colores de los blobs del fondo (blob1, blob2, blob3)
+        blobs: ["rgb(29 78 216)", "rgb(99 102 241)", "rgb(6 182 212)"]
     },
     {
         text: "Oscars.",
         gradient: "from-amber-200 via-yellow-400 to-orange-500",
-        shadow: "from-amber-300/50 via-yellow-500/50 to-orange-500/50"
+        shadow: "from-amber-300/50 via-yellow-500/50 to-orange-500/50",
+        blobs: ["rgb(217 119 6)", "rgb(249 115 22)", "rgb(251 191 36)"]
     },
     {
         text: "Grammys.",
         gradient: "from-pink-300 via-purple-500 to-indigo-500",
-        shadow: "from-pink-500/50 via-purple-500/50 to-indigo-500/50"
+        shadow: "from-pink-500/50 via-purple-500/50 to-indigo-500/50",
+        blobs: ["rgb(236 72 153)", "rgb(168 85 247)", "rgb(99 102 241)"]
     },
     {
         text: "ESLANDs.",
         gradient: "from-emerald-300 via-teal-500 to-cyan-600",
-        shadow: "from-emerald-500/50 via-teal-500/50 to-cyan-500/50"
+        shadow: "from-emerald-500/50 via-teal-500/50 to-cyan-500/50",
+        blobs: ["rgb(16 185 129)", "rgb(20 184 166)", "rgb(6 182 212)"]
     },
     {
         text: "Tierlists.",
         gradient: "from-teal-300 via-emerald-500 to-green-600",
-        shadow: "from-teal-500/50 via-emerald-500/50 to-green-500/50"
+        shadow: "from-teal-500/50 via-emerald-500/50 to-green-500/50",
+        blobs: ["rgb(20 184 166)", "rgb(16 185 129)", "rgb(34 197 94)"]
     }
 ];
 
@@ -146,42 +152,62 @@ export default function LandingClient({ session, showAds = true }: { session: an
 
                 {/* Fondo Ambiental Hero (Optimizado "Aurora Effect") */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                    {/* Blob 1: Azul Profundo (Base) */}
+                    {/* Blob 1 (Base) */}
                     <motion.div
                         animate={{
                             scale: [1, 1.2, 1],
-                            opacity: [0.3, 0.4, 0.3],
+                            opacity: [0.05, 0.2, 0.05],
                             x: [0, 50, 0],
-                            y: [0, 30, 0]
+                            y: [0, 30, 0],
+                            backgroundColor: currentWord.blobs[0]
                         }}
-                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-blue-700/20 rounded-full blur-[100px]"
-                        style={{ willChange: "transform, opacity" }}
+                        transition={{
+                            scale: { duration: 15, repeat: Infinity, ease: "easeInOut" },
+                            opacity: { duration: 15, repeat: Infinity, ease: "easeInOut" },
+                            x: { duration: 15, repeat: Infinity, ease: "easeInOut" },
+                            y: { duration: 15, repeat: Infinity, ease: "easeInOut" },
+                            backgroundColor: { duration: 1.2, ease: "easeInOut" }
+                        }}
+                        className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full blur-[100px]"
+                        style={{ willChange: "transform, opacity, background-color" }}
                     />
 
-                    {/* Blob 2: Violeta/Rosa (Acento) */}
+                    {/* Blob 2 (Acento) */}
                     <motion.div
                         animate={{
                             scale: [1, 1.1, 1],
-                            opacity: [0.2, 0.3, 0.2],
+                            opacity: [0.15, 0.05, 0.15],
                             x: [0, -30, 0],
-                            y: [0, 50, 0]
+                            y: [0, 50, 0],
+                            backgroundColor: currentWord.blobs[1]
                         }}
-                        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                        className="absolute top-[10%] right-[20%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]"
-                        style={{ willChange: "transform, opacity" }}
+                        transition={{
+                            scale: { duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 },
+                            opacity: { duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 },
+                            x: { duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 },
+                            y: { duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 },
+                            backgroundColor: { duration: 1.2, ease: "easeInOut" }
+                        }}
+                        className="absolute top-[10%] right-[20%] w-[500px] h-[500px] rounded-full blur-[100px]"
+                        style={{ willChange: "transform, opacity, background-color" }}
                     />
 
-                    {/* Blob 3: Cyan (Brillo sutil) */}
+                    {/* Blob 3 (Brillo sutil) */}
                     <motion.div
                         animate={{
                             scale: [1, 1.3, 1],
-                            opacity: [0.1, 0.2, 0.1],
-                            rotate: [0, 45, 0]
+                            opacity: [0.01, 0.1, 0.01],
+                            rotate: [0, 45, 0],
+                            backgroundColor: currentWord.blobs[2]
                         }}
-                        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                        className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px]"
-                        style={{ willChange: "transform, opacity" }}
+                        transition={{
+                            scale: { duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 },
+                            opacity: { duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 },
+                            rotate: { duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 },
+                            backgroundColor: { duration: 1.2, ease: "easeInOut" }
+                        }}
+                        className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[800px] h-[400px] rounded-full blur-[120px]"
+                        style={{ willChange: "transform, opacity, background-color" }}
                     />
                 </div>
 
@@ -387,7 +413,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
 
                 </motion.div>
 
-                <div className="absolute top-80 inset-0 bg-[radial-gradient(farthest-side,rgba(150,150,255,0.7),rgba(100,100,200,0.1))] blur-[100px] pointer-events-none" />
+                <div className="absolute top-80 inset-0 bg-[radial-gradient(farthest-side,rgba(1,145,255,0.15),rgba(37,37,193,0.05))] blur-[200px] pointer-events-none" />
             </section>
 
         </div>
