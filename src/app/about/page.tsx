@@ -48,10 +48,10 @@ export default function AboutPage() {
                     variants={staggerContainer}
                     className="relative z-10 max-w-4xl"
                 >
-                    <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border-2 border-white/10 mb-8 backdrop-blur-sm">
+                    {/* <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border-2 border-white/10 mb-8 backdrop-blur-sm">
                         <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
                         <span className="text-xs font-medium text-gray-300 tracking-widest uppercase">Nuestra Historia</span>
-                    </motion.div>
+                    </motion.div> */}
 
                     <motion.h1 variants={fadeInUp} className="text-5xl md:text-8xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40 mb-8">
                         Más que una app, <br /> una <span className="text-blue-500">tradición.</span>

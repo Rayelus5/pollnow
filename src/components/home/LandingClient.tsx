@@ -197,7 +197,7 @@ export default function LandingClient({ session, showAds = true }: { session: an
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
-                        <span className="text-xs font-medium text-gray-300 tracking-wide">Ahora disponible para todos</span>
+                        <span className="text-xs font-medium text-gray-300 tracking-wide">BETA ABIERTA</span>
                     </motion.div>
 
                     {/* Título con Animación Compleja */}

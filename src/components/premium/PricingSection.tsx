@@ -81,10 +81,10 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="mb-20"
             >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/20 border-2 border-indigo-600/40 mb-6 backdrop-blur-sm">
+                {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-900/20 border-2 border-indigo-600/40 mb-6 backdrop-blur-sm">
                     <Sparkles size={12} className="text-indigo-400" />
                     <span className="text-xs font-bold text-indigo-300 tracking-widest uppercase">Upgrade your party</span>
-                </div>
+                </div> */}
 
                 <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6">
                     Actualiza a <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-600">Premium</span>

@@ -92,7 +92,7 @@ function Hero({ demoUrl }: { demoUrl: string }) {
                     <Building2 size={12} /> POLLNOW para Empresas
                 </motion.div>
 
-                <motion.h1 variants={fadeUp} className="text-5xl md:text-6xl lg:text-8xl font-black tracking-tight mb-6">
+                <motion.h1 variants={fadeUp} className="text-5xl md:text-6xl lg:text-8xl font-black mb-6 leading-22 tracking-tighter">
                     Potencia el{" "}
                     <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
                         reconocimiento
