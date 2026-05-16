@@ -37,13 +37,13 @@ export default function NavbarClient({ user, showPremium = true }: NavbarProps) 
 
                 {/* --- MENÚ DESKTOP (Hidden on Mobile) --- */}
                 <div className="hidden lg:flex items-center gap-8">
-                    <NavLink href="/" active={pathname === "/"}>Home</NavLink>
-                    <NavLink href="/polls" active={pathname.startsWith("/polls")}>Events</NavLink>
-                    <NavLink href="/dashboard" active={pathname.startsWith("/dashboard")}>Dashboard</NavLink>
+                    <NavLink href="/" active={pathname === "/"}>Inicio</NavLink>
+                    <NavLink href="/polls" active={pathname.startsWith("/polls")}>Eventos</NavLink>
+                    <NavLink href="/dashboard" active={pathname.startsWith("/dashboard")}>Panel</NavLink>
                     <NavLink href="/premium" active={pathname.startsWith("/premium")}>
                         <span className={clsx("", showPremium ? "text-indigo-400 drop-shadow-[0_0_8px_rgba(150,100,200,0.8)]" : "text-gray-400")}>Premium</span>
                     </NavLink>
-                    <NavLink href="/about" active={pathname === "/about"}>About</NavLink>
+                    <NavLink href="/about" active={pathname === "/about"}>Info</NavLink>
                 </div>
 
                 {/* --- ZONA USUARIO DESKTOP --- */}
@@ -112,13 +112,13 @@ export default function NavbarClient({ user, showPremium = true }: NavbarProps) 
                     >
                         {/* Enlaces de Navegación */}
                         <div className="flex flex-col space-y-2">
-                            <MobileNavLink href="/" icon={<Home size={18} />} onClick={closeMenu}>Home</MobileNavLink>
-                            <MobileNavLink href="/polls" icon={<Vote size={18} />} onClick={closeMenu}>Events</MobileNavLink>
-                            <MobileNavLink href="/dashboard" icon={<LayoutDashboard size={18} />} onClick={closeMenu}>Dashboard</MobileNavLink>
+                            <MobileNavLink href="/" icon={<Home size={18} />} onClick={closeMenu}>Inicio</MobileNavLink>
+                            <MobileNavLink href="/polls" icon={<Vote size={18} />} onClick={closeMenu}>Eventos</MobileNavLink>
+                            <MobileNavLink href="/dashboard" icon={<LayoutDashboard size={18} />} onClick={closeMenu}>Panel</MobileNavLink>
                             <MobileNavLink href="/premium" icon={<Sparkles size={18} className="text-indigo-400" />} onClick={closeMenu}>
                                 <span className="text-indigo-400">Premium</span>
                             </MobileNavLink>
-                            <MobileNavLink href="/about" icon={<Info size={18} />} onClick={closeMenu}>About</MobileNavLink>
+                            <MobileNavLink href="/about" icon={<Info size={18} />} onClick={closeMenu}>Info</MobileNavLink>
                         </div>
 
                         <div className="h-px bg-white/10 my-2" />
