@@ -1,27 +1,32 @@
 "use client";
 
-import { Search, Flame, Clock, TrendingUp, TrendingDown, CalendarClock, Dice5, X } from "lucide-react";
+import { Search, Flame, Clock, TrendingUp, TrendingDown, CalendarClock, Hourglass, Flag, Dice5, X } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const SORT_OPTIONS = [
+// Ordenaciones simples (un solo estado). Las posiciones intermedias las ocupan
+// el toggle de valoración y el toggle de estado.
+const LEADING_SORTS = [
     { value: "recent", label: "Recientes", icon: Clock },
     { value: "popular", label: "Populares", icon: Flame },
-    { value: "top", label: "Mejor valorados", icon: TrendingUp },
-    { value: "worst", label: "Peor valorados", icon: TrendingDown },
+] as const;
+
+const TRAILING_SORTS = [
     { value: "oldest", label: "Más antiguos", icon: CalendarClock },
 ] as const;
 
-type SortValue = typeof SORT_OPTIONS[number]["value"];
+type SortValue = "recent" | "popular" | "top" | "worst" | "oldest";
 
 export default function SearchFilters({
     currentSort = "recent",
     currentTag = "",
+    currentStatus = "",
 }: {
     currentSort?: string;
     currentTag?: string;
+    currentStatus?: string;
 }) {
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -60,6 +65,33 @@ export default function SearchFilters({
 
     const activeSort = (currentSort || "recent") as SortValue;
 
+    // Toggle de valoración: alterna entre "Mejor valorados" y "Peor valorados".
+    const ratingActive = activeSort === "top" || activeSort === "worst";
+    const ratingIsWorst = activeSort === "worst";
+    const handleRatingClick = () => {
+        // Primer clic activa "Mejor valorados"; los siguientes alternan top ↔ worst.
+        if (!ratingActive) handleSort("top");
+        else handleSort(ratingIsWorst ? "top" : "worst");
+    };
+
+    // Toggle de estado: ciclo inactivo → "No finalizado" → "Finalizado" → inactivo.
+    const statusActive = currentStatus === "active" || currentStatus === "ended";
+    const statusIsEnded = currentStatus === "ended";
+    const handleStatusClick = () => {
+        if (currentStatus === "active") updateParam("status", "ended");
+        else if (currentStatus === "ended") updateParam("status", null);
+        else updateParam("status", "active");
+    };
+
+    const chipClass = (isActive: boolean) =>
+        `flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border-2 transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
+            ? "border-blue-500/60 bg-blue-500/15 text-blue-300"
+            : "border-white/10 bg-white/3 text-gray-500 hover:border-white/20 hover:text-gray-300"
+        }`;
+
+    const RatingIcon = ratingIsWorst ? TrendingDown : TrendingUp;
+    const StatusIcon = statusIsEnded ? Flag : Hourglass;
+
     return (
         <div className="w-full space-y-3">
             {/* Row 1: Search + Random */}
@@ -95,23 +127,49 @@ export default function SearchFilters({
 
             {/* Row 2: Sort chips */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none md:justify-center">
-                {SORT_OPTIONS.map(({ value, label, icon: Icon }) => {
-                    const isActive = activeSort === value;
-                    return (
-                        <motion.button
-                            key={value}
-                            onClick={() => handleSort(value)}
-                            whileTap={{ scale: 0.95 }}
-                            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border-2 transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
-                                ? "border-blue-500/60 bg-blue-500/15 text-blue-300"
-                                : "border-white/10 bg-white/3 text-gray-500 hover:border-white/20 hover:text-gray-300"
-                                }`}
-                        >
-                            <Icon size={12} />
-                            {label}
-                        </motion.button>
-                    );
-                })}
+                {LEADING_SORTS.map(({ value, label, icon: Icon }) => (
+                    <motion.button
+                        key={value}
+                        onClick={() => handleSort(value)}
+                        whileTap={{ scale: 0.95 }}
+                        className={chipClass(activeSort === value)}
+                    >
+                        <Icon size={12} />
+                        {label}
+                    </motion.button>
+                ))}
+
+                {/* Toggle valoración: Mejor valorados ↔ Peor valorados */}
+                <motion.button
+                    onClick={handleRatingClick}
+                    whileTap={{ scale: 0.95 }}
+                    className={chipClass(ratingActive)}
+                >
+                    <RatingIcon size={12} />
+                    {ratingIsWorst ? "Peor valorados" : "Mejor valorados"}
+                </motion.button>
+
+                {/* Toggle estado: No finalizado ↔ Finalizado */}
+                <motion.button
+                    onClick={handleStatusClick}
+                    whileTap={{ scale: 0.95 }}
+                    className={chipClass(statusActive)}
+                >
+                    <StatusIcon size={12} />
+                    {statusIsEnded ? "Finalizado" : "No finalizado"}
+                </motion.button>
+
+                {TRAILING_SORTS.map(({ value, label, icon: Icon }) => (
+                    <motion.button
+                        key={value}
+                        onClick={() => handleSort(value)}
+                        whileTap={{ scale: 0.95 }}
+                        className={chipClass(activeSort === value)}
+                    >
+                        <Icon size={12} />
+                        {label}
+                    </motion.button>
+                ))}
             </div>
 
             {/* Active tag filter chip */}

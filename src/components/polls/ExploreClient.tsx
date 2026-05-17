@@ -36,6 +36,7 @@ export default function ExploreClient({
     isLoggedIn,
     currentSort,
     currentTag,
+    currentStatus,
     currentPage,
     totalPages,
     totalEvents,
@@ -44,6 +45,7 @@ export default function ExploreClient({
     isLoggedIn: boolean;
     currentSort: string;
     currentTag: string;
+    currentStatus: string;
     currentPage: number;
     totalPages: number;
     totalEvents: number;
@@ -81,7 +83,7 @@ export default function ExploreClient({
                 </div>
 
                 <div className="w-full max-w-2xl">
-                    <SearchFilters currentSort={currentSort} currentTag={currentTag} />
+                    <SearchFilters currentSort={currentSort} currentTag={currentTag} currentStatus={currentStatus} />
                 </div>
             </motion.div>
 

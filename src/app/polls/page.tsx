@@ -9,6 +9,7 @@ type Props = {
         q?: string;
         sort?: string;
         tag?: string;
+        status?: string;
         page?: string;
     }>;
 };
@@ -20,6 +21,7 @@ export default async function ExplorePage({ searchParams }: Props) {
     const query = params?.q || "";
     const sort = params?.sort || "recent";
     const tag = params?.tag || "";
+    const status = params?.status || "";
     const page = Math.max(1, parseInt(params?.page || "1", 10));
 
     const session = await auth();
@@ -38,6 +40,13 @@ export default async function ExplorePage({ searchParams }: Props) {
 
     if (tag) {
         where.tags = { has: tag };
+    }
+
+    // Filtro por estado del periodo de votación según la fecha de la gala
+    if (status === "active") {
+        where.galaDate = { gte: new Date() };
+    } else if (status === "ended") {
+        where.galaDate = { lt: new Date() };
     }
 
     if (conditions.length > 0) {
@@ -124,6 +133,7 @@ export default async function ExplorePage({ searchParams }: Props) {
                 isLoggedIn={!!userId}
                 currentTag={tag}
                 currentSort={sort}
+                currentStatus={status}
                 currentPage={currentPage}
                 totalPages={totalPages}
                 totalEvents={totalEvents}
