@@ -17,6 +17,7 @@ export const PUSHER_EVENTS = {
     PERMISSIONS_UPDATED: "permissions-updated",
     INVITATION_SENT: "invitation-sent",
     DATA_CHANGED: "data-changed",
+    CHAT_NEW_MESSAGE: "new-message",
 } as const;
 
 // ── Canales privados ──────────────────────────────────────────────────────────
@@ -26,6 +27,10 @@ export function eventChannel(eventId: string) {
 
 export function userChannel(userId: string) {
     return `private-user-${userId}`;
+}
+
+export function chatChannel(chatId: string) {
+    return `private-chat-${chatId}`;
 }
 
 // ── Cliente (singleton, solo en browser) ─────────────────────────────────────

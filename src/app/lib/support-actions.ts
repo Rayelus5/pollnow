@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { pusherServer, chatChannel, PUSHER_EVENTS } from "@/lib/pusher";
 
 // Crear un nuevo chat de soporte (usuario)
 export async function createSupportChat() {
@@ -94,6 +95,14 @@ export async function sendSupportMessage(chatId: string, content: string) {
     await prisma.supportChat.update({
         where: { id: chatId },
         data: { lastMessageAt: new Date() },
+    });
+
+    await pusherServer.trigger(chatChannel(chatId), PUSHER_EVENTS.CHAT_NEW_MESSAGE, {
+        id: message.id,
+        content: message.content,
+        createdAt: message.createdAt.toISOString(),
+        senderId: message.senderId,
+        sender: message.sender,
     });
 
     // Notificación a admin cuando escribe el usuario

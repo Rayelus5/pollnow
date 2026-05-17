@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { sendSupportMessage } from "@/app/lib/support-actions";
+import { getPusherClient, PUSHER_EVENTS } from "@/lib/pusher";
 import { Zoomies } from 'ldrs/react'
 import 'ldrs/react/Zoomies.css'
 import { Bouncy } from "ldrs/react";
@@ -50,31 +51,17 @@ export default function ChatInterface({
     //     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     // }, [messages.length]);
 
-    // Función de sincronización reutilizable
     const fetchMessages = async () => {
         try {
             setSyncError(null);
             setIsSyncing(true);
-
-            const res = await fetch(`/api/support/messages/${chatId}`, {
-                cache: "no-store",
-            });
+            const res = await fetch(`/api/support/messages/${chatId}`, { cache: "no-store" });
             if (!res.ok) {
                 setSyncError("Error al sincronizar mensajes.");
                 return;
             }
-
             const data: ChatMessageType[] = await res.json();
-
-            setMessages((prev) => {
-                if (
-                    prev.length === data.length &&
-                    prev[prev.length - 1]?.id === data[data.length - 1]?.id
-                ) {
-                    return prev;
-                }
-                return data;
-            });
+            setMessages(data);
         } catch (err) {
             console.error("Error fetching chat messages", err);
             setSyncError("Error de conexión al actualizar el chat.");
@@ -83,61 +70,34 @@ export default function ChatInterface({
         }
     };
 
-    // Polling más inteligente:
-    // - Solo mientras el chat está abierto
-    // - Solo cuando la pestaña está visible
     useEffect(() => {
-        let isMounted = true;
-        let intervalId: number | undefined;
-
-        const startPolling = () => {
-            if (!isMounted) return;
-            if (typeof window === "undefined") return;
-
-            // Limpia cualquier intervalo previo
-            if (intervalId) window.clearInterval(intervalId);
-
-            // Si el chat está cerrado, no seguimos haciendo polling continuo
-            if (isClosed) return;
-
-            // Frecuencia: 4s mientras la pestaña está activa
-            intervalId = window.setInterval(() => {
-                if (document.hidden) return;
-                fetchMessages();
-            }, 4000);
-        };
-
-        // Primera carga siempre
         fetchMessages();
 
-        if (typeof document !== "undefined") {
-            const handleVisibility = () => {
-                if (document.hidden) {
-                    if (intervalId) window.clearInterval(intervalId);
-                } else {
-                    // Al volver, sincronizamos una vez y retomamos polling
-                    fetchMessages();
-                    startPolling();
-                }
-            };
+        const pusher = getPusherClient();
+        const channel = pusher.subscribe(`private-chat-${chatId}`);
 
-            document.addEventListener("visibilitychange", handleVisibility);
+        channel.bind(PUSHER_EVENTS.CHAT_NEW_MESSAGE, (newMsg: ChatMessageType) => {
+            setMessages(prev => {
+                // Sustituir mensaje optimista del mismo sender por el real, o añadir si es ajeno
+                const withoutOptimistic = prev.filter(
+                    m => !(m.id.startsWith("optimistic-") && m.senderId === newMsg.senderId)
+                );
+                if (withoutOptimistic.some(m => m.id === newMsg.id)) return withoutOptimistic;
+                return [...withoutOptimistic, newMsg];
+            });
+        });
 
-            // Arrancamos polling
-            startPolling();
-
-            return () => {
-                isMounted = false;
-                if (intervalId) window.clearInterval(intervalId);
-                document.removeEventListener("visibilitychange", handleVisibility);
-            };
-        }
+        const handleVisibility = () => {
+            if (!document.hidden) fetchMessages();
+        };
+        document.addEventListener("visibilitychange", handleVisibility);
 
         return () => {
-            isMounted = false;
-            if (intervalId) window.clearInterval(intervalId);
+            channel.unbind_all();
+            pusher.unsubscribe(`private-chat-${chatId}`);
+            document.removeEventListener("visibilitychange", handleVisibility);
         };
-    }, [chatId, isClosed]);
+    }, [chatId]);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -157,16 +117,14 @@ export default function ChatInterface({
 
         try {
             const res = await sendSupportMessage(chatId, optimistic.content);
-
             if (res?.error) {
-                console.error(res.error);
+                setMessages(prev => prev.filter(m => m.id !== optimistic.id));
                 setSyncError(res.error);
             }
-
-            // Forzamos una sincronización inmediata para sustituir el mensaje "optimista"
-            await fetchMessages();
+            // Pusher entrega el mensaje real y sustituye el optimista automáticamente
         } catch (err) {
             console.error(err);
+            setMessages(prev => prev.filter(m => m.id !== optimistic.id));
             setSyncError("Error de conexión al enviar el mensaje.");
         } finally {
             setIsSending(false);

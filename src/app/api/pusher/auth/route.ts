@@ -31,6 +31,26 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(authResponse);
     }
 
+    // Canal privado de chat de soporte: private-chat-{chatId}
+    if (channelName.startsWith("private-chat-")) {
+        const chatId = channelName.replace("private-chat-", "");
+        const chat = await prisma.supportChat.findUnique({
+            where: { id: chatId },
+            select: { userId: true },
+        });
+        const isOwner = chat?.userId === session.user.id;
+        const isAdminOrMod =
+            session.user.role === "ADMIN" || session.user.role === "MODERATOR";
+        if (!isOwner && !isAdminOrMod) {
+            return NextResponse.json({ error: "No autorizado para este canal" }, { status: 403 });
+        }
+        const authResponse = pusherServer.authorizeChannel(socketId, channelName, {
+            user_id: session.user.id,
+            user_info: { name: session.user.name },
+        });
+        return NextResponse.json(authResponse);
+    }
+
     // Canal privado de evento: private-event-{eventId}
     const eventId = channelName.replace("private-event-", "");
 

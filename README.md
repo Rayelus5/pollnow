@@ -447,7 +447,7 @@ All permission and membership changes broadcast over the private `private-event-
 * `src/app/lib/support-actions.ts`
 * `src/app/api/support/messages/[chatId]/route.ts`
 
-Users can open support chats; admins reply via the admin interface.
+Users can open support chats; admins reply via the admin interface. Messages are delivered in real time via Pusher (`private-chat-{chatId}` channel, event `new-message`): `sendSupportMessage` triggers the event server-side after saving to the DB, and `ChatInterface` subscribes on mount — replacing the previous polling approach. Optimistic messages are automatically swapped for the server-confirmed ones when the Pusher event arrives. A single re-sync fetch runs when the user returns to a previously hidden tab.
 
 **Notifications**:
 
@@ -567,7 +567,7 @@ Core stack:
 * **Auth:** NextAuth + @auth/prisma-adapter
 * **Payments:** Stripe
 * **Mail:** Resend (email verification, transactional emails, notification emails)
-* **Real-time:** Pusher (WebSocket channels for collaborative editing, permission sync)
+* **Real-time:** Pusher (WebSocket channels for collaborative editing, permission sync, and support chat)
 * **AI (Chat):** Google Gemini (`gemini-2.5-flash-lite`) via `@google/generative-ai`
 * **AI (Images):** Pollinations AI (parallel free models: klein · flux · zimage, fallback to p-image)
 * **Guided tours:** Shepherd.js (step-by-step interactive onboarding)
@@ -719,7 +719,23 @@ This repository is intended as a **complete, production-style reference** for a 
 
 ---
 
-Last update: 9/4/2026 — v2.5 (Enterprise plan, CSV bulk import, Landing B2B CTA, private event lobby fix)
+Last update: 17/5/2026 — v2.6 (Real-time support chat via Pusher, gala date timezone fix)
+
+### v2.6 — 17/5/2026
+
+#### Real-time support chat (Pusher)
+
+The support chat (`ChatInterface`) previously used a 4-second polling interval to fetch new messages. This has been replaced with a Pusher WebSocket subscription:
+
+* `sendSupportMessage` now triggers a `new-message` event on `private-chat-{chatId}` after saving to the DB, carrying the full message payload.
+* `ChatInterface` subscribes to the private channel on mount and unbinds on unmount; no `setInterval` is used.
+* The Pusher auth endpoint (`/api/pusher/auth`) now authorises `private-chat-*` channels for the chat owner and admin/mod roles.
+* Optimistic messages are replaced by the incoming Pusher event (matched by `senderId`), so no post-send re-fetch is needed.
+* A single re-sync fetch still runs when the user switches back to a hidden tab, as a safety net for any events missed during a connection drop.
+
+#### Gala date timezone fix
+
+`EventSettings` now converts the `datetime-local` input value to a UTC ISO string (`Date.toISOString()`) before passing it to `updateEvent`. Previously, the raw local-time string (e.g. `"2026-05-17T20:00"`) was sent to the server, which interpreted it as UTC — causing a 2-hour offset for users in Spain (UTC+2).
 
 ### v2.5 — 9/4/2026
 
