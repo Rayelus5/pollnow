@@ -12,6 +12,7 @@ type EventData = {
     title: string;
     description: string | null;
     createdAt: string;
+    galaDate: string;
     tags: string[];
     _count: { participants: number; polls: number };
     user: { name: string; username: string; image: string | null };

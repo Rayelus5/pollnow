@@ -83,6 +83,7 @@ export default async function ExplorePage({ searchParams }: Props) {
         description: e.description,
         tags: e.tags,
         createdAt: e.createdAt.toISOString(),
+        galaDate: e.galaDate.toISOString(),
         user: e.user,
         _count: { participants: e._count.participants, polls: e._count.polls },
         likeCount: e._count.likes,

@@ -18,6 +18,7 @@ type EventSummary = {
     title: string;
     description: string | null;
     createdAt: string;
+    galaDate: string;
     tags: string[];
     _count: { participants: number; polls: number };
     user: { name: string; username: string; image: string | null };
@@ -150,6 +151,9 @@ export default function PublicEventCard({
     };
 
     const scoreColor = voteScore > 0 ? "text-emerald-400" : voteScore < 0 ? "text-red-400" : "text-gray-500";
+
+    // El periodo de votación finaliza cuando la fecha de la gala ya ha pasado
+    const votingEnded = new Date(event.galaDate) < new Date();
 
     return (
         <motion.div
@@ -307,6 +311,13 @@ export default function PublicEventCard({
                                         <ThumbsDown size={11} className={userVote === -1 ? "fill-red-400" : ""} />
                                     </motion.button>
                                 </div>
+
+                                {/* Estado del periodo de votación */}
+                                {votingEnded && (
+                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                                        Finalizado
+                                    </span>
+                                )}
                             </div>
 
                             {/* Arrow */}
