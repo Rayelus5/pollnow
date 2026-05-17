@@ -122,6 +122,9 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
         formData.set('tags', tags.join(','));
 
         const galaDateString = formData.get('galaDate') as string | null;
+        if (galaDateString) {
+            formData.set('galaDate', new Date(galaDateString).toISOString());
+        }
         const galaDate = galaDateString ? new Date(galaDateString) : null;
         const newIsAnonymous = formData.get('isAnonymousVoting') === 'on';
         const newIsPublic = formData.get('isPublic') === 'on';
