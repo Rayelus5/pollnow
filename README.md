@@ -898,7 +898,7 @@ New public marketing page targeting corporate clients:
 * **UseCases** — 6 illustrated business scenarios (team awards, hackathons, employee recognition, etc.).
 * **HowItWorks** — 3-step visual guide.
 * **WhatsIncluded** — feature checklist with Lucide icons.
-* **Pricing** — single 499 € one-time corporate licence card with mailto CTA.
+* **Pricing** — single 399 € one-time corporate licence card with mailto CTA.
 * **PrivateNegotiation** — prompt for large orgs to reach out for custom pricing.
 * **FAQ** — animated accordion with common enterprise questions.
 * All CTAs use `mailto:contacto@pollnow.es` with pre-filled subject/body.

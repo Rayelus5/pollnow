@@ -4,7 +4,7 @@ import EmpresasPage from "@/components/empresas/EmpresasPage";
 export const metadata: Metadata = {
     title: "POLLNOW para Empresas — Reconocimiento de equipo",
     description:
-        "Herramienta de reconocimiento para equipos. Premios internos, votaciones de empleados, hackathons y más. Licencia corporativa desde 499 €.",
+        "Herramienta de reconocimiento para equipos. Premios internos, votaciones de empleados, hackathons y más. Licencia corporativa desde 399 €.",
     openGraph: {
         title: "POLLNOW para Empresas",
         description: "Potencia el reconocimiento en tu equipo con POLLNOW.",

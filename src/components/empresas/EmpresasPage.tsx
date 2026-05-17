@@ -49,7 +49,7 @@ const FEATURES = [
 const FAQ = [
     { q: "¿Cuántos usuarios incluye la licencia?", a: "La licencia es para una cuenta Enterprise. Puedes invitar colaboradores a tus eventos para que te ayuden a crearlos (hasta 30 por evento) sin coste adicional. Los votantes no necesitan cuenta." },
     { q: "¿Pueden votar empleados sin cuenta en POLLNOW?", a: "Sí. Los votantes acceden al evento mediante un enlace (público o con clave privada) y votan sin necesidad de registrarse." },
-    { q: "¿El pago es recurrente?", a: "No. La licencia corporativa es un pago único de 499 €. No hay cuotas mensuales ni anuales." },
+    { q: "¿El pago es recurrente?", a: "No. La licencia corporativa es un pago único de 399 €. No hay cuotas mensuales ni anuales." },
     { q: "¿Qué incluye el soporte prioritario?", a: "Respuesta en menos de 24h por email, asistencia en la configuración inicial de tu primer evento y acceso a mejoras antes del lanzamiento público." },
     { q: "¿Puedo probar la plataforma antes de comprar?", a: "Por supuesto. Puedes crear una cuenta gratuita y explorar la plataforma. El plan Free permite crear 1 evento completo para que veas todo el flujo." },
     { q: "¿Qué pasa si necesito funcionalidades que POLLNOW no ofrece?", a: "Tenemos una opción de negociación privada para empresas que requieran integraciones, diseño personalizado o funcionalidades a medida. Contáctanos y lo hablamos." },
@@ -171,12 +171,12 @@ function HowItWorks() {
 
                     <div className="grid md:grid-cols-3 gap-8">
                         {STEPS.map((s, i) => (
-                            <motion.div key={s.n} variants={fadeUp} className="text-center">
-                                <div className="text-5xl font-black text-white/10 mb-4">{s.n}</div>
+                            <motion.div key={s.n} variants={fadeUp} className="text-center relative">
+                                <div className="text-5xl font-black text-white/20 mb-4">{s.n}</div>
                                 <h3 className="font-bold text-white text-lg mb-2">{s.title}</h3>
                                 <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
                                 {i < STEPS.length - 1 && (
-                                    <div className="hidden md:block absolute mt-[-2rem] ml-[calc(100%-1rem)] text-white/20">
+                                    <div className="hidden md:block absolute top-6 -right-6 text-amber-600">
                                         <ArrowRight size={20} />
                                     </div>
                                 )}
@@ -253,7 +253,7 @@ function Pricing() {
                                     <p className="text-gray-500 text-sm mt-1">Para equipos que quieren lo mejor de lo mejor de forma permanente.</p>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-4xl font-black text-white">499 <span className="text-2xl">€</span></div>
+                                    <div className="text-4xl font-black text-white">399 <span className="text-2xl">€</span></div>
                                     <div className="text-xs text-gray-500 mt-1">pago único · sin IVA</div>
                                 </div>
                             </div>
@@ -422,7 +422,7 @@ function FinalCTA({ demoUrl }: { demoUrl: string }) {
                         href={"http://www.pollnow.es/about#contact"}
                         className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border-2 border-white/15 hover:border-orange-500/30 text-white font-bold text-base rounded-2xl transition-all"
                     >
-                        <Mail size={18} /> Solicitar licencia — 499 €
+                        <Mail size={18} /> Solicitar licencia
                     </a>
                 </div>
             </motion.div>
