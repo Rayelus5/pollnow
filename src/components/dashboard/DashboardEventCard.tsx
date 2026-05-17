@@ -89,10 +89,9 @@ export default function DashboardEventCard({ event, isShared = false, hasCollabo
                                 )}
                             </div>
                             <span className="text-gray-500 text-xs shrink-0">
-                                {formatDistanceToNow(event.createdAt, {
-                                    addSuffix: true,
-                                    locale: es,
-                                })}
+                                {formatDistanceToNow(new Date(event.createdAt), { addSuffix: true, locale: es })
+                                    .replace(/alrededor de /i, "")
+                                    .replace(/^./, (c) => c.toUpperCase())}
                             </span>
                         </div>
 
