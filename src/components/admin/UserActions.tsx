@@ -191,7 +191,7 @@ export default function UserActions({ user }: { user: User }) {
             {/* DATOS BÁSICOS + PLAN */}
             <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6 space-y-4">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <UserCog size={16} /> Datos de Usuario & Plan
+                    <UserCog size={16} /> Datos de Usuario y Suscripción
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -291,7 +291,7 @@ export default function UserActions({ user }: { user: User }) {
                             <option value="premium">Premium</option>
                             <option value="plus">Plus</option>
                             <option value="unlimited">Unlimited</option>
-                            <option value="enterprise">⭐ Enterprise</option>
+                            <option value="enterprise">Enterprise</option>
                         </select>
                         {currentPlan === "enterprise" && (
                             <p className="text-[10px] text-amber-400/70 mt-1 flex items-center gap-1">
@@ -381,8 +381,8 @@ export default function UserActions({ user }: { user: User }) {
                             onClick={() => handleRoleChange(r)}
                             disabled={loading || role === r}
                             className={`flex-1 py-2 rounded-lg text-xs font-bold border-2 transition-all ${role === r
-                                    ? "bg-blue-600 border-blue-500 text-white cursor-default"
-                                    : "bg-black border-white/10 text-gray-500 hover:text-white hover:border-white/30"
+                                ? "bg-blue-600 border-blue-500 text-white cursor-default"
+                                : "bg-black border-white/10 text-gray-500 hover:text-white hover:border-white/30"
                                 }`}
                         >
                             {r}
@@ -473,8 +473,8 @@ export default function UserActions({ user }: { user: User }) {
                         onClick={handleBanToggle}
                         disabled={loading}
                         className={`px-4 py-1.5 rounded text-xs font-bold transition-colors cursor-pointer ${user.ipBan
-                                ? "bg-green-600 text-white hover:bg-green-500"
-                                : "bg-red-600 text-white hover:bg-red-500"
+                            ? "bg-green-600 text-white hover:bg-green-500"
+                            : "bg-red-600 text-white hover:bg-red-500"
                             }`}
                     >
                         {user.ipBan ? "Desbloquear" : "Banear"}
