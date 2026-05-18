@@ -264,7 +264,7 @@ export default function TeamTab({ eventId, eventTitle, planSlug, collaboratorLim
                         Con el plan gratuito no puedes invitar colaboradores. Actualiza tu suscripción para desbloquear esta función.
                     </p>
                     <a
-                        href="/pricing"
+                        href="/premium"
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-opacity"
                     >
                         Ver planes
