@@ -117,7 +117,7 @@ export async function POST(req: Request) {
         });
     }
 
-    console.error("❌ Todos los modelos fallaron (incluido p-image).");
+    console.error("Todos los modelos fallaron (incluido p-image).");
     return NextResponse.json(
         { error: "La generación de imágenes no está disponible ahora mismo." },
         { status: 503 }

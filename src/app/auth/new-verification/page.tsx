@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, Suspense } from "react"; // <--- Importar Suspense
+import { useCallback, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { newVerification } from "@/app/lib/new-verification";
 import Link from "next/link";

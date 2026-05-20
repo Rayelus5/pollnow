@@ -63,7 +63,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     if (!user || !user.passwordHash) return null;
 
                     if (!user.emailVerified) {
-                        console.log("❌ Usuario correcto pero email no verificado.");
+                        console.log("Usuario correcto pero email no verificado.");
                         return null;
                     }
 
@@ -73,7 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     );
 
                     if (passwordsMatch) {
-                        // 🔹 Este `user` incluye `role` desde Prisma
+                        // Este `user` incluye `role` desde Prisma
                         return user;
                     }
                 } catch (e) {
@@ -104,8 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 if (u.role) {
                     role = u.role as "USER" | "ADMIN" | "MODERATOR";
                 } else if (u.email === "admin@admin.com") {
-                    // Parche por si algún provider no mete role pero este email
-                    // es de nuestro admin
+                    // Parche por si algún provider no mete role pero este es mi email de admin (por si acaso)
                     role = "ADMIN";
                 } else if (token.role) {
                     role = token.role as "USER" | "ADMIN" | "MODERATOR";
@@ -118,7 +117,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 delete (token as any).image;
             }
 
-            // 2) Cuando haces session.update() desde el cliente
+            // 2) Cuando hago session.update() desde el cliente
             if (trigger === "update" && session?.user) {
                 const sUser = session.user as any;
 

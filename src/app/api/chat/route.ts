@@ -175,7 +175,7 @@ Dashboard y secciones típicas:
         ? error.message
         : "Error desconocido al generar respuesta.";
 
-    console.error("❌ Error en /api/chat:", message);
+    console.error("Error en /api/chat:", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

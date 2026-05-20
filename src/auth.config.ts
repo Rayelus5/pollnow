@@ -86,7 +86,7 @@ export const authConfig = {
         return false; // Redirige a login si no está logueado
       }
 
-      // /admin lo controlas en el middleware (role + IP), así que aquí lo dejamos pasar
+      // /admin lo controlo en el middleware (role + IP), así que aquí lo dejamos pasar
       return true;
     },
   },

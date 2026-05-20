@@ -68,7 +68,7 @@ export async function GET(request: Request, { params }: Props) {
         return NextResponse.json(formattedPoll);
 
     } catch (error) {
-        console.error("❌ ERROR EN API:", error);
+        console.error("ERROR EN API:", error);
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }
