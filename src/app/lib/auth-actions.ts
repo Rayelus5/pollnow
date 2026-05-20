@@ -71,7 +71,7 @@ export async function registerUser(prevState: string | undefined, formData: Form
                 username,
                 passwordHash: hashedPassword,
                 subscriptionStatus: 'free',
-                image: `https://api.dicebear.com/7.x/glass/svg?seed=${username}`
+                image: `https://api.dicebear.com/9.x/glass/svg?seed=${username}`
             },
         });
 
