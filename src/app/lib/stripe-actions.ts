@@ -62,11 +62,12 @@ export async function createCheckoutSession(priceId: string) {
         // Esto cumple con el requisito de "Pasar por la pasarela" para confirmar cambios.
         if (user.stripeSubscriptionId && user.subscriptionStatus === 'active') {
 
-            // Creamos una sesión de portal que permite actualizar suscripciones
+            // creamos una sesión de portal que permite actualizar suscripciones
             const portalSession = await stripe.billingPortal.sessions.create({
                 customer: customerId,
                 return_url: `${BASE_URL}/dashboard/profile`,
-                // Opcional: Si Stripe lo tiene habilitado en tu cuenta, esto le lleva directo a "Update Plan"
+                // si Stripe lo tiene habilitado, esto le lleva directo a "Update Plan"
+
                 // flow_data: {
                 //   type: 'subscription_update',
                 //   subscription_update: { subscription: user.stripeSubscriptionId }

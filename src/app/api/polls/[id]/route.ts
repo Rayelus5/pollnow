@@ -55,7 +55,7 @@ export async function GET(request: Request, { params }: Props) {
         // 3. Formatear respuesta incluyendo 'hasVoted'
         const formattedPoll = {
             ...poll,
-            hasVoted, // <--- Nuevo campo
+            hasVoted,
             options: poll.options.map(opt => ({
                 id: opt.id,
                 name: opt.participant.name,

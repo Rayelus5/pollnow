@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             data: {
                 title,
                 description,
-                votingType: "SINGLE", // Simplificado para el MVP
+                votingType: "SINGLE",
                 startAt: new Date(),
                 endAt: new Date(endAt),
                 isPublished: true,

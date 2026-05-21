@@ -33,7 +33,7 @@ async function tryGenerate(
         });
 
         if (!response.ok) {
-            console.warn(`⚠️  Modelo ${model} falló con HTTP ${response.status}`);
+            console.warn(`Modelo ${model} falló con HTTP ${response.status}`);
             return { ok: false };
         }
 
@@ -41,7 +41,7 @@ async function tryGenerate(
         const contentType = response.headers.get("content-type") ?? "image/jpeg";
         return { ok: true, buffer, contentType, model };
     } catch {
-        console.warn(`⚠️  Modelo ${model} lanzó una excepción`);
+        console.warn(`Modelo ${model} lanzó una excepción`);
         return { ok: false };
     }
 }
@@ -104,13 +104,13 @@ export async function POST(req: Request) {
 
     // 2. Si todos los gratuitos fallan, intentar con el modelo de pago
     if (!result.ok) {
-        console.warn("⚠️  Todos los modelos gratuitos fallaron, intentando con p-image...");
+        console.warn("Todos los modelos gratuitos fallaron, intentando con p-image...");
         result = await tryGenerate(prompt, resolvedSeed, PAID_FALLBACK, process.env.POLLINATIONS_API_KEY);
     }
 
     if (result.ok) {
         const base64 = Buffer.from(result.buffer).toString("base64");
-        console.log(`✅ Imagen generada con modelo: ${result.model}`);
+        console.log(`Imagen generada con modelo: ${result.model}`);
         return NextResponse.json({
             imageUrl: `data:${result.contentType};base64,${base64}`,
             model: result.model,

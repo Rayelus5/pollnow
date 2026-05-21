@@ -75,7 +75,6 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
     const router = useRouter();
     const isUnlimited = planSlug === 'unlimited';
 
-    // 👇 NUEVO: lógica de estado de moderación
     const isApproved = currentEvent.status === "APPROVED";
     const isPending = currentEvent.status === "PENDING";
     const isDraft = currentEvent.status === "DRAFT";

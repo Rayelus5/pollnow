@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache"; // <--- IMPORTANTE
+import { revalidatePath } from "next/cache";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     typescript: true,

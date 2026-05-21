@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getEventStats(eventId: string) {
-    // 👇 Ya no usamos auth() ni filtramos por userId aquí.
+    // Ya no usamos auth() ni filtramos por userId aquí.
     // La autorización la controlas en la page (dashboard/event/[id]/page.tsx)
 
     const event = await prisma.event.findUnique({
