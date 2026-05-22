@@ -67,9 +67,37 @@ export default function RootLayout({
 }) {
   const showUI = !MAINTENANCE_MODE; // <-- si está en mantenimiento, ocultamos todo
 
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "POLLNOW",
+    url: "https://pollnow.es",
+    logo: "https://pollnow.es/logo.webp",
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "POLLNOW",
+    url: "https://pollnow.es",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://pollnow.es/polls?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="es" className="dark">
       <body className={`${inter.className} bg-black text-white antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
 
         {/* ANNOUNCEMENT BAR (solo si no está en mantenimiento) */}
         {showUI && <AnnouncementBarWrapper />}

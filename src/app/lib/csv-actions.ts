@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getPlanFromUser } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -88,13 +88,15 @@ export async function bulkCreateParticipants(
         return { created: 0, errors: [{ row: 0, value: "", reason: "Sin permisos para gestionar nominados" }] };
     }
 
-    const plan = getPlanFromUser(owner);
+    const plan = await getPlanFromUser(owner);
     const limit = plan.limits.participantsPerEvent;
 
     let currentCount = await prisma.participant.count({ where: { eventId } });
     const errors: BulkImportError[] = [];
     let created = 0;
 
+    // 1) Validar todas las filas y acumular las válidas (respetando el límite del plan)
+    const valid: { rowNum: number; value: string; data: { name: string; imageUrl: string | null; eventId: string } }[] = [];
     for (let i = 0; i < rows.length; i++) {
         const { name, imageUrl } = rows[i];
         const rowNum = i + 1;
@@ -111,15 +113,25 @@ export async function bulkCreateParticipants(
             errors.push({ row: rowNum, value: name, reason: `Límite de ${limit} nominados alcanzado` });
             continue;
         }
+        currentCount++;
+        valid.push({
+            rowNum,
+            value: name,
+            data: { name: name.trim(), imageUrl: imageUrl?.trim() || null, eventId },
+        });
+    }
 
+    // 2) Insertar en lotes con createMany (chunks de 50) en vez de N round-trips
+    const CHUNK = 50;
+    for (let i = 0; i < valid.length; i += CHUNK) {
+        const chunk = valid.slice(i, i + CHUNK);
         try {
-            await prisma.participant.create({
-                data: { name: name.trim(), imageUrl: imageUrl?.trim() || null, eventId },
-            });
-            currentCount++;
-            created++;
+            const res = await prisma.participant.createMany({ data: chunk.map((c) => c.data) });
+            created += res.count;
         } catch {
-            errors.push({ row: rowNum, value: name, reason: "Error al guardar en base de datos" });
+            for (const c of chunk) {
+                errors.push({ row: c.rowNum, value: c.value, reason: "Error al guardar en base de datos" });
+            }
         }
     }
 
@@ -151,7 +163,7 @@ export async function bulkCreatePolls(
         return { created: 0, errors: [{ row: 0, value: "", reason: "Sin permisos para gestionar categorías" }] };
     }
 
-    const plan = getPlanFromUser(owner);
+    const plan = await getPlanFromUser(owner);
     const limit = plan.limits.pollsPerEvent;
 
     let currentCount = await prisma.poll.count({ where: { eventId } });
@@ -166,6 +178,18 @@ export async function bulkCreatePolls(
     let created = 0;
     const validVotingTypes = ["SINGLE", "MULTIPLE", "LIMITED_MULTIPLE"];
 
+    type PollData = {
+        title: string;
+        description: string | null;
+        order: number;
+        isPublished: boolean;
+        votingType: "SINGLE" | "MULTIPLE" | "LIMITED_MULTIPLE";
+        maxOptions: number;
+        eventId: string;
+    };
+
+    // 1) Validar todas las filas y acumular las válidas (con su order secuencial)
+    const valid: { rowNum: number; value: string; data: PollData }[] = [];
     for (let i = 0; i < rows.length; i++) {
         const { title, description, votingType, maxOptions } = rows[i];
         const rowNum = i + 1;
@@ -194,23 +218,34 @@ export async function bulkCreatePolls(
                     ? 1
                     : 999;
 
+        valid.push({
+            rowNum,
+            value: title,
+            data: {
+                title: title.trim(),
+                description: description?.trim() || null,
+                order: nextOrder,
+                isPublished: true,
+                votingType,
+                maxOptions: computedMaxOptions,
+                eventId,
+            },
+        });
+        nextOrder++;
+        currentCount++;
+    }
+
+    // 2) Insertar en lotes con createMany (chunks de 50)
+    const CHUNK = 50;
+    for (let i = 0; i < valid.length; i += CHUNK) {
+        const chunk = valid.slice(i, i + CHUNK);
         try {
-            await prisma.poll.create({
-                data: {
-                    title: title.trim(),
-                    description: description?.trim() || null,
-                    order: nextOrder,
-                    isPublished: true,
-                    votingType,
-                    maxOptions: computedMaxOptions,
-                    event: { connect: { id: eventId } },
-                },
-            });
-            nextOrder++;
-            currentCount++;
-            created++;
+            const res = await prisma.poll.createMany({ data: chunk.map((c) => c.data) });
+            created += res.count;
         } catch {
-            errors.push({ row: rowNum, value: title, reason: "Error al guardar en base de datos" });
+            for (const c of chunk) {
+                errors.push({ row: c.rowNum, value: c.value, reason: "Error al guardar en base de datos" });
+            }
         }
     }
 

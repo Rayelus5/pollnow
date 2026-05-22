@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlanFromUser } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 
@@ -15,10 +15,8 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = getClientIp(req);
-    const rl = rateLimit(`${ip}:collab-respond`, 20);
-    if (!rl.allowed) {
-        return NextResponse.json({ error: "Demasiadas solicitudes. Espera un momento." }, { status: 429 });
-    }
+    const rl = await rateLimit(`${ip}:collab-respond`, 20);
+    if (!rl.allowed) return tooManyRequests(rl, "Demasiadas solicitudes. Espera un momento.");
 
     const { invitationId, action } = (await req.json()) as {
         invitationId?: string;
@@ -53,7 +51,7 @@ export async function POST(req: NextRequest) {
         const invitedUser = await prisma.user.findUnique({ where: { id: session.user.id } });
         if (!invitedUser) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
 
-        const plan = getPlanFromUser(invitedUser);
+        const plan = await getPlanFromUser(invitedUser);
         const maxSharedEvents = plan.limits.maxSharedEvents;
 
         if (maxSharedEvents !== Infinity) {

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit-redis";
+import { refreshEventScore } from "@/lib/event-counters";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -12,13 +13,8 @@ export async function POST(req: Request, { params }: Props) {
     }
 
     // Rate limit: 20 votes/min per user
-    const { allowed, retryAfter } = rateLimit(`vote:${session.user.id}`, 20);
-    if (!allowed) {
-        return NextResponse.json(
-            { error: "Demasiadas peticiones. Inténtalo en unos segundos." },
-            { status: 429, headers: { "Retry-After": String(retryAfter) } }
-        );
-    }
+    const rl = await rateLimit(`vote:${session.user.id}`, 20);
+    if (!rl.allowed) return tooManyRequests(rl);
 
     const { id: eventId } = await params;
     const body = await req.json().catch(() => null);
@@ -45,11 +41,8 @@ export async function POST(req: Request, { params }: Props) {
         });
     }
 
-    const votes = await prisma.eventVote.findMany({
-        where: { eventId },
-        select: { value: true },
-    });
-    const score = votes.reduce((acc, v) => acc + v.value, 0);
+    // Recalcula el score autoritativo desde BD y refresca el contador en Redis
+    const score = await refreshEventScore(eventId);
 
     return NextResponse.json({
         userVote: isToggleOff ? null : (value as 1 | -1),

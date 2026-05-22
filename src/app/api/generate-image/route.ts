@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
 
 // Modelos gratuitos que corren en paralelo; p-image es de pago y sólo se usa como último recurso
 const FREE_MODELS = ["klein", "flux", "zimage"] as const;
@@ -79,13 +79,8 @@ export async function POST(req: Request) {
         : `gen-image:ip:${getClientIp(req)}`;
     const limit = session?.user?.id ? 5 : 2;
 
-    const { allowed, retryAfter } = rateLimit(rateLimitKey, limit);
-    if (!allowed) {
-        return NextResponse.json(
-            { error: "Demasiadas peticiones. Inténtalo en unos segundos." },
-            { status: 429, headers: { "Retry-After": String(retryAfter) } }
-        );
-    }
+    const rl = await rateLimit(rateLimitKey, limit);
+    if (!rl.allowed) return tooManyRequests(rl);
 
     if (!process.env.POLLINATIONS_API_KEY) {
         return NextResponse.json({ error: "POLLINATIONS_API_KEY no configurada." }, { status: 500 });

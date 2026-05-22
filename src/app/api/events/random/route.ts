@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
 
 export async function GET(req: Request) {
     // Rate limit: 30 requests/min per IP
     const ip = getClientIp(req);
-    const { allowed, retryAfter } = rateLimit(`random:${ip}`, 30);
-    if (!allowed) {
-        return NextResponse.json(
-            { error: "Demasiadas peticiones." },
-            { status: 429, headers: { "Retry-After": String(retryAfter) } }
-        );
-    }
+    const rl = await rateLimit(`random:${ip}`, 30);
+    if (!rl.allowed) return tooManyRequests(rl, "Demasiadas peticiones.");
 
     const count = await prisma.event.count({
         where: { isPublic: true, status: "APPROVED" },

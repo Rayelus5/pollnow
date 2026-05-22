@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import HomeHero from "@/components/HomeHero";
 import { Lock } from "lucide-react";
 import { getCurrentUserPlan } from "@/lib/user-plan";
+import type { Metadata } from "next";
+
+const BASE = "https://pollnow.es";
 
 type Props = {
     params: Promise<{ slug: string }>;
@@ -10,6 +13,38 @@ type Props = {
 }
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug } = await params;
+    const event = await prisma.event.findUnique({
+        where: { slug },
+        select: {
+            title: true,
+            description: true,
+            isPublic: true,
+            status: true,
+            user: { select: { name: true } },
+        },
+    });
+
+    // Eventos privados o no aprobados → noindex
+    if (!event || !event.isPublic || event.status !== "APPROVED") {
+        return { robots: { index: false, follow: false } };
+    }
+
+    const description =
+        event.description?.slice(0, 155) ||
+        `Gala digital organizada por ${event.user.name} en Pollnow. Vota por tus favoritos.`;
+    const canonical = `${BASE}/e/${slug}`;
+
+    return {
+        title: event.title,
+        description,
+        alternates: { canonical },
+        openGraph: { type: "website", url: canonical, title: event.title, description },
+        twitter: { card: "summary_large_image", title: event.title, description },
+    };
+}
 
 export default async function EventLobbyPage({ params, searchParams }: Props) {
     const { slug } = await params;
@@ -59,16 +94,41 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
     const isGalaTime = now >= galaDate;
     const firstPollId = event.polls[0]?.id;
 
+    // JSON-LD del evento (solo públicos aprobados) para rich results
+    const eventJsonLd =
+        event.isPublic && event.status === "APPROVED"
+            ? {
+                  "@context": "https://schema.org",
+                  "@type": "Event",
+                  name: event.title,
+                  description: event.description || undefined,
+                  url: `${BASE}/e/${event.slug}`,
+                  startDate: galaDate.toISOString(),
+                  eventStatus: "https://schema.org/EventScheduled",
+                  eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+                  location: { "@type": "VirtualLocation", url: `${BASE}/e/${event.slug}` },
+                  organizer: { "@type": "Organization", name: "POLLNOW", url: BASE },
+              }
+            : null;
+
     return (
-        <HomeHero
-            firstPollId={firstPollId}
-            isGalaTime={isGalaTime}
-            galaDate={galaDate}
-            title={event.title}
-            description={event.description || ""}
-            eventId={event.id}
-            slug={event.slug}
-            showAds={showAds}
-        />
+        <>
+            {eventJsonLd && (
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
+                />
+            )}
+            <HomeHero
+                firstPollId={firstPollId}
+                isGalaTime={isGalaTime}
+                galaDate={galaDate}
+                title={event.title}
+                description={event.description || ""}
+                eventId={event.id}
+                slug={event.slug}
+                showAds={showAds}
+            />
+        </>
     );
 }

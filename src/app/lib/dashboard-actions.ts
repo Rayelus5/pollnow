@@ -2,10 +2,10 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlanFromUser } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 async function triggerDataChanged(eventId: string, triggeredBy: string, dataType: string) {
@@ -74,7 +74,7 @@ export async function createEvent(formData: FormData) {
 
   if (!user) return { error: "Usuario no encontrado" };
 
-  const plan = getPlanFromUser(user);
+  const plan = await getPlanFromUser(user);
   const currentEvents = user._count.events;
 
   if (currentEvents >= plan.quota) {
@@ -200,6 +200,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
   // 5) Revalidar rutas
   revalidatePath(`/dashboard/event/${eventId}`);
   if (newIsPublic) revalidatePath("/polls");
+  revalidateTag("events-public", {});
   if (isAdmin) {
     revalidatePath("/admin/events");
   }
@@ -226,6 +227,8 @@ export async function deleteEvent(eventId: string) {
     await tx.moderationLog.deleteMany({ where: { eventId } });
     await tx.event.delete({ where: { id: eventId } });
   });
+
+  revalidateTag("events-public", {});
 
   if (isAdmin) {
     revalidatePath("/admin/events");

@@ -1,9 +1,23 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { PLANS, getPlanFromUser } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import PricingSection from "@/components/premium/PricingSection"; // Importamos el nuevo componente
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+    title: "Premium — Planes y precios",
+    description:
+        "Mejora tu plan de Pollnow: más eventos, categorías, nominados y colaboradores. Planes Premium, Plus y Unlimited para llevar tus galas al siguiente nivel.",
+    alternates: { canonical: "https://pollnow.es/premium" },
+    openGraph: {
+        url: "https://pollnow.es/premium",
+        title: "Pollnow Premium — Planes y precios",
+        description: "Desbloquea más eventos, categorías y colaboradores con los planes de pago de Pollnow.",
+    },
+};
 
 export default async function PremiumPage() {
     const session = await auth();
@@ -14,7 +28,7 @@ export default async function PremiumPage() {
     if (session?.user?.id) {
         const user = await prisma.user.findUnique({ where: { id: session.user.id } });
         if (user) {
-            const plan = getPlanFromUser(user);
+            const plan = await getPlanFromUser(user);
             currentPlanSlug = plan.slug;
         }
     }

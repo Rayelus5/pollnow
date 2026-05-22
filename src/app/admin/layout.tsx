@@ -14,6 +14,7 @@ import {
     MessageCircleMore,
     Mail,
     Gift,
+    CreditCard,
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -62,6 +63,7 @@ export default async function AdminLayout({
                                 <NavLink href="/admin/emails" icon={<Mail size={18} />} label="Emails" adminOnly />
                                 <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-600 uppercase tracking-wider">Marketing</div>
                                 <NavLink href="/admin/promotions" icon={<Gift size={18} />} label="Promociones" adminOnly />
+                                <NavLink href="/admin/plans" icon={<CreditCard size={18} />} label="Planes" adminOnly />
                             </>
                         )}
 

@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { getPriceIdForSlug } from "@/lib/plans";
+import { getPriceIdForSlug } from "@/lib/user-plan";
 
 export async function applyWelcomeBonus(
     userId: string,
     planSlug: string,
     durationDays: number
 ): Promise<void> {
-    const priceId = getPriceIdForSlug(planSlug);
+    const priceId = await getPriceIdForSlug(planSlug);
     if (!priceId) return;
 
     const subscriptionEndDate = new Date();

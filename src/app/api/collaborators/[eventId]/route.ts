@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
 import { NextRequest, NextResponse } from "next/server";
 
 type Params = { params: Promise<{ eventId: string }> };
@@ -15,10 +15,8 @@ export async function GET(req: NextRequest, { params }: Params) {
     }
 
     const ip = getClientIp(req);
-    const rl = rateLimit(`${ip}:collab-get`, 60);
-    if (!rl.allowed) {
-        return NextResponse.json({ error: "Demasiadas solicitudes." }, { status: 429 });
-    }
+    const rl = await rateLimit(`${ip}:collab-get`, 60);
+    if (!rl.allowed) return tooManyRequests(rl, "Demasiadas solicitudes.");
 
     const { eventId } = await params;
 
@@ -87,10 +85,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const ip = getClientIp(req);
-    const rl = rateLimit(`${ip}:collab-patch`, 30);
-    if (!rl.allowed) {
-        return NextResponse.json({ error: "Demasiadas solicitudes." }, { status: 429 });
-    }
+    const rl = await rateLimit(`${ip}:collab-patch`, 30);
+    if (!rl.allowed) return tooManyRequests(rl, "Demasiadas solicitudes.");
 
     const { eventId } = await params;
 
@@ -158,10 +154,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     }
 
     const ip = getClientIp(req);
-    const rl = rateLimit(`${ip}:collab-delete`, 20);
-    if (!rl.allowed) {
-        return NextResponse.json({ error: "Demasiadas solicitudes." }, { status: 429 });
-    }
+    const rl = await rateLimit(`${ip}:collab-delete`, 20);
+    if (!rl.allowed) return tooManyRequests(rl, "Demasiadas solicitudes.");
 
     const { eventId } = await params;
 

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit-redis";
+import { refreshEventLikes } from "@/lib/event-counters";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -12,13 +13,8 @@ export async function POST(req: Request, { params }: Props) {
     }
 
     // Rate limit: 15 likes/min per user
-    const { allowed, retryAfter } = rateLimit(`like:${session.user.id}`, 15);
-    if (!allowed) {
-        return NextResponse.json(
-            { error: "Demasiadas peticiones. Inténtalo en unos segundos." },
-            { status: 429, headers: { "Retry-After": String(retryAfter) } }
-        );
-    }
+    const rl = await rateLimit(`like:${session.user.id}`, 15);
+    if (!rl.allowed) return tooManyRequests(rl);
 
     const { id: eventId } = await params;
     const userId = session.user.id;
@@ -33,6 +29,7 @@ export async function POST(req: Request, { params }: Props) {
         await prisma.eventLike.create({ data: { eventId, userId } });
     }
 
-    const count = await prisma.eventLike.count({ where: { eventId } });
+    // Recalcula los likes autoritativos desde BD y refresca el contador en Redis
+    const count = await refreshEventLikes(eventId);
     return NextResponse.json({ liked: !existing, count });
 }

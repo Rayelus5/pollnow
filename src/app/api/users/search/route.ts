@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/users/search?q=<query>&eventId=<eventId>
@@ -13,10 +13,8 @@ export async function GET(req: NextRequest) {
     }
 
     const ip = getClientIp(req);
-    const rl = rateLimit(`${ip}:users-search`, 30);
-    if (!rl.allowed) {
-        return NextResponse.json({ error: "Demasiadas solicitudes. Espera un momento." }, { status: 429 });
-    }
+    const rl = await rateLimit(`${ip}:users-search`, 30);
+    if (!rl.allowed) return tooManyRequests(rl, "Demasiadas solicitudes. Espera un momento.");
 
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.trim() ?? "";

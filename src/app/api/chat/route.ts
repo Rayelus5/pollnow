@@ -1,7 +1,7 @@
 // app/api/chat/route.ts
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
 
 // Definimos un tipo para los mensajes del chat
 interface ChatMessage {
@@ -12,13 +12,8 @@ interface ChatMessage {
 export async function POST(req: Request) {
   // Rate limit: 15 mensajes/min por IP
   const ip = getClientIp(req);
-  const { allowed, retryAfter } = rateLimit(`chat:${ip}`, 15);
-  if (!allowed) {
-    return NextResponse.json(
-      { error: "Demasiadas peticiones. Inténtalo en unos segundos." },
-      { status: 429, headers: { "Retry-After": String(retryAfter) } }
-    );
-  }
+  const rl = await rateLimit(`chat:${ip}`, 15);
+  if (!rl.allowed) return tooManyRequests(rl);
 
   try {
     if (!process.env.GEMINI_API_KEY) {

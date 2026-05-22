@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { getPlanFromUser } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
 
 export default async function DashboardPage() {
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
     if (!user) redirect("/login");
 
-    const plan = getPlanFromUser(user);
+    const plan = await getPlanFromUser(user);
 
     const [events, notifications, supportChats, collaborations, pendingInvites] = await Promise.all([
         // Eventos propios
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
             where: { userId: session.user.id },
             orderBy: { createdAt: "desc" },
             include: {
-                _count: { select: { polls: true, participants: true } },
+                _count: { select: { polls: true, participants: true, collaborators: true } },
             },
         }),
         // Notificaciones (sistema + colaboración)
@@ -87,15 +87,10 @@ export default async function DashboardPage() {
     }));
 
     // IDs de eventos propios que tienen al menos 1 colaborador
-    const ownEventIds = events.map((e) => e.id);
-    const eventsWithCollaboratorsRecords = ownEventIds.length
-        ? await prisma.eventCollaborator.findMany({
-              where: { eventId: { in: ownEventIds } },
-              select: { eventId: true },
-              distinct: ["eventId"],
-          })
-        : [];
-    const eventsWithCollaborators = eventsWithCollaboratorsRecords.map((r) => r.eventId);
+    // (derivado del _count ya traído, sin query extra)
+    const eventsWithCollaborators = events
+        .filter((e) => e._count.collaborators > 0)
+        .map((e) => e.id);
 
     const dashboardUser = {
         id: user.id,

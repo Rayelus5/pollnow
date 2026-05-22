@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit-redis";
 import { sendAdminBroadcastBatch } from "@/lib/mail";
 import { BROADCAST_TEMPLATES, TemplateId } from "@/lib/email-broadcast";
 
@@ -12,13 +12,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Acceso restringido a administradores." }, { status: 403 });
     }
 
-    const { allowed, retryAfter } = rateLimit(`admin:send-email:${session.user.id}`, 5);
-    if (!allowed) {
-        return NextResponse.json(
-            { error: "Demasiados envíos. Espera unos minutos." },
-            { status: 429, headers: { "Retry-After": String(retryAfter) } }
-        );
-    }
+    const rl = await rateLimit(`admin:send-email:${session.user.id}`, 5);
+    if (!rl.allowed) return tooManyRequests(rl, "Demasiados envíos. Espera unos minutos.");
 
     const body = await req.json();
     const { recipients, customEmails, subject, messageBody, templateId, ctaLabel, ctaUrl } = body as {

@@ -1,3 +1,36 @@
+// src/lib/plans.ts
+//
+// Módulo CLIENT-SAFE de planes. NO importa prisma ni next/cache, por lo que se
+// puede usar tanto en componentes cliente (display de tiers) como de servidor.
+//
+// Fuente de verdad para ENFORCEMENT en servidor: la tabla `SubscriptionPlan`
+// (ver `getPlanFromUser` async en `@/lib/user-plan`). Las constantes `PLANS` de
+// aquí se conservan como:
+//   1) Datos de display en componentes cliente (tarjetas de precios, upsells).
+//   2) Fallback fail-open si la BD no responde.
+
+export type PlanLimits = {
+    pollsPerEvent: number;
+    participantsPerEvent: number;
+    collaboratorsPerEvent: number;
+    /** Infinity = ilimitado (en BD se almacena como null). */
+    maxSharedEvents: number;
+};
+
+export type ResolvedPlan = {
+    name: string;
+    slug: string;
+    quota: number;
+    limits: PlanLimits;
+    price: number;
+    priceId: string | null;
+    features: Record<string, unknown>;
+};
+
+/**
+ * @deprecated La fuente de verdad para los límites es la tabla `SubscriptionPlan`.
+ * Estas constantes se mantienen solo para display en cliente y como fallback.
+ */
 export const PLANS = {
     FREE: {
         name: "Free",
@@ -65,36 +98,64 @@ export const PLANS = {
     },
 };
 
-export function getPlanFromUser(user: {
+/** Lista de planes hardcodeados normalizada a `ResolvedPlan` (fallback fail-open). */
+export const FALLBACK_PLANS: ResolvedPlan[] = Object.values(PLANS).map((p) => ({
+    name: p.name,
+    slug: p.slug,
+    quota: p.quota,
+    limits: p.limits,
+    price: p.price,
+    priceId: "priceId" in p ? (p as { priceId: string }).priceId : null,
+    features: {},
+}));
+
+type PlanUserInput = {
     subscriptionStatus: string | null;
     stripePriceId: string | null;
     subscriptionEndDate?: Date | null;
     stripeSubscriptionId?: string | null;
-}) {
-    if (user.subscriptionStatus !== "active") return PLANS.FREE;
+};
 
-    // Si no hay Stripe real y la fecha de fin ha pasado, tratar como FREE
-    // (el cron expira en batch, pero esto evita que el usuario vea perks caducados)
+const FALLBACK_FREE = FALLBACK_PLANS.find((p) => p.slug === "free")!;
+
+/**
+ * Lógica PURA de resolución de plan a partir de una lista de planes ya cargada.
+ * No accede a BD: se usa tanto desde el resolver de servidor (con planes de BD)
+ * como desde el fallback hardcodeado.
+ */
+export function resolvePlanFromList(user: PlanUserInput, plans: ResolvedPlan[]): ResolvedPlan {
+    const free = plans.find((p) => p.slug === "free") ?? FALLBACK_FREE;
+
+    if (user.subscriptionStatus !== "active") return free;
+
+    // Suscripción de promoción sin Stripe ya caducada → tratar como Free
     if (
         !user.stripeSubscriptionId &&
         user.subscriptionEndDate &&
         user.subscriptionEndDate < new Date()
     ) {
-        return PLANS.FREE;
+        return free;
     }
 
-    if (user.stripePriceId === PLANS.ENTERPRISE.priceId) return PLANS.ENTERPRISE;
-    if (user.stripePriceId === PLANS.UNLIMITED.priceId) return PLANS.UNLIMITED;
-    if (user.stripePriceId === PLANS.PLUS.priceId) return PLANS.PLUS;
-    if (user.stripePriceId === PLANS.PREMIUM.priceId) return PLANS.PREMIUM;
+    if (user.stripePriceId) {
+        const match = plans.find((p) => p.priceId && p.priceId === user.stripePriceId);
+        if (match) return match;
+    }
 
-    return PLANS.FREE;
+    return free;
 }
 
-/** Devuelve el priceId de Stripe para un slug de plan dado. */
+/**
+ * @deprecated Versión SÍNCRONA basada en planes hardcodeados. En código de
+ * servidor usa la versión async de `@/lib/user-plan`, que lee de BD y refleja
+ * los cambios del admin. Se mantiene para componentes cliente y como fallback.
+ */
+export function getPlanFromUser(user: PlanUserInput): ResolvedPlan {
+    return resolvePlanFromList(user, FALLBACK_PLANS);
+}
+
+/** Devuelve el priceId de Stripe para un slug de plan dado (versión hardcodeada/fallback). */
 export function getPriceIdForSlug(slug: string): string | null {
-    for (const plan of Object.values(PLANS)) {
-        if (plan.slug === slug && "priceId" in plan) return plan.priceId;
-    }
-    return null;
+    const plan = FALLBACK_PLANS.find((p) => p.slug === slug);
+    return plan?.priceId ?? null;
 }

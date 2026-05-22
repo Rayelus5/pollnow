@@ -2,9 +2,9 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
-import { getPlanFromUser } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 
 // ─── Helper: verifica acceso colaborador con permiso específico ───────────────
@@ -90,6 +90,7 @@ export async function updateEvent(eventId: string, formData: FormData) {
 
     revalidatePath(`/dashboard/event/${eventId}`);
     if (isPublic) revalidatePath('/polls');
+    revalidateTag("events-public", {});
 }
 
 export async function deleteEvent(eventId: string, isAdmin: boolean = false) {
@@ -112,6 +113,8 @@ export async function deleteEvent(eventId: string, isAdmin: boolean = false) {
             await tx.event.delete({ where: { id: eventId, userId: session.user.id } });
         }
     });
+
+    revalidateTag("events-public", {});
 
     if (isAdmin) {
         revalidatePath("/admin/events");
@@ -145,19 +148,20 @@ export async function createEventParticipant(eventId: string, formData: FormData
     const imageUrl = formData.get('imageUrl') as string;
     if (!name) return;
 
-    // Obtener el plan del dueño del evento (no del colaborador)
+    // Obtener el plan del dueño del evento (no del colaborador) y el conteo
+    // de participantes en una sola query con _count.
     const event = await prisma.event.findUnique({
         where: { id: eventId },
-        select: { userId: true },
+        select: {
+            user: true,
+            _count: { select: { participants: true } },
+        },
     });
     if (!event) return;
 
-    const owner = await prisma.user.findUnique({ where: { id: event.userId } });
-    if (!owner) return;
-    const plan = getPlanFromUser(owner);
+    const plan = await getPlanFromUser(event.user);
 
-    const currentParticipantsCount = await prisma.participant.count({ where: { eventId } });
-    if (currentParticipantsCount >= plan.limits.participantsPerEvent) {
+    if (event._count.participants >= plan.limits.participantsPerEvent) {
         console.error("Límite de participantes alcanzado");
         return;
     }
@@ -225,7 +229,7 @@ export async function createEventPoll(eventId: string, formData: FormData) {
 
     const owner = await prisma.user.findUnique({ where: { id: event.userId } });
     if (!owner) return;
-    const plan = getPlanFromUser(owner);
+    const plan = await getPlanFromUser(owner);
 
     const currentPollsCount = await prisma.poll.count({ where: { eventId } });
     if (currentPollsCount >= plan.limits.pollsPerEvent) {
@@ -302,18 +306,21 @@ export async function updateEventPoll(pollId: string, eventId: string, formData:
         },
     });
 
-    const toDelete = currentOptions.filter(
-        (o) => !participantIds.includes(o.participantId)
-    );
-    for (const opt of toDelete) {
-        await prisma.option.delete({ where: { id: opt.id } });
-    }
+    const toDeleteIds = currentOptions
+        .filter((o) => !participantIds.includes(o.participantId))
+        .map((o) => o.id);
 
     const currentIds = currentOptions.map((o) => o.participantId);
     const toCreate = participantIds.filter((pId) => !currentIds.includes(pId));
-    for (const pId of toCreate) {
-        await prisma.option.create({ data: { pollId, participantId: pId } });
-    }
+
+    // Una sola transacción en lugar de N queries (delete/create por opción)
+    await prisma.$transaction([
+        prisma.option.deleteMany({ where: { id: { in: toDeleteIds } } }),
+        prisma.option.createMany({
+            data: toCreate.map((pId) => ({ pollId, participantId: pId })),
+            skipDuplicates: true,
+        }),
+    ]);
 
     revalidatePath(`/dashboard/event/${eventId}`);
     await triggerDataChanged(eventId, session.user.id, "polls");

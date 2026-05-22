@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlanFromUser, PLANS } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import { getEventStats } from "@/app/lib/stats-actions";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -80,7 +81,7 @@ export default async function EventDashboardPage({ params }: Props) {
     const user = await prisma.user.findUnique({
         where: { id: session.user.id },
     });
-    const plan = user ? getPlanFromUser(user) : { slug: "free", name: "Free", limits: PLANS.FREE.limits };
+    const plan = user ? await getPlanFromUser(user) : { slug: "free", name: "Free", limits: PLANS.FREE.limits };
 
     const collaboratorLimit = plan.limits.collaboratorsPerEvent;
 

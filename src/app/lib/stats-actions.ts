@@ -6,36 +6,66 @@ export async function getEventStats(eventId: string) {
     // Ya no usamos auth() ni filtramos por userId aquí.
     // La autorización la controlas en la page (dashboard/event/[id]/page.tsx)
 
-    const event = await prisma.event.findUnique({
-        where: { id: eventId },
-        include: {
-            polls: {
-                include: {
-                    _count: { select: { votes: true } },
-                    options: {
-                        include: {
-                            participant: true,
-                            votes: {
-                                include: {
-                                    vote: {
-                                        include: {
-                                            user: {
-                                                select: { name: true, image: true, email: true }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+    // Query 1: estructura del evento + contadores (sin arrastrar votos/usuarios anidados).
+    // Query 2: detalle de votantes por opción (solo lo que necesita el modal), con join plano.
+    // Query 3: timeline de las últimas 50 votaciones.
+    // Las tres se ejecutan en paralelo.
+    const [event, voteOptionRows, recentVotes] = await Promise.all([
+        prisma.event.findUnique({
+            where: { id: eventId },
+            select: {
+                isAnonymousVoting: true,
+                _count: { select: { likes: true } },
+                eventVotes: { select: { value: true } },
+                polls: {
+                    select: {
+                        id: true,
+                        title: true,
+                        _count: { select: { votes: true } },
+                        options: {
+                            select: {
+                                id: true,
+                                participant: { select: { name: true, imageUrl: true } },
+                                _count: { select: { votes: true } },
+                            },
+                        },
+                    },
+                },
             },
-            _count: { select: { likes: true } },
-            eventVotes: { select: { value: true } },
-        }
-    });
+        }),
+        prisma.voteOption.findMany({
+            where: { option: { poll: { eventId } } },
+            select: {
+                optionId: true,
+                vote: {
+                    select: {
+                        userId: true,
+                        user: { select: { name: true, image: true } },
+                    },
+                },
+            },
+        }),
+        prisma.vote.findMany({
+            where: { poll: { eventId } },
+            orderBy: { createdAt: "desc" },
+            take: 50,
+            select: { createdAt: true },
+        }),
+    ]);
 
     if (!event) return null;
+
+    // Agrupar votantes por opción a partir del join plano
+    const votersByOption = new Map<string, { name: string; image: string | null; isAnonymous: boolean }[]>();
+    for (const row of voteOptionRows) {
+        const list = votersByOption.get(row.optionId) ?? [];
+        list.push({
+            name: row.vote.user?.name || "Anónimo",
+            image: row.vote.user?.image || null,
+            isAnonymous: !row.vote.userId,
+        });
+        votersByOption.set(row.optionId, list);
+    }
 
     const totalPolls = event.polls.length;
     const totalVotes = event.polls.reduce(
@@ -61,24 +91,13 @@ export async function getEventStats(eventId: string) {
                 id: opt.id,
                 name: opt.participant.name,
                 imageUrl: opt.participant.imageUrl,
-                votesCount: opt.votes.length,
-                voters: opt.votes.map((v) => ({
-                    name: v.vote.user?.name || "Anónimo",
-                    image: v.vote.user?.image || null,
-                    isAnonymous: !v.vote.userId,
-                })),
+                votesCount: opt._count.votes,
+                voters: votersByOption.get(opt.id) ?? [],
             }))
             .sort((a, b) => b.votesCount - a.votesCount),
     }));
 
     // Timeline simple de las últimas 50 votaciones
-    const recentVotes = await prisma.vote.findMany({
-        where: { poll: { eventId } },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        select: { createdAt: true },
-    });
-
     const votesByDateMap = new Map<string, number>();
     recentVotes.forEach((vote) => {
         const date = vote.createdAt.toISOString().split("T")[0];

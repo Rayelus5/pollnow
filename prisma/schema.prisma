@@ -195,6 +195,7 @@ model Event {
     @@index([slug])
     @@index([status])
     @@index([createdAt])
+    @@index([status, createdAt])
 }
 
 model Participant {
@@ -260,6 +261,7 @@ model Vote {
     @@unique([pollId, voterHash])
     @@index([userId])
     @@index([createdAt])
+    @@index([pollId, createdAt])
 }
 
 model VoteOption {
@@ -388,6 +390,7 @@ model CollaboratorInvitation {
     @@index([eventId])
     @@index([invitedUserId])
     @@index([status])
+    @@index([eventId, status])
 }
 
 model SupportChat {
@@ -491,4 +494,27 @@ model AnnouncementBar {
     linkText  String?  @db.VarChar(100)
     isActive  Boolean  @default(false)
     updatedAt DateTime @updatedAt
+}
+
+// ===================================
+// PLANES DE SUSCRIPCIÓN (gestionables desde admin)
+// ===================================
+
+model SubscriptionPlan {
+    id            String   @id @default(cuid())
+    name          String
+    slug          String   @unique
+    quota         Int      // nº de eventos permitidos
+    limits        Json     // { pollsPerEvent, participantsPerEvent, collaboratorsPerEvent, maxSharedEvents }  (null = ilimitado)
+    features      Json     @default("{}") // flags adicionales (ej: { csvImport: true })
+    price         Float    @default(0)
+    stripePriceId String?  @unique
+    isActive      Boolean  @default(true)
+    sortOrder     Int      @default(0)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    @@index([slug])
+    @@index([isActive])
+    @@index([sortOrder])
 }

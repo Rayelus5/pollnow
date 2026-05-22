@@ -22,7 +22,7 @@ export default async function AdminDashboardPage() {
         prisma.event.findMany({
             take: 6,
             orderBy: { createdAt: 'desc' },
-            include: { user: true }
+            include: { user: { select: { name: true } } }
         }),
         prisma.user.findMany({
             take: 6,

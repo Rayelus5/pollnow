@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import bcrypt from "bcryptjs";
 import { sendSystemNotificationEmail } from "@/lib/mail";
 import { buildUnsubscribeUrl } from "@/lib/unsubscribe";
@@ -63,6 +63,7 @@ export async function approveEvent(eventId: string) {
 
     revalidatePath('/admin/reviews');
     revalidatePath('/polls'); // Actualizar el explorador público
+    revalidateTag("events-public", {}); // invalida caché del listado y tags
 }
 
 export async function rejectEvent(eventId: string, reason: string) {

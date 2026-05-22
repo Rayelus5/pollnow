@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlanFromUser } from "@/lib/plans";
+import { getPlanFromUser } from "@/lib/user-plan";
 import HelpButton from "./HelpButton";
 
 export default async function HelpButtonWrapper() {
@@ -13,7 +13,7 @@ export default async function HelpButtonWrapper() {
     });
     if (!user) return null;
 
-    const plan = getPlanFromUser(user);
+    const plan = await getPlanFromUser(user);
     const eventCount = await prisma.event.count({ where: { userId: session.user.id } });
     const canCreateMore = eventCount < plan.quota;
 

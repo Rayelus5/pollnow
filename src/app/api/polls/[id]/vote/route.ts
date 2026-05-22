@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { auth } from "@/auth";
-import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { rateLimit, getClientIp, tooManyRequests } from '@/lib/rate-limit-redis';
 
 type Props = {
     params: Promise<{ id: string }>
@@ -11,13 +11,8 @@ type Props = {
 export async function POST(req: Request, { params }: Props) {
     // Rate limit by IP: 15 votes/min (una por categoría en condiciones normales)
     const ip = getClientIp(req);
-    const { allowed, retryAfter } = rateLimit(`polls:vote:${ip}`, 15);
-    if (!allowed) {
-        return NextResponse.json(
-            { error: 'Demasiadas peticiones.' },
-            { status: 429, headers: { 'Retry-After': String(retryAfter) } }
-        );
-    }
+    const rl = await rateLimit(`polls:vote:${ip}`, 15);
+    if (!rl.allowed) return tooManyRequests(rl, 'Demasiadas peticiones.');
 
     try {
         const { id: pollId } = await params;
