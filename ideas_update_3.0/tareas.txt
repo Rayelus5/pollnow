@@ -1,0 +1,40 @@
+- Vamos a añadir una nueva funcionalidad: Modos de eventos
+
+- Actualmente solo tenemos un tipo de evento (tipo gala), y dado que no tenemos más tipos pues no lo hemos especificado, pero en esta actualización añadiremos diferentes formatos. Pero para esta actualización necesitaré otro plan de implementación así que primero genera un plan para esta ampliación de la actualización (v3.0).
+
+- Los nuevos tipos de eventos serán: TIERLIST, PREGUNTAS y DIBUJO. (y el de tipo GALA que ya existe)
+
+- Cada tipo de evento tiene sus limitaciones (según el plan) y su forma de funcionar.
+
+- Tienes todos los conceptos visuales en la carpeta "ideas_update_3.0"
+
+## LIMITES de los nuevos Modos
+
+### TIERLIST (las tierlist son de un único tema, no se pueden crear varios temas en un mismo evento, las categorias pueden ser renombrables en vez de solo S++, S+, A, B, C, D... los nominados podrán tener imagen y generarse con IA como suele ser normal. Las cards de nominados de eventos tipo tierlist serán cuadradas.)
+
+- FREE: 5 Tiers (Categorias) y 10 opciones (nominados).
+- PREMIUM: 10 Tiers (Categorias) y 20 opciones (nominados).
+- PLUS: 15 Tiers (Categorias) y 35 opciones (nominados).
+- UNLIMITED: 25 Tiers (Categorias) y 80 opciones (nominados).
+- ENTERPRISE: 50 Tiers (Categorias) y 120 opciones (nominados).
+
+### PREGUNTAS (Las preguntas funcionarán de una manera similar a un google form por ejemplo, solo habrán respuestas de tipo checkbox y radius, texto libre no estará disponible. tienes más info en las imagenes dentro de la carpeta "ideas_update_3.0". )
+
+- FREE: 8 preguntas. (opciones por pregunta [box y radius] = 5). max preguntas por pagina 4
+- PREMIUM: 15 preguntas. (opciones por pregunta [box y radius] = 10). max preguntas por pagina 15
+- PLUS: 30 preguntas. (opciones por pregunta [box y radius] = 20). max preguntas por pagina 30
+- UNLIMITED: 50 preguntas. (opciones por pregunta [box y radius] = 30). max preguntas por pagina 50
+- ENTERPRISE: 70 preguntas. (opciones por pregunta [box y radius] = 50). max preguntas por pagina 70
+
+### DIBUJO (El tipo de evento dibujo solo lo podrán crear los usuarios con un nivel de suscripción PREMIUM o superior. Este tipo de evento es bastante especial e inspirado en la web de Gartic Phone. Los eventos de modo dibujo tendrán 3 fases a la hora de votar: primero, fase de dibujo (los usuarios tendrán que dibujar en la plataforma de pollnow con las herramientas de dibujo que se ofrecen, puede ser dentro de un tiempo limite con un contador o sin tiempo limite, según como lo haya configurado el creador del evento), segundo la fase de votación (una vez todos los participantes han subido sus dibujos toca votar por ellos, debemos preparar al sistema para recibir muchas participaciones (50.000-100.000 recuerdalo) por lo que debemos pensar bien como hacer este sistema para que las votaciones tampoco sean eternas (crear una galeria de dibujos para votar, que sea sencillo y muy visual sin saturar backend ni front...) tercero la fase de resultados (los usuarios verán los resultados de la votación, los dibujos ordenados por puntos, (no se mostrarán todos los dibujos en el ranking, si son más de 100 entonces solo se mostrarán los 100 mejores)))).
+
+- FREE: 0 (No disponible, el usuario FREE no puede crear eventos de este tipo.)
+- PREMIUM: Puede ajustar el tiempo, siendo el mínimo 10 segundos y el máximo 3 minutos. Pero no puede poner tiempo ilimitado. Puede crear máximo 1 evento de este tipo.
+- PLUS: Sí puede poner tiempo ilimitado con una suscripción PLUS o superior. Puede crear máximo 3 eventos de este tipo.
+- UNLIMITED: Puede crear máximo 8 eventos de este tipo.
+- ENTERPRISE: Puede crear máximo 15 eventos de este tipo.
+
+Las herramientas de dibujo que debemos permitir son las que ves en la imagen de la carpeta "ideas_update_3.0" llamada "Event_DIBUJO_mode_complete_test.jpg" donde se ve el canva de dibujo (lienzo), Selector de colores (selector custom HTML hex), Colores usados recientemente, Más herramientas como trazado de cuadrado y circulo, cuadrado y circulo, linea, deshacer, rehacer, cuenta gotas para el color... Selector de grosos (tamaños de puntero, para pincel, goma, linea, trazo...), opacidad, modos de puntero (pincel, goma, cubo...).
+
+
+Esta actualización es un autentico reto así que debemos de crear el plan perfecto para implementar todas estas mejoras, funcionalidades y nuevos modos. No cometas el error de simplificar en demasia y luego tener que rehacer. Debemos ser profesionales y detallados.
