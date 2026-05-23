@@ -3,7 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useCallback } from "react";
 import {
     Brush, Eraser, PaintBucket, Minus, Square, Circle as CircleIcon,
-    Pipette, Undo2, Redo2, Trash2,
+    Pipette, Undo2, Redo2, Trash2, MoveVertical,
 } from "lucide-react";
 
 export type DrawingCanvasHandle = {
@@ -52,6 +52,9 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, { disabled?: boolean }>(fu
     const [recent, setRecent] = useState<string[]>([]);
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
+    const [toolbarPos, setToolbarPos] = useState<"top" | "bottom">("top");
+    const wrapRef = useRef<HTMLDivElement>(null);
+    const cursorRef = useRef<HTMLDivElement>(null);
 
     // Init canvas (fondo blanco)
     useEffect(() => {
@@ -88,6 +91,26 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, { disabled?: boolean }>(fu
             x: ((e.clientX - rect.left) / rect.width) * CANVAS_W,
             y: ((e.clientY - rect.top) / rect.height) * CANVAS_H,
         };
+    };
+
+    // --- Cursor custom (punto que escala con el grosor) ---
+    const updateCursor = (e: React.PointerEvent) => {
+        const canvas = canvasRef.current;
+        const wrap = wrapRef.current;
+        const cur = cursorRef.current;
+        if (!canvas || !wrap || !cur) return;
+        const rect = canvas.getBoundingClientRect();
+        const scale = rect.width / CANVAS_W;
+        const d = Math.max(6, size * scale);
+        const wrapRect = wrap.getBoundingClientRect();
+        cur.style.width = `${d}px`;
+        cur.style.height = `${d}px`;
+        cur.style.left = `${e.clientX - wrapRect.left}px`;
+        cur.style.top = `${e.clientY - wrapRect.top}px`;
+        cur.style.display = "block";
+    };
+    const hideCursor = () => {
+        if (cursorRef.current) cursorRef.current.style.display = "none";
     };
 
     const applyStroke = (ctx: CanvasRenderingContext2D) => {
@@ -163,6 +186,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, { disabled?: boolean }>(fu
     };
 
     const onPointerMove = (e: React.PointerEvent) => {
+        updateCursor(e);
         if (!drawing.current || disabled) return;
         const ctx = ctxRef.current;
         if (!ctx || !startPos.current) return;
@@ -259,105 +283,134 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, { disabled?: boolean }>(fu
         isDirty: () => dirty.current,
     }), []);
 
+    const toolbar = (
+        <div className="rounded-2xl border-2 border-neutral-700 bg-neutral-800/80 backdrop-blur p-2.5 flex flex-wrap items-center gap-3 max-w-5xl mx-auto">
+            {/* Herramientas (primero, lo más usado) */}
+            <div className="flex items-center gap-1">
+                {TOOLS.map(({ id, label, Icon }) => (
+                    <button
+                        key={id}
+                        type="button"
+                        onClick={() => setTool(id)}
+                        title={label}
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 cursor-pointer transition-colors ${tool === id ? "border-blue-500 bg-blue-500/15 text-blue-300" : "border-white/15 text-gray-300 hover:border-white/30"}`}
+                    >
+                        <Icon size={16} fill={id.endsWith("-fill") ? "currentColor" : "none"} />
+                    </button>
+                ))}
+            </div>
+
+            <div className="h-8 w-px bg-white/10" />
+
+            {/* Color + recientes */}
+            <div className="flex items-center gap-2">
+                <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="w-9 h-9 rounded-lg bg-transparent border-2 border-white/15 cursor-pointer p-0"
+                    title="Color"
+                />
+                <input
+                    value={color}
+                    onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setColor(v); }}
+                    className="w-[68px] bg-black border-2 border-white/15 rounded-lg px-2 py-1.5 text-white text-xs font-mono outline-none focus:border-blue-500"
+                />
+                <div className="flex gap-1">
+                    {recent.map((c) => (
+                        <button key={c} type="button" onClick={() => setColor(c)} className="w-6 h-6 rounded border border-white/20 cursor-pointer" style={{ backgroundColor: c }} title={c} />
+                    ))}
+                </div>
+            </div>
+
+            <div className="h-8 w-px bg-white/10" />
+
+            {/* Tamaños */}
+            <div className="flex items-center gap-1">
+                {SIZES.map((s) => (
+                    <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSize(s)}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center border-2 cursor-pointer transition-colors ${size === s ? "border-blue-500 bg-blue-500/15" : "border-white/15 hover:border-white/30"}`}
+                        title={`${s}px`}
+                    >
+                        <span className="rounded-full bg-white block" style={{ width: Math.min(s, 20), height: Math.min(s, 20) }} />
+                    </button>
+                ))}
+            </div>
+
+            <div className="h-8 w-px bg-white/10" />
+
+            {/* Opacidad */}
+            <div className="flex items-center gap-2">
+                <input type="range" min={5} max={100} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} className="w-20 accent-blue-500" title="Opacidad" />
+                <span className="text-xs text-white font-mono w-9">{opacity}%</span>
+            </div>
+
+            <div className="h-8 w-px bg-white/10" />
+
+            {/* Historial */}
+            <div className="flex items-center gap-1">
+                <button type="button" onClick={undo} disabled={!canUndo} className="w-9 h-9 rounded-lg flex items-center justify-center border-2 border-white/15 text-gray-300 hover:border-white/30 cursor-pointer disabled:opacity-30" title="Deshacer (Ctrl+Z)">
+                    <Undo2 size={16} />
+                </button>
+                <button type="button" onClick={redo} disabled={!canRedo} className="w-9 h-9 rounded-lg flex items-center justify-center border-2 border-white/15 text-gray-300 hover:border-white/30 cursor-pointer disabled:opacity-30" title="Rehacer (Ctrl+Y)">
+                    <Redo2 size={16} />
+                </button>
+                <button type="button" onClick={clearAll} className="w-9 h-9 rounded-lg flex items-center justify-center border-2 border-red-500/30 text-red-400 hover:bg-red-500/10 cursor-pointer" title="Limpiar todo">
+                    <Trash2 size={16} />
+                </button>
+            </div>
+
+            {/* Mover barra arriba/abajo */}
+            <button
+                type="button"
+                onClick={() => setToolbarPos((p) => (p === "top" ? "bottom" : "top"))}
+                className="ml-auto w-9 h-9 rounded-lg flex items-center justify-center border-2 border-white/15 text-gray-400 hover:text-white hover:border-white/30 cursor-pointer"
+                title={toolbarPos === "top" ? "Mover herramientas abajo" : "Mover herramientas arriba"}
+            >
+                <MoveVertical size={16} />
+            </button>
+        </div>
+    );
+
     return (
-        <div className={`select-none ${disabled ? "opacity-60 pointer-events-none" : ""}`}>
-            {/* Lienzo */}
-            <div className="rounded-2xl overflow-hidden border-4 border-neutral-700 bg-neutral-700 p-3">
+        <div className={`select-none flex flex-col gap-3 ${disabled ? "opacity-60 pointer-events-none" : ""}`}>
+            {toolbarPos === "top" && toolbar}
+
+            {/* Lienzo (altura acotada para no exceder el viewport) */}
+            <div
+                ref={wrapRef}
+                className="relative mx-auto w-full rounded-2xl border-4 border-neutral-700 bg-neutral-700 p-2"
+                style={{ maxWidth: `calc(64vh * ${CANVAS_W} / ${CANVAS_H})` }}
+            >
                 <canvas
                     ref={canvasRef}
                     width={CANVAS_W}
                     height={CANVAS_H}
-                    onPointerDown={onPointerDown}
+                    onPointerDown={(e) => { updateCursor(e); onPointerDown(e); }}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
-                    onPointerLeave={onPointerUp}
-                    className="w-full rounded-xl bg-white touch-none cursor-crosshair"
-                    style={{ aspectRatio: `${CANVAS_W}/${CANVAS_H}` }}
+                    onPointerEnter={updateCursor}
+                    onPointerLeave={() => { onPointerUp(); hideCursor(); }}
+                    className="w-full rounded-xl bg-white touch-none"
+                    style={{ aspectRatio: `${CANVAS_W}/${CANVAS_H}`, cursor: "none" }}
+                />
+                {/* Cursor custom: punto blanco con borde negro, escala con el grosor */}
+                <div
+                    ref={cursorRef}
+                    className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
+                    style={{
+                        display: "none",
+                        background: "rgba(255,255,255,0.55)",
+                        border: "1.5px solid #000",
+                        boxShadow: "0 0 0 1px #fff",
+                    }}
                 />
             </div>
 
-            {/* Toolbar */}
-            <div className="mt-3 rounded-2xl border-2 border-neutral-700 bg-neutral-800/60 p-3 flex flex-wrap items-center gap-4">
-                {/* Color + recientes */}
-                <div className="flex items-center gap-2">
-                    <input
-                        type="color"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                        className="w-10 h-10 rounded-lg bg-transparent border-2 border-white/15 cursor-pointer"
-                        title="Color"
-                    />
-                    <input
-                        value={color}
-                        onChange={(e) => { const v = e.target.value; if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setColor(v); }}
-                        className="w-20 bg-black border-2 border-white/15 rounded-lg px-2 py-1.5 text-white text-xs font-mono outline-none focus:border-blue-500"
-                    />
-                    <div className="flex gap-1">
-                        {recent.length === 0 && <span className="text-[10px] text-gray-600 self-center">Sin colores</span>}
-                        {recent.map((c) => (
-                            <button key={c} type="button" onClick={() => setColor(c)} className="w-6 h-6 rounded border border-white/20 cursor-pointer" style={{ backgroundColor: c }} title={c} />
-                        ))}
-                    </div>
-                </div>
-
-                <div className="h-8 w-px bg-white/10" />
-
-                {/* Tamaños */}
-                <div className="flex items-center gap-1.5">
-                    {SIZES.map((s) => (
-                        <button
-                            key={s}
-                            type="button"
-                            onClick={() => setSize(s)}
-                            className={`w-9 h-9 rounded-full flex items-center justify-center border-2 cursor-pointer transition-colors ${size === s ? "border-blue-500 bg-blue-500/10" : "border-white/15 hover:border-white/30"}`}
-                            title={`${s}px`}
-                        >
-                            <span className="rounded-full bg-white" style={{ width: Math.min(s, 22), height: Math.min(s, 22) }} />
-                        </button>
-                    ))}
-                </div>
-
-                <div className="h-8 w-px bg-white/10" />
-
-                {/* Opacidad */}
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-gray-400 uppercase">Opacidad</span>
-                    <input type="range" min={5} max={100} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} className="w-24 accent-blue-500" />
-                    <span className="text-xs text-white font-mono w-9">{opacity}%</span>
-                </div>
-
-                <div className="h-8 w-px bg-white/10" />
-
-                {/* Herramientas */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    {TOOLS.map(({ id, label, Icon }) => (
-                        <button
-                            key={id}
-                            type="button"
-                            onClick={() => setTool(id)}
-                            title={label}
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center border-2 cursor-pointer transition-colors ${tool === id ? "border-blue-500 bg-blue-500/10 text-blue-300" : "border-white/15 text-gray-300 hover:border-white/30"} ${id.endsWith("-fill") ? "bg-white/5" : ""}`}
-                        >
-                            <Icon size={16} fill={id.endsWith("-fill") ? "currentColor" : "none"} />
-                        </button>
-                    ))}
-                </div>
-
-                <div className="h-8 w-px bg-white/10" />
-
-                {/* Historial */}
-                <div className="flex items-center gap-1.5">
-                    <button type="button" onClick={undo} disabled={!canUndo} className="w-9 h-9 rounded-lg flex items-center justify-center border-2 border-white/15 text-gray-300 hover:border-white/30 cursor-pointer disabled:opacity-30" title="Deshacer (Ctrl+Z)">
-                        <Undo2 size={16} />
-                    </button>
-                    <button type="button" onClick={redo} disabled={!canRedo} className="w-9 h-9 rounded-lg flex items-center justify-center border-2 border-white/15 text-gray-300 hover:border-white/30 cursor-pointer disabled:opacity-30" title="Rehacer (Ctrl+Y)">
-                        <Redo2 size={16} />
-                    </button>
-                    <button type="button" onClick={clearAll} className="w-9 h-9 rounded-lg flex items-center justify-center border-2 border-red-500/30 text-red-400 hover:bg-red-500/10 cursor-pointer" title="Limpiar todo">
-                        <Trash2 size={16} />
-                    </button>
-                </div>
-            </div>
+            {toolbarPos === "bottom" && toolbar}
         </div>
     );
 });

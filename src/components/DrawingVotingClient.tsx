@@ -2,8 +2,10 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { ArrowLeft, Check, ThumbsUp, ThumbsDown, Star, Send, Trophy, Clock, Loader2 } from "lucide-react";
 import DrawingCanvas, { type DrawingCanvasHandle } from "@/components/DrawingCanvas";
+import WinnerConfetti from "@/components/WinnerConfetti";
 
 type Phase = "DRAWING" | "VOTING" | "RESULTS";
 
@@ -30,16 +32,16 @@ export default function DrawingVotingClient({
 }) {
     return (
         <main className="min-h-screen bg-black text-white">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-                <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-4">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5">
+                <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-white mb-3">
                     <ArrowLeft size={16} /> Volver
                 </Link>
 
-                <div className="text-center mb-6">
-                    <h1 className="text-3xl font-bold">{event.title}</h1>
-                    {event.description && <p className="text-gray-400 mt-1">{event.description}</p>}
-                    <span className="inline-block mt-2 text-[11px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">Dibujo</span>
-                </div>
+
+                {/* <div className="flex flex-col items-center justify-center gap-2 mb-3">
+                    <h1 className="text-xl sm:text-2xl font-bold truncate">{event.title}</h1>
+                    <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">Dibujo</span>
+                </div> */}
 
                 {phase === "DRAWING" && <DrawingPhase event={event} alreadySubmitted={alreadySubmitted} myImageUrl={myImageUrl} />}
                 {phase === "VOTING" && <VotingPhase eventId={event.id} superlikeUsed={superlikeUsed} />}
@@ -105,10 +107,10 @@ function DrawingPhase({ event, alreadySubmitted, myImageUrl }: { event: EventInf
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-                <div className="rounded-xl border-2 border-blue-500/20 bg-blue-500/5 px-4 py-2">
+            <div className="flex flex-col items-center justify-center w-full mb-3 gap-3 flex-wrap">
+                <div className="rounded-xl border-2 border-blue-500/20 bg-blue-500/5 px-4 py-3 w-full max-w-5xl text-center">
                     <span className="text-xs text-gray-400 uppercase">Tema</span>
-                    <p className="font-bold text-white">{event.drawingPrompt || "Dibujo libre"}</p>
+                    <p className="font-bold text-2xl text-white">{event.drawingPrompt || "Dibujo libre"}</p>
                 </div>
                 {remaining !== null && (
                     <span className={`inline-flex items-center gap-1.5 font-mono font-bold px-3 py-2 rounded-xl border-2 ${remaining <= 10 ? "text-red-400 border-red-500/30 bg-red-500/10" : "text-white border-white/15"}`}>
@@ -248,31 +250,55 @@ function ResultsPhase({ eventId }: { eventId: string }) {
 
     const podium = results.slice(0, 3);
     const rest = results.slice(3);
+    // Orden visual del podio: 2º · 1º · 3º
+    const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean) as ResultItem[];
+    const rankOf = (r: ResultItem) => results.indexOf(r);
+    const MEDAL = ["🥇", "🥈", "🥉"];
+    const RING = ["ring-amber-400 shadow-amber-500/30", "ring-gray-300 shadow-gray-400/20", "ring-amber-700 shadow-amber-800/20"];
 
     return (
         <div>
-            <h2 className="text-center text-xl font-bold mb-1 flex items-center justify-center gap-2"><Trophy size={20} className="text-amber-400" /> Resultados</h2>
-            {total > 100 && <p className="text-center text-xs text-gray-500 mb-6">Mostrando solo los 100 mejores de {total} dibujos.</p>}
+            <WinnerConfetti />
+            <h2 className="text-center text-2xl font-black mb-1 flex items-center justify-center gap-2">
+                <Trophy size={24} className="text-amber-400" /> ¡Resultados!
+            </h2>
+            {total > 100 && <p className="text-center text-xs text-gray-500 mb-8">Mostrando solo los 100 mejores de {total} dibujos.</p>}
 
-            {/* Podio */}
-            <div className="grid grid-cols-3 gap-3 max-w-2xl mx-auto mb-8 items-end">
-                {podium.map((r, i) => (
-                    <div key={r.id} className={`text-center ${i === 0 ? "order-2" : i === 1 ? "order-1" : "order-3"}`}>
-                        <div className={`relative rounded-2xl overflow-hidden border-2 ${i === 0 ? "border-amber-400" : i === 1 ? "border-gray-300" : "border-amber-700"}`}>
-                            <img src={r.imageUrl} alt={`#${i + 1}`} className="w-full aspect-square object-cover bg-white" />
-                            <span className="absolute top-1 left-1 text-lg">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
-                        </div>
-                        <p className="mt-1 font-bold text-sm">{r.score} pts</p>
-                    </div>
-                ))}
+            {/* Podio épico */}
+            <div className="flex justify-center items-end gap-3 sm:gap-5 mb-12 mt-6">
+                {podiumOrder.map((r) => {
+                    const rank = rankOf(r);
+                    const isFirst = rank === 0;
+                    return (
+                        <motion.div
+                            key={r.id}
+                            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ delay: rank * 0.15, type: "spring", stiffness: 200, damping: 18 }}
+                            className={`flex flex-col items-center ${isFirst ? "w-40 sm:w-52" : "w-28 sm:w-36"}`}
+                        >
+                            <span className={`mb-1 ${isFirst ? "text-4xl" : "text-2xl"}`}>{MEDAL[rank]}</span>
+                            <div className={`relative w-full rounded-2xl overflow-hidden ring-4 shadow-2xl ${RING[rank]}`}>
+                                <img src={r.imageUrl} alt={`#${rank + 1}`} className="w-full aspect-[3/2] object-cover bg-white" />
+                                {isFirst && <div className="absolute inset-0 ring-1 ring-inset ring-white/30 pointer-events-none" />}
+                            </div>
+                            <div className={`mt-2 font-black ${isFirst ? "text-amber-400 text-lg" : "text-gray-200"}`}>{r.score} pts</div>
+                            <div className="text-[11px] text-gray-500 flex items-center gap-1.5">
+                                <ThumbsUp size={11} className="text-emerald-400" />{r.likeCount}
+                                <ThumbsDown size={11} className="text-red-400" />{r.dislikeCount}
+                                <Star size={11} className="text-amber-400" />{r.superlikeCount}
+                            </div>
+                        </motion.div>
+                    );
+                })}
             </div>
 
-            {/* Resto */}
+            {/* Resto (galería rectangular) */}
             {rest.length > 0 && (
-                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {rest.map((r, i) => (
                         <div key={r.id} className="rounded-xl overflow-hidden border-2 border-white/10 bg-neutral-900 relative">
-                            <img src={r.imageUrl} alt={`#${i + 4}`} className="w-full aspect-square object-cover bg-white" />
+                            <img src={r.imageUrl} alt={`#${i + 4}`} className="w-full aspect-[3/2] object-cover bg-white" />
                             <div className="absolute inset-x-0 bottom-0 bg-black/70 text-[11px] text-center py-0.5 flex items-center justify-center gap-2">
                                 <span className="text-gray-400">#{i + 4}</span>
                                 <span className="font-bold text-white">{r.score} pts</span>

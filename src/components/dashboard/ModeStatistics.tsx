@@ -142,7 +142,7 @@ export default function ModeStatistics({
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                         {stats.top.map((d, i) => (
                             <div key={d.id} className="rounded-xl overflow-hidden border-2 border-white/10 bg-neutral-900 relative">
-                                {d.imageUrl ? <img src={d.imageUrl} alt={`#${i + 1}`} className="w-full aspect-square object-cover bg-white" /> : <div className="w-full aspect-square bg-neutral-800" />}
+                                {d.imageUrl ? <img src={d.imageUrl} alt={`#${i + 1}`} className="w-full aspect-[3/2] object-cover bg-white" /> : <div className="w-full aspect-[3/2] bg-neutral-800" />}
                                 <div className="absolute inset-x-0 bottom-0 bg-black/70 text-[11px] text-center py-0.5 flex items-center justify-center gap-2">
                                     <span className="text-gray-400">#{i + 1}</span>
                                     <span className="font-bold text-white">{d.score} pts</span>

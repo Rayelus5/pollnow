@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ListOrdered } from "lucide-react";
+import { ArrowLeft, ListOrdered, Trophy } from "lucide-react";
+import WinnerConfetti from "@/components/WinnerConfetti";
 
 type Tier = { id: string; label: string; color: string; order: number };
 type StatParticipant = {
@@ -75,17 +76,22 @@ export default function TierlistResultsClient({
                     <div className="text-center py-16 text-gray-500">Este evento finalizó sin votos.</div>
                 ) : (
                     <>
+                        <WinnerConfetti />
                         <div className="rounded-2xl overflow-hidden border-2 border-neutral-700">
-                            {sortedTiers.map((t) => (
-                                <div key={t.id} className="flex border-b border-neutral-700 last:border-b-0 min-h-[96px]">
-                                    <div className="w-24 shrink-0 flex items-center justify-center font-bold text-black/80 text-center px-2 break-words" style={{ backgroundColor: t.color }}>
-                                        {t.label}
+                            {sortedTiers.map((t, idx) => {
+                                const isTop = idx === 0;
+                                return (
+                                    <div key={t.id} className={`flex border-b border-neutral-700 last:border-b-0 min-h-[96px] ${isTop ? "relative ring-2 ring-amber-400/60 z-10" : ""}`}>
+                                        <div className="w-24 shrink-0 flex flex-col items-center justify-center font-bold text-black/80 text-center px-2 break-words gap-1" style={{ backgroundColor: t.color }}>
+                                            {isTop && <Trophy size={16} className="text-black/70" />}
+                                            {t.label}
+                                        </div>
+                                        <div className={`flex-1 flex flex-wrap gap-2 p-2 items-center ${isTop ? "bg-amber-400/5" : "bg-neutral-900/40"}`}>
+                                            {(byTier.get(t.id) ?? []).map((p) => <Card key={p.id} p={p} />)}
+                                        </div>
                                     </div>
-                                    <div className="flex-1 flex flex-wrap gap-2 p-2 items-center bg-neutral-900/40">
-                                        {(byTier.get(t.id) ?? []).map((p) => <Card key={p.id} p={p} />)}
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
 
                         {unranked.length > 0 && (
