@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Search, Filter, Users } from "lucide-react";
 import AdminPagination from "@/components/admin/AdminPagination";
 import AdminUsersTableClient from "@/components/admin/AdminUsersTableClient";
+import { getActivePlans } from "@/lib/user-plan";
+import { planSlugFromUser } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +53,9 @@ export default async function AdminUsersPage({
 
     const totalPages = Math.max(1, Math.ceil(totalUsers / PAGE_SIZE));
 
+    // Planes desde BD (fuente de verdad) para resolver el slug real de cada usuario
+    const plans = await getActivePlans();
+
     // Serializar para cliente (fechas a ISO, evitar objetos)
     const usersForClient = users.map((u) => ({
         id: u.id,
@@ -62,6 +67,7 @@ export default async function AdminUsersPage({
         ipBan: u.ipBan ?? false,
         subscriptionStatus: u.subscriptionStatus ?? "free",
         stripePriceId: u.stripePriceId ?? null,
+        planSlug: planSlugFromUser(u, plans),
         createdAt: u.createdAt.toISOString(),
         _count: u._count,
     }));

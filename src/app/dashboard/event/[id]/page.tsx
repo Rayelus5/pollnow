@@ -196,7 +196,7 @@ export default async function EventDashboardPage({ params }: Props) {
                                 planSlug={plan.slug}
                                 canManageNominees={permissions.canManageNominees}
                                 square={event.mode === "TIERLIST"}
-                                limitOverride={event.mode === "TIERLIST" ? plan.limits.tierlistMaxOptions : undefined}
+                                limitOverride={event.mode === "TIERLIST" ? plan.limits.tierlistMaxOptions : plan.limits.participantsPerEvent}
                             />
                         </div>
                     }
@@ -259,6 +259,7 @@ export default async function EventDashboardPage({ params }: Props) {
                                 eventId={event.id}
                                 planSlug={plan.slug}
                                 canManagePolls={permissions.canManagePolls}
+                                limitOverride={plan.limits.pollsPerEvent}
                             />
                         </div>
                     }

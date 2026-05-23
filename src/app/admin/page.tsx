@@ -3,6 +3,8 @@ import { Users, Calendar, CheckSquare, ArrowRight, ShieldAlert, ArrowUpRight } f
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { getActivePlans } from "@/lib/user-plan";
+import { planSlugFromUser, planBadge } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +31,9 @@ export default async function AdminDashboardPage() {
             orderBy: { createdAt: 'desc' }
         })
     ]);
+
+    // Planes desde BD para resolver el slug real de cada usuario (badge correcto)
+    const plans = await getActivePlans();
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -130,9 +135,15 @@ export default async function AdminDashboardPage() {
                                     </div>
                                     <p className="text-xs text-gray-500">{u.email}</p>
                                 </div>
-                                <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${u.stripePriceId === 'enterprise' ? 'bg-amber-900/20 text-amber-400' : u.subscriptionStatus === 'active' ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
-                                    {u.stripePriceId === 'enterprise' ? '⭐ ENTERPRISE' : u.subscriptionStatus === 'active' ? 'PREMIUM' : 'FREE'}
-                                </span>
+                                {(() => {
+                                    const slug = planSlugFromUser(u, plans);
+                                    const b = planBadge(slug);
+                                    return (
+                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${b.className}`}>
+                                            {slug === "enterprise" ? "⭐ " : ""}{b.label}
+                                        </span>
+                                    );
+                                })()}
                                 <div className="p-2 bg-white/5 rounded-lg group-hover:bg-blue-600 transition-colors duration-400">
                                     <ArrowUpRight size={16} />
                                 </div>

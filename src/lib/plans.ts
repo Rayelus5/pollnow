@@ -228,3 +228,28 @@ export function getPriceIdForSlug(slug: string): string | null {
     const plan = FALLBACK_PLANS.find((p) => p.slug === slug);
     return plan?.priceId ?? null;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers de presentación / resolución (client-safe). Fuente de verdad: la lista
+// de planes que se pase (de BD vía getActivePlans, o FALLBACK). Evita duplicar
+// mapeos slug⇄priceId⇄label por toda la app.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Estilos de badge por slug (solo presentación; el dato de negocio es el slug). */
+export const PLAN_BADGE: Record<string, { label: string; className: string }> = {
+    free: { label: "Free", className: "bg-white/10 text-gray-400 border border-white/10" },
+    premium: { label: "Premium", className: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" },
+    plus: { label: "Plus", className: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
+    unlimited: { label: "Unlimited", className: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+    enterprise: { label: "Enterprise", className: "bg-amber-500/10 text-amber-400 border border-amber-500/20" },
+};
+
+/** Badge para un slug desconocido (plan custom creado en admin). */
+export function planBadge(slug: string): { label: string; className: string } {
+    return PLAN_BADGE[slug] ?? { label: slug.charAt(0).toUpperCase() + slug.slice(1), className: "bg-white/10 text-gray-300 border border-white/10" };
+}
+
+/** Resuelve el slug del plan de un usuario a partir de una lista de planes (pura). */
+export function planSlugFromUser(user: PlanUserInput, plans: ResolvedPlan[]): string {
+    return resolvePlanFromList(user, plans).slug;
+}

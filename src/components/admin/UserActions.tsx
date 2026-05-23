@@ -20,10 +20,8 @@ import { Bouncy } from "ldrs/react";
 import "ldrs/react/Bouncy.css";
 import { useRouter } from "next/navigation";
 
-const PREMIUM_PRICE_ID = "price_1T1tQSAnnRNk3k0PKQVAbjnb";
-const PLUS_PRICE_ID = "price_1T1tRmAnnRNk3k0PLPBcN1Pk";
-const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
-const ENTERPRISE_PRICE_ID = "enterprise";
+// Opción de plan que llega desde el server (slug + priceId reales de la BD).
+type PlanOption = { slug: string; name: string; priceId: string | null };
 
 type User = {
     id: string;
@@ -48,17 +46,7 @@ type ProfileState = {
     cancelAtPeriodEnd: boolean;
 };
 
-function getPlanKeyFromProfile(profile: {
-    stripePriceId: string | null;
-}): "free" | "premium" | "plus" | "unlimited" | "enterprise" {
-    if (profile.stripePriceId === ENTERPRISE_PRICE_ID) return "enterprise";
-    if (profile.stripePriceId === PREMIUM_PRICE_ID) return "premium";
-    if (profile.stripePriceId === PLUS_PRICE_ID) return "plus";
-    if (profile.stripePriceId === UNLIMITED_PRICE_ID) return "unlimited";
-    return "free";
-}
-
-export default function UserActions({ user }: { user: User }) {
+export default function UserActions({ user, plans }: { user: User; plans: PlanOption[] }) {
     const router = useRouter();
 
     const [loading, setLoading] = useState(false);
@@ -184,7 +172,8 @@ export default function UserActions({ user }: { user: User }) {
         setPasswordSaving(false);
     };
 
-    const currentPlan = getPlanKeyFromProfile(profile);
+    // Slug del plan actual resuelto contra los planes de BD (no priceIds hardcodeados)
+    const currentPlan = plans.find((p) => p.priceId && p.priceId === profile.stripePriceId)?.slug ?? "free";
 
     return (
         <div className="space-y-6">
@@ -254,44 +243,22 @@ export default function UserActions({ user }: { user: User }) {
                         <select
                             value={currentPlan}
                             onChange={(e) => {
-                                const value = e.target.value as
-                                    | "free"
-                                    | "premium"
-                                    | "plus"
-                                    | "unlimited"
-                                    | "enterprise";
-
-                                setProfile((p) => {
-                                    let stripePriceId: string | null = null;
-                                    if (value === "premium")
-                                        stripePriceId = PREMIUM_PRICE_ID;
-                                    if (value === "plus")
-                                        stripePriceId = PLUS_PRICE_ID;
-                                    if (value === "unlimited")
-                                        stripePriceId = UNLIMITED_PRICE_ID;
-                                    if (value === "enterprise")
-                                        stripePriceId = ENTERPRISE_PRICE_ID;
-
-                                    return {
-                                        ...p,
-                                        subscriptionStatus:
-                                            value === "free"
-                                                ? "free"
-                                                : "active",
-                                        stripePriceId,
-                                        // Enterprise sin fecha = vitalicio
-                                        subscriptionEndDate:
-                                            value === "enterprise" ? "" : p.subscriptionEndDate,
-                                    };
-                                });
+                                const slug = e.target.value;
+                                const selected = plans.find((p) => p.slug === slug);
+                                setProfile((p) => ({
+                                    ...p,
+                                    subscriptionStatus: slug === "free" ? "free" : "active",
+                                    // priceId real del plan en BD (null para free)
+                                    stripePriceId: slug === "free" ? null : (selected?.priceId ?? null),
+                                    // Enterprise sin fecha = vitalicio
+                                    subscriptionEndDate: slug === "enterprise" ? "" : p.subscriptionEndDate,
+                                }));
                             }}
                             className="w-full bg-black border-2 border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-blue-500 cursor-pointer"
                         >
-                            <option value="free">Free</option>
-                            <option value="premium">Premium</option>
-                            <option value="plus">Plus</option>
-                            <option value="unlimited">Unlimited</option>
-                            <option value="enterprise">Enterprise</option>
+                            {plans.map((p) => (
+                                <option key={p.slug} value={p.slug}>{p.name}</option>
+                            ))}
                         </select>
                         {currentPlan === "enterprise" && (
                             <p className="text-[10px] text-amber-400/70 mt-1 flex items-center gap-1">

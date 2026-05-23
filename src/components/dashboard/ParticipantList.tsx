@@ -31,7 +31,9 @@ type Participant = {
     imageUrl: string | null;
 };
 
-type InputMode = "manual" | "ai";
+type InputMode = "manual" | "ai" | "search";
+
+type SearchImage = { url: string; thumbnail: string; source: "pexels" | "wikimedia"; credit?: string };
 
 // ─── Submit buttons ───────────────────────────────────────────────────────────
 
@@ -85,7 +87,7 @@ function DeleteButton() {
 
 function ModeSwitcher({ mode, onChange, canUseAi }: { mode: InputMode; onChange: (m: InputMode) => void; canUseAi: boolean }) {
     return (
-        <div className="flex items-center gap-1 p-1 bg-white/5 rounded-xl border-2 border-white/8 w-fit">
+        <div className="flex items-center gap-1 p-1 bg-white/5 rounded-xl border-2 border-white/8 w-fit flex-wrap">
             <button
                 type="button"
                 onClick={() => onChange("manual")}
@@ -101,6 +103,23 @@ function ModeSwitcher({ mode, onChange, canUseAi }: { mode: InputMode; onChange:
                 )}
                 <Upload size={12} className="relative z-10" />
                 <span className="relative z-10">Manual</span>
+            </button>
+
+            <button
+                type="button"
+                onClick={() => onChange("search")}
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer
+                    ${mode === "search" ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+            >
+                {mode === "search" && (
+                    <motion.div
+                        layoutId="mode-pill"
+                        className="absolute inset-0 bg-emerald-600/20 border-2 border-emerald-500/40 rounded-lg"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                )}
+                <Search size={12} className={`relative z-10 ${mode === "search" ? "text-emerald-300" : ""}`} />
+                <span className={`relative z-10 ${mode === "search" ? "text-emerald-200" : ""}`}>Buscar</span>
             </button>
 
             <button
@@ -127,6 +146,130 @@ function ModeSwitcher({ mode, onChange, canUseAi }: { mode: InputMode; onChange:
     );
 }
 
+// ─── Panel de búsqueda de imágenes en internet (Pexels + Wikimedia) ─────────────
+
+function SearchImagesPanel({ eventId, initialQuery, onPick, compact }: {
+    eventId: string;
+    initialQuery: string;
+    onPick: (url: string) => void;
+    compact?: boolean;
+}) {
+    const [query, setQuery] = useState(initialQuery);
+    const [results, setResults] = useState<SearchImage[]>([]);
+    const [visible, setVisible] = useState(5);
+    const [loading, setLoading] = useState(false);
+    const [picking, setPicking] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [searched, setSearched] = useState(false);
+
+    const doSearch = async () => {
+        if (!query.trim() || loading) return;
+        setLoading(true); setError(null); setVisible(5); setSearched(true);
+        try {
+            const res = await fetch(`/api/search-images?q=${encodeURIComponent(query.trim())}`);
+            const data = await res.json();
+            if (!res.ok) { setError(data.error || "No se pudo buscar."); setResults([]); }
+            else {
+                setResults(data.images ?? []);
+                if ((data.images ?? []).length === 0) setError("Sin resultados. Prueba con otro término.");
+            }
+        } catch {
+            setError("Error de red al buscar.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const pick = async (img: SearchImage) => {
+        if (picking) return;
+        setPicking(img.url); setError(null);
+        try {
+            const res = await fetch("/api/participant-image/rehost", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ url: img.url, eventId }),
+            });
+            const data = await res.json();
+            if (res.ok && data.url) onPick(data.url);
+            else setError(data.error || "No se pudo guardar la imagen.");
+        } catch {
+            setError("Error al guardar la imagen.");
+        } finally {
+            setPicking(null);
+        }
+    };
+
+    const shown = results.slice(0, visible);
+
+    return (
+        <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+                <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 w-3.5 h-3.5" />
+                    <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); doSearch(); } }}
+                        placeholder="Busca una imagen (ej: el nombre del nominado)…"
+                        className="w-full bg-black border-2 border-emerald-500/25 rounded-lg px-3 py-2 pl-9 text-white text-sm focus:border-emerald-500 outline-none placeholder-gray-600"
+                    />
+                </div>
+                <button
+                    type="button"
+                    onClick={doSearch}
+                    disabled={loading || !query.trim()}
+                    className="px-3 py-2 bg-emerald-600/20 text-emerald-300 border-2 border-emerald-500/30 rounded-lg hover:bg-emerald-600/40 transition-colors disabled:opacity-40 text-xs font-semibold cursor-pointer shrink-0 flex items-center gap-1.5"
+                >
+                    {loading ? <Bouncy size="14" speed="1.75" color="#6ee7b7" /> : <Search size={13} />} Buscar
+                </button>
+            </div>
+
+            {error && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border-2 border-red-500/25 text-red-400 text-xs">
+                    <AlertCircle size={12} className="shrink-0" /><span>{error}</span>
+                </div>
+            )}
+
+            {shown.length > 0 && (
+                <>
+                    <div className={`grid ${compact ? "grid-cols-5" : "grid-cols-5"} gap-2`}>
+                        {shown.map((img) => (
+                            <button
+                                key={img.url}
+                                type="button"
+                                onClick={() => pick(img)}
+                                disabled={!!picking}
+                                className="relative aspect-square rounded-lg overflow-hidden border-2 border-white/10 hover:border-emerald-500/60 transition-colors cursor-pointer disabled:opacity-50 group"
+                                title={img.credit ? `Foto de ${img.credit} (${img.source})` : img.source}
+                            >
+                                <img src={img.thumbnail} alt="" className="w-full h-full object-cover" />
+                                {picking === img.url && (
+                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                        <Bouncy size="20" speed="1.75" color="#fff" />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                    {visible < results.length && visible < 20 && (
+                        <button
+                            type="button"
+                            onClick={() => setVisible((v) => Math.min(v + 5, 20, results.length))}
+                            className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer mt-0.5"
+                        >
+                            Mostrar más ({Math.min(5, results.length - visible)})
+                        </button>
+                    )}
+                    <p className="text-[10px] text-gray-600">Imágenes de Pexels y Wikimedia. Al elegir una, se guarda en tu almacenamiento.</p>
+                </>
+            )}
+            {searched && !loading && results.length === 0 && !error && (
+                <p className="text-xs text-gray-600 py-2">Sin resultados.</p>
+            )}
+        </div>
+    );
+}
+
 // ─── Image preview ────────────────────────────────────────────────────────────
 
 function ImagePreview({
@@ -146,9 +289,10 @@ function ImagePreview({
 }) {
     const size = isEditMode ? "w-14 h-14" : "w-16 h-16 sm:w-20 sm:h-20";
     const isAi = mode === "ai";
+    const isManual = mode === "manual";
 
     return (
-        <div className="relative shrink-0 group" onClick={!isAi && !isGenerating ? onUploadClick : undefined}>
+        <div className="relative shrink-0 group" onClick={isManual && !isGenerating ? onUploadClick : undefined}>
             {/* Glow ring for AI mode */}
             {isAi && !isEditMode && (
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 opacity-40 blur-sm animate-pulse pointer-events-none" />
@@ -157,7 +301,9 @@ function ImagePreview({
             <div className={`relative ${size} rounded-full overflow-hidden border-2 flex items-center justify-center transition-all
                 ${isAi
                     ? "border-violet-500/50 bg-violet-950/50"
-                    : "border-blue-500/30 bg-gray-900 cursor-pointer hover:border-blue-500"
+                    : isManual
+                        ? "border-blue-500/30 bg-gray-900 cursor-pointer hover:border-blue-500"
+                        : "border-emerald-500/40 bg-gray-900"
                 }`}
             >
                 {isGenerating ? (
@@ -182,7 +328,7 @@ function ImagePreview({
                             >
                                 <RefreshCw size={isEditMode ? 12 : 16} className="text-violet-300" />
                             </button>
-                        ) : !isAi ? (
+                        ) : isManual ? (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Upload size={isEditMode ? 12 : 16} className="text-white" />
                             </div>
@@ -192,7 +338,9 @@ function ImagePreview({
                     <div className="flex flex-col items-center gap-1">
                         {isAi
                             ? <Sparkles size={isEditMode ? 14 : 22} className="text-violet-400" />
-                            : <Upload size={isEditMode ? 14 : 22} className="text-blue-400" />
+                            : isManual
+                                ? <Upload size={isEditMode ? 14 : 22} className="text-blue-400" />
+                                : <Search size={isEditMode ? 14 : 22} className="text-emerald-400" />
                         }
                     </div>
                 )}
@@ -217,6 +365,7 @@ function ParticipantForm({
     onCancel,
     isEditMode = false,
     planSlug,
+    eventId,
 }: {
     initialName?: string;
     initialImage?: string;
@@ -224,6 +373,7 @@ function ParticipantForm({
     onCancel: () => void;
     isEditMode?: boolean;
     planSlug: string;
+    eventId: string;
 }) {
     const canUseAi = planSlug !== "free";
     const [mode, setMode] = useState<InputMode>("manual");
@@ -364,6 +514,13 @@ function ParticipantForm({
                                     />
                                 </div>
                             </motion.div>
+                        ) : mode === "search" ? (
+                            <motion.div key="search-edit"
+                                initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.15 }}
+                            >
+                                <SearchImagesPanel eventId={eventId} initialQuery={name} onPick={setImage} compact />
+                            </motion.div>
                         ) : (
                             <motion.div key="ai-edit"
                                 initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
@@ -446,7 +603,7 @@ function ParticipantForm({
                     />
                     <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/*" className="hidden" />
 
-                    {!isAi && (
+                    {mode === "manual" && (
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
@@ -506,6 +663,17 @@ function ParticipantForm({
                                         placeholder="URL de imagen (opcional)..."
                                     />
                                 </div>
+                            </motion.div>
+                        ) : mode === "search" ? (
+                            <motion.div
+                                key="search-create"
+                                initial={{ opacity: 0, x: 8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 8 }}
+                                transition={{ duration: 0.18 }}
+                                className="flex flex-col gap-2"
+                            >
+                                <SearchImagesPanel eventId={eventId} initialQuery={name} onPick={setImage} />
                             </motion.div>
                         ) : (
                             <motion.div
@@ -711,9 +879,9 @@ export default function ParticipantList({
                                 <Lock className="text-amber-500" /> Límite Alcanzado
                             </h2>
                             <p className="text-gray-400 text-sm mb-6">
-                                Has alcanzado el máximo de <strong>{currentLimit} {limitOverride ? "elementos" : "participantes"}</strong> en tu plan actual.
+                                Has alcanzado el máximo de <strong>{currentLimit} {square ? "elementos" : "participantes"}</strong> en tu plan actual.
                             </p>
-                            <div className={`bg-black/40 rounded-xl border-2 border-white/5 p-4 mb-8 space-y-3 ${limitOverride ? "hidden" : ""}`}>
+                            <div className={`bg-black/40 rounded-xl border-2 border-white/5 p-4 mb-8 space-y-3 ${square ? "hidden" : ""}`}>
                                 <div className="flex justify-between items-center text-sm border-b-2 border-white/5 pb-2">
                                     <span className="text-gray-500">Tu Plan ({PLANS[planKey].name})</span>
                                     <span className="font-mono text-red-400">{currentLimit} participantes</span>
@@ -766,6 +934,7 @@ export default function ParticipantList({
                         {/* Decorative gradient top line */}
                         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
                         <ParticipantForm
+                            eventId={eventId}
                             onSubmit={async (fd) => {
                                 await createEventParticipant(eventId, fd);
                                 setIsCreating(false);
@@ -792,6 +961,7 @@ export default function ParticipantList({
                             {editingId === p.id ? (
                                 <div className="p-4">
                                     <ParticipantForm
+                                        eventId={eventId}
                                         initialName={p.name}
                                         initialImage={p.imageUrl || ""}
                                         isEditMode

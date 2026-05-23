@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit-redis";
+import { collectEventBlobUrls, deleteBlobsBatched } from "@/lib/blob-cleanup";
 
 export async function POST(req: Request) {
     const session = await auth();
@@ -28,7 +29,10 @@ export async function POST(req: Request) {
         }
 
         if (action === "delete") {
+            // Recoger blobs (dibujos + nominados re-alojados) antes del cascade
+            const blobUrls = await collectEventBlobUrls({ userIds: ids });
             await prisma.user.deleteMany({ where: { id: { in: ids } } });
+            await deleteBlobsBatched(blobUrls);
             return NextResponse.json({ success: true });
         }
 

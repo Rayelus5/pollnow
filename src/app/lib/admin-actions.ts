@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import bcrypt from "bcryptjs";
 import { sendSystemNotificationEmail } from "@/lib/mail";
 import { buildUnsubscribeUrl } from "@/lib/unsubscribe";
+import { collectEventBlobUrls, deleteBlobsBatched } from "@/lib/blob-cleanup";
 
 // Helper para verificar permisos de admin
 async function checkAdminPermissions() {
@@ -137,10 +138,16 @@ export async function changeUserRole(userId: string, newRole: 'USER' | 'ADMIN' |
 
 export async function deleteUser(userId: string) {
     await checkAdminPermissions();
-    
+
+    // Recoger blobs (dibujos + nominados re-alojados) de TODOS sus eventos antes del cascade
+    const blobUrls = await collectEventBlobUrls({ userId });
+
     // El borrado en cascada de Prisma se encargará de eventos, votos, etc.
     await prisma.user.delete({ where: { id: userId } });
-    
+
+    // Limpiar los blobs huérfanos (best-effort)
+    await deleteBlobsBatched(blobUrls);
+
     revalidatePath('/admin/users');
 }
 

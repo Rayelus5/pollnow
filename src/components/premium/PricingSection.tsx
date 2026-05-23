@@ -5,50 +5,66 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Check, Sparkles, ArrowRight } from "lucide-react";
 import { clsx } from "clsx";
-import { PLANS } from "@/lib/plans";
 import CheckoutButton from "@/components/premium/CheckoutButton";
 import ManageButton from "@/components/premium/ManageButton";
 
-// Datos visuales de los planes
-const PRICING_DATA = [
-    {
-        key: 'free',
-        title: "Free",
-        price: "GRATIS",
+// Plan serializado que llega desde la BD (page.tsx → getActivePlans).
+type PlanCard = {
+    slug: string;
+    name: string;
+    price: number;
+    priceId: string | null;
+    features: Record<string, unknown>;
+};
+
+// FALLBACK de presentación por slug. Solo se usa si el JSON `features` del plan en
+// BD no trae estos campos. Lo "de marca" (textos) puede moverse al JSON desde /admin.
+const PRESENTATION: Record<string, { description: string; period?: string; highlight?: boolean; enterpriseLike?: boolean; originalPrice?: number; features: string[] }> = {
+    free: {
         description: "Prueba la experiencia sin compromiso.",
         features: ["1 Evento Activo", "5 Categorías máximo por evento", "12 Nominados máximo por evento", "Votación Anónima", "Resultados Modo Gala", "Con publicidad"],
-        priceId: null
     },
-    {
-        key: 'premium',
-        title: "Premium",
-        price: "2.99€",
-        period: "/mes",
+    premium: {
         description: "Para grupos de amigos activos.",
+        period: "/mes",
+        highlight: true,
         features: ["5 Eventos Activos", "10 Categorías máximo por evento", "30 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas básicas"],
-        priceId: PLANS.PREMIUM.priceId,
-        highlight: true
     },
-    {
-        key: 'plus',
-        title: "Plus",
-        price: "5.99€",
-        period: "/mes",
+    plus: {
         description: "Para disfrutar de eventos sin anuncios.",
-        features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Sin publicidad"],
-        priceId: PLANS.PLUS.priceId
-    },
-    {
-        key: 'unlimited',
-        title: "Unlimited",
-        price: "12.99€",
         period: "/mes",
-        description: "Para organizadores de eventos serios. Aumenta tus límites al máximo nivel, incluyendo desactivación de voto anónimo.",
-        features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Creación de nominados con CSV", "Creación de categorías con CSV", "Sin publicidad", "Desactivación de voto anónimo"],
-        priceId: PLANS.UNLIMITED.priceId,
-        enterpriseLike: true
+        features: ["10 Eventos Activos", "15 Categorías máximo por evento", "50 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Sin publicidad"],
     },
-];
+    unlimited: {
+        description: "Para organizadores de eventos serios. Aumenta tus límites al máximo nivel, incluyendo desactivación de voto anónimo.",
+        period: "/mes",
+        enterpriseLike: true,
+        originalPrice: 24.99,
+        features: ["20 Eventos Activos", "30 Categorías máximo por evento", "100 Nominados máximo por evento", "Generación de imágenes con IA", "Colaboración en tiempo real*", "Estadísticas Avanzadas", "Creación de nominados con CSV", "Creación de categorías con CSV", "Sin publicidad", "Desactivación de voto anónimo"],
+    },
+};
+
+const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+const strArr = (v: unknown): string[] | undefined => (Array.isArray(v) && v.every((x) => typeof x === "string") ? (v as string[]) : undefined);
+const numOr = (v: unknown, fb: number): number => (typeof v === "number" ? v : fb);
+
+/** Construye los datos visuales mezclando BD (precio, priceId, features JSON) con el fallback por slug. */
+function buildCard(p: PlanCard) {
+    const f = p.features ?? {};
+    const pres = PRESENTATION[p.slug] ?? { description: "", features: [] };
+    return {
+        key: p.slug,
+        title: p.name,
+        price: p.price === 0 ? "GRATIS" : `${p.price.toFixed(2)}€`,
+        period: p.price === 0 ? undefined : (str(f.period) ?? pres.period),
+        description: str(f.tagline) ?? pres.description,
+        features: strArr(f.featureList) ?? pres.features,
+        priceId: p.priceId,
+        highlight: typeof f.highlight === "boolean" ? f.highlight : pres.highlight,
+        enterpriseLike: typeof f.enterpriseLike === "boolean" ? (f.enterpriseLike as boolean) : pres.enterpriseLike,
+        originalPrice: numOr(f.originalPrice, pres.originalPrice ?? 0),
+    };
+}
 
 // Variantes de animación
 const containerVariants = {
@@ -68,8 +84,11 @@ const cardVariants = {
     }
 };
 
-export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: string }) {
+export default function PricingSection({ currentPlanSlug, plans }: { currentPlanSlug: string; plans: PlanCard[] }) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+    // Tarjetas construidas desde BD (excluye Enterprise, que tiene su card dedicada abajo).
+    const PRICING_DATA = plans.filter((p) => p.slug !== "enterprise").map(buildCard);
 
     return (
         <div className="max-w-7xl mx-auto text-center w-full">
@@ -169,23 +188,25 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
                                                 </span>
 
                                                 <div className="flex flex-wrap items-center gap-3 justify-start md:justify-end mt-5 md:mt-0">
-                                                    {/* Original price (tached) */}
+                                                    {/* Original price (tachado) — solo si hay precio original configurado */}
+                                                    {plan.originalPrice > 0 && (
                                                     <div className="flex flex-col justify-end p-2 rounded-xl bg-blue-950/40 border-2 border-blue-400/30">
                                                         <span
                                                             className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-xs md:text-sm justify-center font-semibold bg-blue-600 text-white"
                                                             aria-hidden="true"
                                                         >
-                                                            -{Math.round((1 - 12.99 / 24.99) * 100)}%
+                                                            -{Math.round((1 - parseFloat(plan.price) / plan.originalPrice) * 100)}%
                                                         </span>
 
                                                         <span
                                                             className="text-md md:text-xl text-gray-400 line-through opacity-80"
                                                             aria-hidden="true"
                                                         >
-                                                            €{24.99.toFixed(2)}
+                                                            €{plan.originalPrice.toFixed(2)}
                                                         </span>
 
                                                     </div>
+                                                    )}
 
                                                     {/* Discounted price (prominent) */}
                                                     <div className="text-5xl md:text-6xl font-extrabold text-blue-300">
@@ -196,7 +217,7 @@ export default function PricingSection({ currentPlanSlug }: { currentPlanSlug: s
 
                                                 {/* Hidden accessibility text describing the offer for screen readers */}
                                                 <span className="sr-only">
-                                                    Original price 24.99€. Now {plan.price}€.
+                                                    {plan.originalPrice > 0 ? `Precio original ${plan.originalPrice.toFixed(2)}€. ` : ""}Ahora {plan.price}.
                                                 </span>
                                             </div>
 

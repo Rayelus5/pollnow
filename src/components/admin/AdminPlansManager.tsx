@@ -391,13 +391,23 @@ function PlanCard({ plan, onCancelCreate }: { plan?: AdminPlan; onCancelCreate?:
                 </Field>
             </div>
 
-            {/* Features JSON */}
+            {/* Features JSON — también alimenta la página /premium */}
             <div className="mt-4">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Features (JSON)</label>
+                <p className="text-[10px] text-gray-600 ml-1 mt-0.5 mb-1 leading-relaxed">
+                    Controla cómo se ve este plan en <span className="text-gray-400">/premium</span>. Claves soportadas:{" "}
+                    <code className="text-blue-400">featureList</code> (array de textos),{" "}
+                    <code className="text-blue-400">tagline</code> (string),{" "}
+                    <code className="text-blue-400">period</code> (ej. &quot;/mes&quot;),{" "}
+                    <code className="text-blue-400">highlight</code> (bool, badge &quot;Más popular&quot;),{" "}
+                    <code className="text-blue-400">enterpriseLike</code> (bool, tarjeta ancha),{" "}
+                    <code className="text-blue-400">originalPrice</code> (número, para mostrar descuento). Si se dejan vacías, /premium usa textos por defecto.
+                </p>
                 <textarea
                     value={form.features}
                     onChange={(e) => set("features", e.target.value)}
-                    rows={2}
+                    rows={4}
+                    placeholder={`{\n  "tagline": "Para grupos de amigos activos.",\n  "featureList": ["5 Eventos Activos", "Generación con IA"],\n  "highlight": true\n}`}
                     className="mt-1 w-full p-3 rounded-xl bg-white/5 border-2 border-white/20 text-white font-mono text-xs focus:outline-none focus:border-blue-500 transition-colors"
                 />
             </div>

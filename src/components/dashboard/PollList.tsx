@@ -99,12 +99,15 @@ export default function PollList({
     eventId,
     planSlug,
     canManagePolls = true,
+    limitOverride,
 }: {
     initialPolls: Poll[];
     allParticipants: Participant[];
     eventId: string;
     planSlug: string;
     canManagePolls?: boolean;
+    /** Límite de categorías resuelto desde BD (fuente de verdad). */
+    limitOverride?: number;
 }) {
     const router = useRouter();
     const [polls, setPolls] = useState(initialPolls);
@@ -119,7 +122,7 @@ export default function PollList({
     const [votingType, setVotingType] = useState<Poll["votingType"]>("SINGLE");
 
     const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
-    const currentLimit = PLANS[planKey]?.limits?.pollsPerEvent || 5;
+    const currentLimit = limitOverride ?? (PLANS[planKey]?.limits?.pollsPerEvent || 5);
     const canImportCsv = planSlug === "enterprise" || planSlug === "unlimited";
     const currentCount = polls.length;
     const isAtLimit = currentCount >= currentLimit;

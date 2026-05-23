@@ -33,15 +33,20 @@ export async function putDrawing(buffer: Buffer | Uint8Array, key: string): Prom
 }
 
 /**
- * Borra un dibujo del almacenamiento. Acepta la key o la URL pública.
+ * Borra uno o varios objetos del almacenamiento. Acepta key(s) o URL(s) públicas.
  * Tolerante a fallos: no lanza si el objeto ya no existe.
  */
-export async function deleteDrawing(keyOrUrl: string): Promise<void> {
+export async function deleteDrawing(keyOrUrl: string | string[]): Promise<void> {
     try {
         await del(keyOrUrl);
     } catch (e) {
         console.error("[drawing-storage] deleteDrawing falló (ignorado):", e);
     }
+}
+
+/** True si la URL apunta a nuestro almacén de Vercel Blob (evita borrar URLs externas/data-URI). */
+export function isBlobUrl(url: string | null | undefined): boolean {
+    return !!url && url.includes(".blob.vercel-storage.com");
 }
 
 /** Construye la key canónica de un dibujo dentro de un evento. */

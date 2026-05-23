@@ -5,13 +5,10 @@ import { es } from "date-fns/locale";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Mail } from "lucide-react";
 import UserActions from "@/components/admin/UserActions";
+import { getActivePlans } from "@/lib/user-plan";
+import { planSlugFromUser, planBadge } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
-
-const PREMIUM_PRICE_ID = "price_1T1tQSAnnRNk3k0PKQVAbjnb";
-const PLUS_PRICE_ID = "price_1T1tRmAnnRNk3k0PLPBcN1Pk";
-const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
-const ENTERPRISE_PRICE_ID = "enterprise";
 
 export default async function AdminUserDetailPage({
     params,
@@ -30,21 +27,13 @@ export default async function AdminUserDetailPage({
 
     if (!user) notFound();
 
-    // --- Derivamos plan a partir de stripePriceId ---
-    let planLabel = "Free";
-    if (user.stripePriceId === ENTERPRISE_PRICE_ID) planLabel = "Enterprise";
-    else if (user.stripePriceId === PREMIUM_PRICE_ID) planLabel = "Premium";
-    else if (user.stripePriceId === PLUS_PRICE_ID) planLabel = "Plus";
-    else if (user.stripePriceId === UNLIMITED_PRICE_ID) planLabel = "Unlimited";
-
-    const isPaidPlan = planLabel !== "Free";
-
-    const planBadgeClasses =
-        planLabel === "Enterprise"
-            ? "bg-amber-900/20 text-amber-400 border-amber-500/30"
-            : isPaidPlan
-                ? "bg-emerald-900/30 text-emerald-400 border-emerald-500/20"
-                : "bg-gray-800 text-gray-500 border-gray-700";
+    // --- Plan resuelto desde la BD (fuente de verdad) ---
+    const plans = await getActivePlans();
+    const planSlug = planSlugFromUser(user, plans);
+    const planLabel = planBadge(planSlug).label;
+    const planBadgeClasses = planBadge(planSlug).className;
+    // Opciones de plan para el selector del admin (slug + priceId reales de BD)
+    const planOptions = plans.map((p) => ({ slug: p.slug, name: p.name, priceId: p.priceId }));
 
     const roleBadgeClasses =
         user.role === "ADMIN"
@@ -192,6 +181,7 @@ export default async function AdminUserDetailPage({
                 {/* COLUMNA DERECHA: ACCIONES Y EDICIÓN COMPLETA */}
                 <div>
                     <UserActions
+                        plans={planOptions}
                         user={{
                             id: user.id,
                             role: user.role,

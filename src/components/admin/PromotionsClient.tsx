@@ -25,12 +25,7 @@ type Raffle = {
 type Bar = { id: string; text: string; link: string | null; linkText: string | null; isActive: boolean };
 
 type Tab = "bonus" | "raffles" | "bar";
-
-const PLAN_OPTIONS = [
-    { value: "premium", label: "Premium", color: "text-blue-400" },
-    { value: "plus", label: "Plus", color: "text-violet-400" },
-    { value: "unlimited", label: "Unlimited", color: "text-amber-400" },
-];
+type PlanOption = { value: string; label: string };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
     ACTIVE: { label: "Activo", color: "border-emerald-500/40 text-emerald-300 bg-emerald-500/10" },
@@ -42,10 +37,12 @@ export default function PromotionsClient({
     initialConfig,
     initialRaffles,
     initialBar,
+    planOptions,
 }: {
     initialConfig: Config;
     initialRaffles: Raffle[];
     initialBar: Bar;
+    planOptions: PlanOption[];
 }) {
     const [tab, setTab] = useState<Tab>("bonus");
 
@@ -80,7 +77,7 @@ export default function PromotionsClient({
                     exit={{ opacity: 0, y: -8 }}
                     transition={{ duration: 0.15 }}
                 >
-                    {tab === "bonus" && <BonusTab initialConfig={initialConfig} />}
+                    {tab === "bonus" && <BonusTab initialConfig={initialConfig} planOptions={planOptions} />}
                     {tab === "raffles" && <RafflesTab initialRaffles={initialRaffles} />}
                     {tab === "bar" && <BarTab initialBar={initialBar} />}
                 </motion.div>
@@ -91,7 +88,7 @@ export default function PromotionsClient({
 
 // ─── Tab: Bono de bienvenida ──────────────────────────────────────────────────
 
-function BonusTab({ initialConfig }: { initialConfig: Config }) {
+function BonusTab({ initialConfig, planOptions }: { initialConfig: Config; planOptions: PlanOption[] }) {
     const [config, setConfig] = useState(initialConfig);
     const [saved, setSaved] = useState(false);
     const [pending, startTransition] = useTransition();
@@ -141,14 +138,14 @@ function BonusTab({ initialConfig }: { initialConfig: Config }) {
                             <div className="space-y-4 pb-2">
                                 <div>
                                     <label className="text-xs uppercase text-gray-500 block mb-2">Plan a regalar</label>
-                                    <div className="flex gap-2">
-                                        {PLAN_OPTIONS.map(p => (
+                                    <div className="flex gap-2 flex-wrap">
+                                        {planOptions.map(p => (
                                             <button
                                                 key={p.value}
                                                 onClick={() => setConfig(c => ({ ...c, planSlug: p.value }))}
-                                                className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-bold transition-all cursor-pointer ${
+                                                className={`flex-1 min-w-[100px] py-2.5 rounded-xl border-2 text-sm font-bold transition-all cursor-pointer ${
                                                     config.planSlug === p.value
-                                                        ? `border-white/30 bg-white/10 ${p.color}`
+                                                        ? "border-violet-500/40 bg-violet-500/10 text-violet-300"
                                                         : "border-white/10 text-gray-600 hover:border-white/20"
                                                 }`}
                                             >

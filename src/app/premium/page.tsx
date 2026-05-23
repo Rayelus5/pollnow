@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { PLANS } from "@/lib/plans";
-import { getPlanFromUser } from "@/lib/user-plan";
+import { getPlanFromUser, getActivePlans } from "@/lib/user-plan";
 import PricingSection from "@/components/premium/PricingSection"; // Importamos el nuevo componente
 import type { Metadata } from "next";
 
@@ -22,8 +21,12 @@ export const metadata: Metadata = {
 export default async function PremiumPage() {
     const session = await auth();
 
+    // Planes desde BD (fuente de verdad, cacheada). El precio, priceId y features
+    // salen de aquí; no se hardcodean en el componente.
+    const plans = await getActivePlans();
+
     // Obtenemos el plan actual del usuario
-    let currentPlanSlug = PLANS.FREE.slug;
+    let currentPlanSlug = "free";
 
     if (session?.user?.id) {
         const user = await prisma.user.findUnique({ where: { id: session.user.id } });
@@ -33,6 +36,15 @@ export default async function PremiumPage() {
         }
     }
 
+    // Serializamos solo lo que el cliente necesita (ResolvedPlan ya es serializable).
+    const planCards = plans.map((p) => ({
+        slug: p.slug,
+        name: p.name,
+        price: p.price,
+        priceId: p.priceId,
+        features: p.features,
+    }));
+
     return (
         <main className="min-h-screen bg-black text-white pt-24 pb-20 px-6 overflow-hidden relative">
 
@@ -40,7 +52,7 @@ export default async function PremiumPage() {
             <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-900/10 rounded-[100%] blur-[120px] pointer-events-none" />
 
             {/* Componente Cliente con Animaciones */}
-            <PricingSection currentPlanSlug={currentPlanSlug} />
+            <PricingSection currentPlanSlug={currentPlanSlug} plans={planCards} />
 
         </main>
     );

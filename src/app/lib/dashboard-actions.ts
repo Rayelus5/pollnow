@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlanFromUser } from "@/lib/user-plan";
 import { canCreateDrawingEvent, clampDrawingTime } from "@/lib/event-modes";
+import { collectEventBlobUrls, deleteBlobsBatched } from "@/lib/blob-cleanup";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import { z } from "zod";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -287,11 +288,17 @@ export async function deleteEvent(eventId: string) {
     return;
   }
 
+  // Recoger las URLs de Blob ANTES de borrar (el cascade elimina las filas)
+  const blobUrls = await collectEventBlobUrls({ eventId });
+
   await prisma.$transaction(async (tx) => {
     await tx.report.deleteMany({ where: { eventId } });
     await tx.moderationLog.deleteMany({ where: { eventId } });
     await tx.event.delete({ where: { id: eventId } });
   });
+
+  // Borrar los blobs huérfanos (best-effort; no rompe el borrado si falla)
+  await deleteBlobsBatched(blobUrls);
 
   revalidateTag("events-public", {});
 

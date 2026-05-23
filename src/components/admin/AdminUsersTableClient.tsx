@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { clsx } from "clsx";
+import { planBadge } from "@/lib/plans";
 
 type UserRow = {
     id: string;
@@ -18,6 +19,7 @@ type UserRow = {
     ipBan: boolean;
     subscriptionStatus: string;
     stripePriceId: string | null;
+    planSlug: string; // resuelto en servidor desde la BD (fuente de verdad)
     createdAt: string; // ISO
     _count: { events: number; reports: number };
 };
@@ -244,7 +246,7 @@ export default function AdminUsersTableClient({
                                 </td>
 
                                 <td className="p-3">
-                                    <PlanBadge stripePriceId={u.stripePriceId} subscriptionStatus={u.subscriptionStatus} />
+                                    <PlanBadge planSlug={u.planSlug} />
                                 </td>
 
                                 <td className="p-3 text-xs text-gray-400 font-mono">
@@ -300,42 +302,11 @@ export default function AdminUsersTableClient({
     );
 }
 
-const PREMIUM_PRICE_ID = "price_1T1tQSAnnRNk3k0PKQVAbjnb";
-const PLUS_PRICE_ID = "price_1T1tRmAnnRNk3k0PLPBcN1Pk";
-const UNLIMITED_PRICE_ID = "price_1SVz24AnnRNk3k0PvSjAEVQA";
-
-function PlanBadge({ stripePriceId, subscriptionStatus }: { stripePriceId: string | null; subscriptionStatus: string }) {
-    if (stripePriceId === "enterprise") {
-        return (
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-900/20 text-amber-400 border-2 border-amber-500/30">
-                ⭐ Enterprise
-            </span>
-        );
-    }
-    if (stripePriceId === UNLIMITED_PRICE_ID && subscriptionStatus === "active") {
-        return (
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-900/20 text-indigo-400 border-2 border-indigo-500/20">
-                Unlimited
-            </span>
-        );
-    }
-    if (stripePriceId === PLUS_PRICE_ID && subscriptionStatus === "active") {
-        return (
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-900/20 text-blue-400 border-2 border-blue-500/20">
-                Plus
-            </span>
-        );
-    }
-    if (stripePriceId === PREMIUM_PRICE_ID && subscriptionStatus === "active") {
-        return (
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-violet-900/20 text-violet-400 border-2 border-violet-500/20">
-                Premium
-            </span>
-        );
-    }
+function PlanBadge({ planSlug }: { planSlug: string }) {
+    const b = planBadge(planSlug);
     return (
-        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-800 text-gray-500 border-2 border-gray-700">
-            Free
+        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${b.className}`}>
+            {planSlug === "enterprise" ? "⭐ " : ""}{b.label}
         </span>
     );
 }
