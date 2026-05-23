@@ -502,6 +502,29 @@ export default function PricingSection({ currentPlanSlug, plans }: { currentPlan
                         </ul>
                     </div>
                 </div>
+
+                {/* Enlace a la página de límites detallados */}
+                <div className="mt-10 px-4">
+                    <Link
+                        href="/limits"
+                        className="group flex items-center justify-between gap-4 rounded-2xl border-2 border-white/10 bg-white/[0.02] hover:border-indigo-500/40 hover:bg-indigo-500/[0.04] transition-colors px-5 py-4"
+                    >
+                        <div className="flex items-start gap-3 text-left">
+                            <div className="mt-0.5 flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0">
+                                <Sparkles size={16} />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-white">
+                                    ¿Qué incluye exactamente cada plan?
+                                </p>
+                                <p className="text-xs text-zinc-500 mt-0.5">
+                                    Consulta todos los límites por plan y por modo de evento (galas, tierlists, preguntas y dibujo).
+                                </p>
+                            </div>
+                        </div>
+                        <ArrowRight size={18} className="text-zinc-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+                </div>
             </motion.div>
         </div>
     );

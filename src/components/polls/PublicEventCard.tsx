@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { Users, Vote, ArrowRight, Heart, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Users, Vote, ArrowRight, Heart, ThumbsUp, ThumbsDown, ListOrdered, CircleHelp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { DotPulse } from 'ldrs/react';
@@ -20,13 +20,37 @@ type EventSummary = {
     createdAt: string;
     galaDate: string;
     tags: string[];
-    _count: { participants: number; polls: number };
+    mode: "GALA" | "TIERLIST" | "PREGUNTAS" | "DIBUJO";
+    _count: { participants: number; polls: number; tiers: number; questions: number };
     user: { name: string; username: string; image: string | null };
     likeCount: number;
     voteScore: number;
     hasLiked: boolean;
     userVote: 1 | -1 | null;
 };
+
+type StatBadge = { value: number; label: string; Icon: typeof Users; color: string };
+
+/** Stats a mostrar en la card según el modo del evento (DIBUJO nunca es público). */
+function modeStats(event: EventSummary): StatBadge[] {
+    const c = event._count;
+    switch (event.mode) {
+        case "TIERLIST":
+            return [
+                { value: c.tiers, label: "Tiers", Icon: ListOrdered, color: "text-blue-400" },
+                { value: c.participants, label: "Nominados", Icon: Users, color: "text-emerald-400" },
+            ];
+        case "PREGUNTAS":
+            return [
+                { value: c.questions, label: "Preguntas", Icon: CircleHelp, color: "text-violet-400" },
+            ];
+        default: // GALA
+            return [
+                { value: c.participants, label: "Nominados", Icon: Users, color: "text-blue-400" },
+                { value: c.polls, label: "Categorías", Icon: Vote, color: "text-purple-400" },
+            ];
+    }
+}
 
 const cardVariants = {
     hidden: { opacity: 0, y: 16 },
@@ -216,16 +240,17 @@ export default function PublicEventCard({
                         {event.description || "Sin descripción disponible para este evento."}
                     </p>
 
-                    {/* Stats badges */}
+                    {/* Stats badges (según modo de evento) */}
                     <div className="flex gap-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-4">
-                        <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border-2 border-white/5">
-                            <Users size={12} className="text-blue-400" />
-                            <span>{event._count.participants} Nominados</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border-2 border-white/5">
-                            <Vote size={12} className="text-purple-400" />
-                            <span>{event._count.polls} Categorías</span>
-                        </div>
+                        {modeStats(event).map((stat) => {
+                            const StatIcon = stat.Icon;
+                            return (
+                                <div key={stat.label} className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg border-2 border-white/5">
+                                    <StatIcon size={12} className={stat.color} />
+                                    <span>{stat.value} {stat.label}</span>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Tags + Like/Vote + Arrow */}

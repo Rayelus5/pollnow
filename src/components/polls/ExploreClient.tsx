@@ -14,7 +14,8 @@ type EventData = {
     createdAt: string;
     galaDate: string;
     tags: string[];
-    _count: { participants: number; polls: number };
+    mode: "GALA" | "TIERLIST" | "PREGUNTAS" | "DIBUJO";
+    _count: { participants: number; polls: number; tiers: number; questions: number };
     user: { name: string; username: string; image: string | null };
     likeCount: number;
     voteScore: number;

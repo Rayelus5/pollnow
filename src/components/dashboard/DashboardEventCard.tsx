@@ -104,14 +104,6 @@ export default function DashboardEventCard({ event, isShared = false, hasCollabo
                                     {visibilityLabel}
                                 </div>
 
-                                {event.status !== "DRAFT" && (
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 border-white/10 text-gray-300 ${event.status === "APPROVED" ? "bg-green-500/10" : event.status === "DENIED" ? "bg-red-500/10" : event.status === "PENDING" ? "bg-yellow-500/10" : "bg-gray-800/30"}`}>
-                                        {event.status === "PENDING" && "En revisión"}
-                                        {event.status === "APPROVED" && "Aprobado"}
-                                        {event.status === "DENIED" && "Rechazado"}
-                                    </span>
-                                )}
-
                                 {/* Icono de colaboración */}
                                 {(isShared || hasCollaborators) && (
                                     <span className={clsx(
@@ -143,13 +135,22 @@ export default function DashboardEventCard({ event, isShared = false, hasCollabo
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-start gap-4 text-xs text-gray-500 font-mono border-t-2 border-white/10 pt-4">
-                        {stats.map((s) => (
-                            <div key={s.label} className="flex items-center gap-1">
-                                <span className="text-white font-bold">{s.value}</span>{" "}
-                                {s.label}
-                            </div>
-                        ))}
+                    <div className="flex items-center justify-between border-t border-white/15 pt-4">
+                        <div className="flex items-center justify-start gap-4 text-xs text-gray-500 font-mono">
+                            {stats.map((s) => (
+                                <div key={s.label} className="flex items-center gap-1">
+                                    <span className="text-white font-bold">{s.value}</span>{" "}
+                                    {s.label}
+                                </div>
+                            ))}
+                        </div>
+                        {event.status !== "DRAFT" && (
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 border-white/10 text-gray-300 ${event.status === "APPROVED" ? "bg-green-500/10" : event.status === "DENIED" ? "bg-red-500/10" : event.status === "PENDING" ? "bg-yellow-500/10" : "bg-gray-800/30"}`}>
+                                {event.status === "PENDING" && "En revisión"}
+                                {event.status === "APPROVED" && "Aprobado"}
+                                {event.status === "DENIED" && "Rechazado"}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>

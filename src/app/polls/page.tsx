@@ -51,7 +51,8 @@ type PublicEvent = {
     createdAt: string;
     galaDate: string;
     user: { name: string; username: string; image: string | null };
-    _count: { participants: number; polls: number };
+    mode: "GALA" | "TIERLIST" | "PREGUNTAS" | "DIBUJO";
+    _count: { participants: number; polls: number; tiers: number; questions: number };
     likeCount: number;
     voteScore: number;
 };
@@ -63,7 +64,8 @@ type PublicEvent = {
  */
 const getPublicEventsData = unstable_cache(
     async (query: string, tag: string, status: string): Promise<PublicEvent[]> => {
-        const where: any = { isPublic: true };
+        // DIBUJO es siempre privado; nunca debe listarse en la comunidad.
+        const where: any = { isPublic: true, mode: { not: "DIBUJO" } };
         const conditions: any[] = [];
 
         if (query) {
@@ -82,7 +84,7 @@ const getPublicEventsData = unstable_cache(
             orderBy: { createdAt: "desc" },
             include: {
                 user: { select: { name: true, username: true, image: true } },
-                _count: { select: { participants: true, polls: true, likes: true } },
+                _count: { select: { participants: true, polls: true, likes: true, tiers: true, questions: true } },
             },
         });
 
@@ -105,7 +107,13 @@ const getPublicEventsData = unstable_cache(
             createdAt: e.createdAt.toISOString(),
             galaDate: e.galaDate.toISOString(),
             user: e.user,
-            _count: { participants: e._count.participants, polls: e._count.polls },
+            mode: e.mode,
+            _count: {
+                participants: e._count.participants,
+                polls: e._count.polls,
+                tiers: e._count.tiers,
+                questions: e._count.questions,
+            },
             likeCount: e._count.likes,
             voteScore: scoreMap.get(e.id) ?? 0,
         }));
