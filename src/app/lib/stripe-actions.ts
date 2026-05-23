@@ -83,6 +83,12 @@ export async function createCheckoutSession(priceId: string) {
                 mode: 'subscription',
                 payment_method_types: ['card'],
                 line_items: [{ price: priceId, quantity: 1 }],
+                // Muestra el campo "Añadir código promocional" en la pasarela.
+                // Los códigos se crean en el Dashboard (Catálogo de productos → Cupones).
+                allow_promotion_codes: true,
+                // Permite que Stripe actualice nombre/dirección del cliente desde el checkout.
+                customer_update: { name: 'auto', address: 'auto' },
+                billing_address_collection: 'auto',
                 success_url: `${BASE_URL}/dashboard/profile?checkout_status=success`,
                 cancel_url: `${BASE_URL}/premium?checkout_status=cancelled`,
                 metadata: {

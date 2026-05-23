@@ -50,6 +50,12 @@ type DashboardTabsProps = {
     plan: {
         slug: string;
         name: string;
+        quota: number;
+        limits: {
+            pollsPerEvent: number;
+            participantsPerEvent: number;
+            collaboratorsPerEvent: number;
+        };
     };
     events: EventRow[];
     /** Eventos en los que el usuario es colaborador (no dueño) */
@@ -434,7 +440,7 @@ function ProfileTab({
     return (
         <section className="max-w-7xl space-y-8">
             {/* TARJETA DE SUSCRIPCIÓN */}
-            <SubscriptionCard user={subData} />
+            <SubscriptionCard user={subData} plan={plan} />
 
             {/* FORMULARIOS DE PERFIL */}
             <ProfileForm user={profileUserData} />

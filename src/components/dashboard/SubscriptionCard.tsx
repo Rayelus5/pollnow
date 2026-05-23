@@ -1,6 +1,5 @@
 "use client";
 
-import { PLANS, getPlanFromUser } from "@/lib/plans";
 import { CreditCard, Calendar, AlertTriangle, Building2, Infinity as InfinityIcon, Crown } from "lucide-react";
 import Link from "next/link";
 import ManageButton from "@/components/premium/ManageButton";
@@ -10,12 +9,25 @@ type UserSubscription = {
     subscriptionStatus: string | null;
     stripePriceId: string | null;
     subscriptionEndDate: Date | null;
-    cancelAtPeriodEnd: boolean;
+    cancelAtPeriodEnd: boolean | null;
     stripeSubscriptionId: string | null;
 };
 
-export default function SubscriptionCard({ user }: { user: UserSubscription }) {
-    const plan = getPlanFromUser(user);
+// Plan ya resuelto en servidor desde la tabla SubscriptionPlan (fuente de verdad).
+// No re-resolvemos aquí con priceIds hardcodeados: así los cambios de priceId/limits
+// en BD se reflejan correctamente.
+type ResolvedPlanProp = {
+    slug: string;
+    name: string;
+    quota: number;
+    limits: {
+        pollsPerEvent: number;
+        participantsPerEvent: number;
+        collaboratorsPerEvent: number;
+    };
+};
+
+export default function SubscriptionCard({ user, plan }: { user: UserSubscription; plan: ResolvedPlanProp }) {
     const isFree = plan.slug === "free";
     const isEnterprise = plan.slug === "enterprise";
 
@@ -76,10 +88,10 @@ export default function SubscriptionCard({ user }: { user: UserSubscription }) {
                             {/* Limits summary */}
                             <div className="mt-4 grid grid-cols-2 gap-2">
                                 {[
-                                    { label: "Eventos", value: PLANS.ENTERPRISE.quota },
-                                    { label: "Categorías/evento", value: PLANS.ENTERPRISE.limits.pollsPerEvent },
-                                    { label: "Nominados/evento", value: PLANS.ENTERPRISE.limits.participantsPerEvent },
-                                    { label: "Colaboradores/evento", value: PLANS.ENTERPRISE.limits.collaboratorsPerEvent },
+                                    { label: "Eventos", value: plan.quota },
+                                    { label: "Categorías/evento", value: plan.limits.pollsPerEvent },
+                                    { label: "Nominados/evento", value: plan.limits.participantsPerEvent },
+                                    { label: "Colaboradores/evento", value: plan.limits.collaboratorsPerEvent },
                                 ].map(({ label, value }) => (
                                     <div key={label} className="flex items-center justify-between px-3 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-lg">
                                         <span className="text-[10px] text-gray-500">{label}</span>
