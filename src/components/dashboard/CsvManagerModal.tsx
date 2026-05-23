@@ -33,6 +33,12 @@ export type CsvManagerConfig = {
     exportData: string[][];
     /** Nombre del archivo exportado. */
     exportFilename: string;
+    /** Límite del plan para este tipo de dato (p.ej. nominados/tiers/preguntas). */
+    limit?: number;
+    /** Cantidad ya existente en el evento (para calcular cuántas filas caben). */
+    currentCount?: number;
+    /** Etiqueta en plural para los mensajes de límite (p.ej. "nominados"). */
+    unitLabel?: string;
 };
 
 function parseCSVLine(line: string): string[] {
@@ -89,6 +95,13 @@ export default function CsvManagerModal({
     const validRows = parsedRows.filter((r): r is Extract<ParsedRow, { ok: true }> => r.ok);
     const invalidRows = parsedRows.filter((r): r is Extract<ParsedRow, { ok: false }> => !r.ok);
 
+    // Control de límite del plan: cuántas filas válidas caben realmente.
+    const hasLimit = typeof config.limit === "number" && typeof config.currentCount === "number";
+    const remaining = hasLimit ? Math.max(0, config.limit! - config.currentCount!) : Infinity;
+    const willImport = Math.min(validRows.length, remaining);
+    const overflow = validRows.length - willImport; // válidas que NO caben por el límite
+    const unit = config.unitLabel ?? "elementos";
+
     async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -117,9 +130,11 @@ export default function CsvManagerModal({
     }
 
     async function handleImport() {
-        if (!validRows.length || importing) return;
+        if (!willImport || importing) return;
         setImporting(true);
-        const res = await config.onImport(validRows.map((r) => r.data));
+        // Solo enviamos las filas que caben dentro del límite del plan; el resto
+        // se avisa antes de importar (el servidor también lo aplica como salvaguarda).
+        const res = await config.onImport(validRows.slice(0, willImport).map((r) => r.data));
         setResult(res);
         setImporting(false);
         if (res.created > 0) onImported?.();
@@ -237,13 +252,28 @@ export default function CsvManagerModal({
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="flex items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
                                     <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
-                                    <div><p className="text-xs font-bold text-emerald-400">{validRows.length} válidas</p><p className="text-[10px] text-gray-500">listas para importar</p></div>
+                                    <div><p className="text-xs font-bold text-emerald-400">{willImport} se importarán</p><p className="text-[10px] text-gray-500">{validRows.length} válida{validRows.length !== 1 ? "s" : ""} en el archivo</p></div>
                                 </div>
                                 <div className={`flex items-center gap-2 p-3 border rounded-xl ${invalidRows.length > 0 ? "bg-red-500/5 border-red-500/15" : "bg-white/3 border-white/8"}`}>
                                     <XCircle size={16} className={invalidRows.length > 0 ? "text-red-400 shrink-0" : "text-gray-600 shrink-0"} />
                                     <div><p className={`text-xs font-bold ${invalidRows.length > 0 ? "text-red-400" : "text-gray-500"}`}>{invalidRows.length} con errores</p><p className="text-[10px] text-gray-500">no se importarán</p></div>
                                 </div>
                             </div>
+
+                            {/* Aviso de límite del plan */}
+                            {hasLimit && (remaining === 0 || overflow > 0) && (
+                                <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-500/8 border-2 border-amber-500/20 rounded-xl text-xs text-amber-300">
+                                    <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                                    <span>
+                                        {remaining === 0 ? (
+                                            <>Has alcanzado el límite de <strong>{config.limit} {unit}</strong> de tu plan ({config.currentCount} ya creados). No se importará ninguna fila.</>
+                                        ) : (
+                                            <>Tu plan permite <strong>{config.limit} {unit}</strong> y ya tienes <strong>{config.currentCount}</strong>. Solo se importarán <strong>{willImport}</strong>; las otras <strong>{overflow}</strong> superan el límite.</>
+                                        )}
+                                    </span>
+                                </div>
+                            )}
+
                             {invalidRows.length > 0 && (
                                 <div className="max-h-32 overflow-y-auto space-y-1 pr-1">
                                     {invalidRows.map((r, i) => (
@@ -257,8 +287,8 @@ export default function CsvManagerModal({
                             )}
                             <div className="flex gap-3 pt-1">
                                 <button onClick={resetFile} disabled={importing} className="px-4 py-2.5 bg-white/5 hover:bg-white/10 border-2 border-white/10 rounded-xl text-sm font-semibold text-gray-300 transition-colors cursor-pointer disabled:opacity-50">Cambiar archivo</button>
-                                <button onClick={handleImport} disabled={!validRows.length || importing} className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-900/30">
-                                    {importing ? <><RefreshCw size={14} className="animate-spin" /> Importando...</> : <><FileSpreadsheet size={14} /> Importar {validRows.length}</>}
+                                <button onClick={handleImport} disabled={!willImport || importing} className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-900/30">
+                                    {importing ? <><RefreshCw size={14} className="animate-spin" /> Importando...</> : <><FileSpreadsheet size={14} /> Importar {willImport}</>}
                                 </button>
                             </div>
                         </div>

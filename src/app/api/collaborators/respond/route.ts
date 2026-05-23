@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
         const plan = await getPlanFromUser(invitedUser);
         const maxSharedEvents = plan.limits.maxSharedEvents;
 
-        if (maxSharedEvents !== Infinity) {
+        // Solo aplicamos el límite si es un número finito; Infinity/null/undefined = ilimitado.
+        if (Number.isFinite(maxSharedEvents)) {
             const currentShared = await prisma.eventCollaborator.count({
                 where: { userId: session.user.id },
             });

@@ -814,6 +814,9 @@ export default function ParticipantList({
         exportHeaders: ["nombre", "imagen_url"],
         exportData: initialData.map((p) => [p.name, p.imageUrl ?? ""]),
         exportFilename: `nominados-${eventId}.csv`,
+        limit: currentLimit,
+        currentCount,
+        unitLabel: "nominados",
     };
 
     const handleCreateClick = () => {

@@ -63,6 +63,9 @@ export default function TierlistManager({
         exportHeaders: ["nombre", "color"],
         exportData: tiers.map((t) => [t.label, t.color]),
         exportFilename: `tiers-${eventId}.csv`,
+        limit,
+        currentCount: tiers.length,
+        unitLabel: "tiers",
     };
 
     async function handleCreate(formData: FormData) {

@@ -88,6 +88,9 @@ export default function QuestionManager({
             q.options.map((o) => o.text).join("|"),
         ]),
         exportFilename: `preguntas-${eventId}.csv`,
+        limit,
+        currentCount: questions.length,
+        unitLabel: "preguntas",
     };
 
     async function handleCreate(fd: FormData) {

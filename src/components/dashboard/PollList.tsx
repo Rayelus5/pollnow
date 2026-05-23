@@ -381,6 +381,8 @@ export default function PollList({
             {showCsvModal && canManagePolls && (
                 <CsvImportPollsModal
                     eventId={eventId}
+                    limit={currentLimit}
+                    currentCount={currentCount}
                     onClose={(didCreate) => {
                         setShowCsvModal(false);
                         if (didCreate) router.refresh();
@@ -819,9 +821,13 @@ function parseCSVLinePoll(line: string): string[] {
 function CsvImportPollsModal({
     eventId,
     onClose,
+    limit,
+    currentCount,
 }: {
     eventId: string;
     onClose: (didCreate: boolean) => void;
+    limit?: number;
+    currentCount?: number;
 }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [parsedRows, setParsedRows] = useState<ParsedPollRow[]>([]);
@@ -832,6 +838,12 @@ function CsvImportPollsModal({
 
     const validRows = parsedRows.filter(r => r.valid);
     const invalidRows = parsedRows.filter(r => !r.valid);
+
+    // Control de límite del plan: cuántas categorías válidas caben realmente.
+    const hasLimit = typeof limit === "number" && typeof currentCount === "number";
+    const remaining = hasLimit ? Math.max(0, limit! - currentCount!) : Infinity;
+    const willImport = Math.min(validRows.length, remaining);
+    const overflow = validRows.length - willImport;
 
     async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -899,9 +911,10 @@ function CsvImportPollsModal({
     }
 
     async function handleImport() {
-        if (!validRows.length || importing) return;
+        if (!willImport || importing) return;
         setImporting(true);
-        const rows = validRows.map(r => ({
+        // Solo enviamos las que caben en el límite del plan (el servidor también lo aplica).
+        const rows = validRows.slice(0, willImport).map(r => ({
             title: r.title,
             description: r.description || undefined,
             votingType: r.votingType as "SINGLE" | "MULTIPLE" | "LIMITED_MULTIPLE",
@@ -1008,8 +1021,8 @@ function CsvImportPollsModal({
                                 <div className="flex items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
                                     <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
                                     <div>
-                                        <p className="text-xs font-bold text-emerald-400">{validRows.length} válidas</p>
-                                        <p className="text-[10px] text-gray-500">listas para importar</p>
+                                        <p className="text-xs font-bold text-emerald-400">{willImport} se importarán</p>
+                                        <p className="text-[10px] text-gray-500">{validRows.length} válida{validRows.length !== 1 ? "s" : ""} en el archivo</p>
                                     </div>
                                 </div>
                                 <div className={`flex items-center gap-2 p-3 border rounded-xl ${invalidRows.length > 0 ? "bg-red-500/5 border-red-500/15" : "bg-white/3 border-white/8"}`}>
@@ -1020,6 +1033,21 @@ function CsvImportPollsModal({
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Aviso de límite del plan */}
+                            {hasLimit && (remaining === 0 || overflow > 0) && (
+                                <div className="flex items-start gap-2 px-3 py-2.5 bg-amber-500/8 border-2 border-amber-500/20 rounded-xl text-xs text-amber-300">
+                                    <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                                    <span>
+                                        {remaining === 0 ? (
+                                            <>Has alcanzado el límite de <strong>{limit} categorías</strong> de tu plan ({currentCount} ya creadas). No se importará ninguna fila.</>
+                                        ) : (
+                                            <>Tu plan permite <strong>{limit} categorías</strong> y ya tienes <strong>{currentCount}</strong>. Solo se importarán <strong>{willImport}</strong>; las otras <strong>{overflow}</strong> superan el límite.</>
+                                        )}
+                                    </span>
+                                </div>
+                            )}
+
                             {invalidRows.length > 0 && (
                                 <div className="space-y-1.5">
                                     <p className="text-[11px] font-semibold text-red-400 uppercase tracking-wider">Errores de validación</p>
@@ -1071,12 +1099,12 @@ function CsvImportPollsModal({
                                 </button>
                                 <button
                                     onClick={handleImport}
-                                    disabled={!validRows.length || importing}
+                                    disabled={!willImport || importing}
                                     className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-900/30"
                                 >
                                     {importing
                                         ? <><RefreshCw size={14} className="animate-spin" /> Importando...</>
-                                        : <><FileSpreadsheet size={14} /> Importar {validRows.length} categoría{validRows.length !== 1 ? "s" : ""}</>
+                                        : <><FileSpreadsheet size={14} /> Importar {willImport} categoría{willImport !== 1 ? "s" : ""}</>
                                     }
                                 </button>
                             </div>

@@ -72,9 +72,14 @@ function mapRow(row: DbPlanRow): ResolvedPlan {
     };
 }
 
-const loadPlans = unstable_cache(
-    async (): Promise<ResolvedPlan[]> => {
-        const rows = await prisma.subscriptionPlan.findMany({
+// IMPORTANTE: cacheamos las FILAS CRUDAS de BD y aplicamos mapRow DESPUÉS, fuera de
+// la caché. `unstable_cache` serializa su valor a JSON y `Infinity` (que mapRow usa
+// para "ilimitado") se convierte en `null` al serializarse, corrompiendo límites como
+// `maxSharedEvents`. Manteniendo mapRow fuera de la caché, el `Infinity` se regenera
+// fresco en cada llamada y nunca se serializa.
+const loadPlanRows = unstable_cache(
+    async (): Promise<DbPlanRow[]> => {
+        return prisma.subscriptionPlan.findMany({
             where: { isActive: true },
             orderBy: { sortOrder: "asc" },
             select: {
@@ -87,7 +92,6 @@ const loadPlans = unstable_cache(
                 stripePriceId: true,
             },
         });
-        return rows.map(mapRow);
     },
     ["subscription-plans"],
     { tags: ["subscription-plans"], revalidate: 3600 }
@@ -96,8 +100,8 @@ const loadPlans = unstable_cache(
 /** Lista de planes activos desde BD (cacheada), con fallback hardcodeado. */
 export async function getActivePlans(): Promise<ResolvedPlan[]> {
     try {
-        const plans = await loadPlans();
-        return plans.length ? plans : FALLBACK_PLANS;
+        const rows = await loadPlanRows();
+        return rows.length ? rows.map(mapRow) : FALLBACK_PLANS;
     } catch (e) {
         console.error("[plans] Error leyendo SubscriptionPlan de BD; usando fallback hardcodeado:", e);
         return FALLBACK_PLANS;
