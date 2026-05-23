@@ -32,11 +32,44 @@ export default function TierlistVotingClient({
     const [voted, setVoted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Reconstruye un estado de listas válido a partir de lo guardado: descarta ids
+    // que ya no existen y coloca en la bandeja cualquier nominado no clasificado.
+    function buildFromSaved(saved: Record<string, string[]>): Record<string, string[]> {
+        const valid = new Set(participants.map((p) => p.id));
+        const placed = new Set<string>();
+        const next: Record<string, string[]> = { [TRAY]: [] };
+        sortedTiers.forEach((t) => (next[`tier-${t.id}`] = []));
+        for (const t of sortedTiers) {
+            const key = `tier-${t.id}`;
+            for (const pid of saved[key] ?? []) {
+                if (valid.has(pid) && !placed.has(pid)) { next[key].push(pid); placed.add(pid); }
+            }
+        }
+        for (const pid of saved[TRAY] ?? []) {
+            if (valid.has(pid) && !placed.has(pid)) { next[TRAY].push(pid); placed.add(pid); }
+        }
+        for (const p of participants) if (!placed.has(p.id)) next[TRAY].push(p.id);
+        return next;
+    }
+
+    function persistLists(current: Record<string, string[]>) {
+        try { localStorage.setItem(`tl_lists_${event.id}`, JSON.stringify(current)); } catch { /* no-op */ }
+    }
+
     useEffect(() => {
-        if (typeof window !== "undefined" && localStorage.getItem(`tl_voted_${event.id}`)) setVoted(true);
+        if (typeof window === "undefined") return;
+        if (!localStorage.getItem(`tl_voted_${event.id}`)) return;
+        setVoted(true);
+        // Restaurar la tierlist que envió el usuario (para mostrarla deshabilitada).
+        const saved = localStorage.getItem(`tl_lists_${event.id}`);
+        if (saved) {
+            try { setLists(buildFromSaved(JSON.parse(saved))); } catch { /* mantener estado actual */ }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [event.id]);
 
     function onDragEnd(result: DropResult) {
+        if (voted) return;
         const { source, destination } = result;
         if (!destination) return;
         if (source.droppableId === destination.droppableId && source.index === destination.index) return;
@@ -73,10 +106,11 @@ export default function TierlistVotingClient({
             });
             const data = await res.json();
             if (!res.ok) {
-                if (res.status === 403) { localStorage.setItem(`tl_voted_${event.id}`, "1"); setVoted(true); }
+                if (res.status === 403) { localStorage.setItem(`tl_voted_${event.id}`, "1"); persistLists(lists); setVoted(true); }
                 else setError(data.error || "No se pudo registrar el voto.");
             } else {
                 localStorage.setItem(`tl_voted_${event.id}`, "1");
+                persistLists(lists);
                 setVoted(true);
             }
         } catch {
@@ -124,51 +158,58 @@ export default function TierlistVotingClient({
                     <span className="inline-block mt-2 text-[11px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">Tierlist</span>
                 </div>
 
-                {voted ? (
-                    <div className="max-w-md mx-auto text-center bg-neutral-900/60 border-2 border-green-500/30 rounded-2xl p-8">
-                        <div className="w-14 h-14 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-4 text-green-400">
-                            <Check size={28} />
+                {/* Aviso de voto registrado (la tierlist se muestra debajo, deshabilitada) */}
+                {voted && (
+                    <div className="max-w-2xl mx-auto mb-6 flex items-center gap-3 bg-green-500/10 border-2 border-green-500/30 rounded-2xl px-5 py-4">
+                        <div className="w-10 h-10 rounded-full bg-green-500/15 flex items-center justify-center text-green-400 shrink-0">
+                            <Check size={20} />
                         </div>
-                        <h2 className="text-xl font-bold mb-1">¡Voto registrado!</h2>
-                        <p className="text-sm text-gray-400">Gracias por participar en esta tierlist.</p>
+                        <div>
+                            <p className="font-bold text-white">¡Voto registrado!</p>
+                            <p className="text-sm text-gray-400">Esta es la tierlist que enviaste. Ya no puedes editarla.</p>
+                        </div>
                     </div>
-                ) : (
-                    <DragDropContext onDragEnd={onDragEnd}>
-                        {/* Tabla de tiers */}
-                        <div className="rounded-2xl overflow-hidden border-2 border-neutral-700">
-                            {sortedTiers.map((t) => (
-                                <div key={t.id} className="flex border-b border-neutral-700 last:border-b-0 min-h-[96px]">
-                                    <div className="w-24 shrink-0 flex items-center justify-center font-bold text-black/80 text-center px-2 break-words" style={{ backgroundColor: t.color }}>
-                                        {t.label}
-                                    </div>
-                                    <Droppable droppableId={`tier-${t.id}`} direction="horizontal">
-                                        {(prov, snap) => (
-                                            <div
-                                                ref={prov.innerRef}
-                                                {...prov.droppableProps}
-                                                className={`flex-1 flex flex-wrap gap-2 p-2 items-center bg-neutral-900/40 ${snap.isDraggingOver ? "bg-blue-500/5" : ""}`}
-                                            >
-                                                {lists[`tier-${t.id}`].map((pid, i) => {
-                                                    const p = partById.get(pid);
-                                                    return p ? <Card key={pid} p={p} index={i} /> : null;
-                                                })}
-                                                {prov.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
-                                </div>
-                            ))}
-                        </div>
+                )}
 
-                        {/* Bandeja de nominados */}
+                <DragDropContext onDragEnd={onDragEnd}>
+                    {/* Tabla de tiers */}
+                    <div className={`rounded-2xl overflow-hidden border-2 border-neutral-700 ${voted ? "opacity-90" : ""}`}>
+                        {sortedTiers.map((t) => (
+                            <div key={t.id} className="flex border-b border-neutral-700 last:border-b-0 min-h-[96px]">
+                                <div className="w-24 shrink-0 flex items-center justify-center font-bold text-black/80 text-center px-2 break-words" style={{ backgroundColor: t.color }}>
+                                    {t.label}
+                                </div>
+                                <Droppable droppableId={`tier-${t.id}`} direction="horizontal" isDropDisabled={voted}>
+                                    {(prov, snap) => (
+                                        <div
+                                            ref={prov.innerRef}
+                                            {...prov.droppableProps}
+                                            className={`flex-1 flex flex-wrap gap-2 p-2 items-center bg-neutral-900/40 ${snap.isDraggingOver ? "bg-blue-500/5" : ""}`}
+                                        >
+                                            {lists[`tier-${t.id}`].map((pid, i) => {
+                                                const p = partById.get(pid);
+                                                return p ? <Card key={pid} p={p} index={i} /> : null;
+                                            })}
+                                            {prov.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Bandeja de nominados (sin clasificar) */}
+                    {(!voted || lists[TRAY].length > 0) && (
                         <div className="mt-6">
-                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Arrastra los nominados a los tiers</p>
-                            <Droppable droppableId={TRAY} direction="horizontal">
+                            <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+                                {voted ? "Sin clasificar" : "Arrastra los nominados a los tiers"}
+                            </p>
+                            <Droppable droppableId={TRAY} direction="horizontal" isDropDisabled={voted}>
                                 {(prov, snap) => (
                                     <div
                                         ref={prov.innerRef}
                                         {...prov.droppableProps}
-                                        className={`flex flex-wrap gap-2 p-3 rounded-2xl border-2 border-neutral-700 bg-neutral-800/40 min-h-[110px] ${snap.isDraggingOver ? "border-blue-500/40" : ""}`}
+                                        className={`flex flex-wrap gap-2 p-3 rounded-2xl border-2 border-neutral-700 bg-neutral-800/40 min-h-[110px] ${snap.isDraggingOver ? "border-blue-500/40" : ""} ${voted ? "opacity-90" : ""}`}
                                     >
                                         {lists[TRAY].map((pid, i) => {
                                             const p = partById.get(pid);
@@ -179,20 +220,24 @@ export default function TierlistVotingClient({
                                 )}
                             </Droppable>
                         </div>
+                    )}
 
-                        {error && <p className="text-red-400 text-sm mt-4 text-center">{error}</p>}
+                    {!voted && (
+                        <>
+                            {error && <p className="text-red-400 text-sm mt-4 text-center">{error}</p>}
 
-                        <div className="flex justify-center mt-6">
-                            <button
-                                onClick={handleSubmit}
-                                disabled={submitting}
-                                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
-                            >
-                                <Trophy size={18} /> {submitting ? "Registrando…" : "Registrar voto"}
-                            </button>
-                        </div>
-                    </DragDropContext>
-                )}
+                            <div className="flex justify-center mt-6">
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={submitting}
+                                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-full transition-colors disabled:opacity-50 cursor-pointer"
+                                >
+                                    <Trophy size={18} /> {submitting ? "Registrando…" : "Registrar voto"}
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </DragDropContext>
             </div>
         </main>
     );
