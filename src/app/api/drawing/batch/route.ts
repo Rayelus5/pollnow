@@ -28,12 +28,23 @@ export async function GET(req: Request) {
         const phase = computeDrawingPhase(event);
         if (phase !== "VOTING") return NextResponse.json({ items: [], phase }, { status: 200 });
 
-        // Candidatos: menos vistos primero (índice [eventId, impressions]); excluir vistos y propio.
+        // Dibujos a los que el votante YA reaccionó (persistido en BD): se excluyen
+        // siempre, no solo dentro de la sesión. Sin esto, al recargar reaparecerían
+        // con los botones activos aunque el voto no vuelva a contar.
+        const reactedRows = voterId
+            ? await prisma.drawingReaction.findMany({
+                  where: { eventId, voterHash: voterId },
+                  select: { submissionId: true },
+              })
+            : [];
+        const exclude = Array.from(new Set([...seen, ...reactedRows.map((r) => r.submissionId)]));
+
+        // Candidatos: menos vistos primero (índice [eventId, impressions]); excluir vistos, reaccionados y propio.
         const candidates = await prisma.drawingSubmission.findMany({
             where: {
                 eventId,
                 voterHash: { not: voterId },
-                id: { notIn: seen.length ? seen : ["__none__"] },
+                id: { notIn: exclude.length ? exclude : ["__none__"] },
             },
             orderBy: { impressions: "asc" },
             take: 40,

@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Check, ThumbsUp, ThumbsDown, Star, Send, Trophy, Clock, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, ThumbsUp, ThumbsDown, Star, Send, Trophy, Clock, Loader2, PartyPopper, RefreshCw, Sparkles } from "lucide-react";
 import DrawingCanvas, { type DrawingCanvasHandle } from "@/components/DrawingCanvas";
 import WinnerConfetti from "@/components/WinnerConfetti";
 
@@ -173,7 +173,19 @@ function VotingPhase({ eventId, superlikeUsed }: { eventId: string; superlikeUse
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ submissionId, type }),
             });
-            if (!res.ok && res.status === 409) setUsedSuper(true);
+            if (!res.ok) {
+                // 403 → ya habías reaccionado a este dibujo (dejamos el botón bloqueado).
+                // 409 → superlike ya gastado en el evento; revertimos la marca de este dibujo
+                //        para que pueda reaccionar con like/dislike.
+                if (res.status === 409) {
+                    setUsedSuper(true);
+                    setReacted((p) => {
+                        const next = { ...p };
+                        delete next[submissionId];
+                        return next;
+                    });
+                }
+            }
         } catch { /* optimista; ignorar */ }
     }
 
@@ -181,13 +193,10 @@ function VotingPhase({ eventId, superlikeUsed }: { eventId: string; superlikeUse
 
     return (
         <div>
-            <p className="text-center text-sm text-gray-400 mb-1">Vota los dibujos: 👍 +100 · 👎 −100 · ⭐ +300 (1 superlike por evento)</p>
-            <p className="text-center text-xs text-gray-600 mb-6">Verás dibujos al azar. Reacciona a los que quieras y carga más cuando termines.</p>
-
             {loading && items.length === 0 ? (
                 <div className="flex justify-center py-16"><Loader2 size={28} className="animate-spin text-gray-500" /></div>
             ) : empty && items.length === 0 ? (
-                <div className="text-center py-16 text-gray-500">No hay (más) dibujos para votar por ahora. ¡Gracias por participar!</div>
+                <EmptyVoting onRetry={loadBatch} loading={loading} />
             ) : (
                 <>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -218,9 +227,113 @@ function VotingPhase({ eventId, superlikeUsed }: { eventId: string; superlikeUse
                             {allReacted || items.length === 0 ? "Ver más dibujos" : "Reacciona a todos para ver más"}
                         </button>
                     </div>
+
+                    <VotingLegend />
                 </>
             )}
         </div>
+    );
+}
+
+// ─── LEYENDA DE PUNTUACIÓN (sutil, al pie) ────────────────────────────────────────
+function VotingLegend() {
+    return (
+        <div className="mt-12 mb-2 flex flex-col items-center gap-3">
+            <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] font-medium text-gray-400">
+                <span className="inline-flex items-center gap-1.5">
+                    <ThumbsUp size={13} className="text-emerald-400/80" />
+                    <span className="tabular-nums">+100</span>
+                </span>
+                <span className="mx-1 h-3 w-px bg-white/10" />
+                <span className="inline-flex items-center gap-1.5">
+                    <ThumbsDown size={13} className="text-red-400/80" />
+                    <span className="tabular-nums">−100</span>
+                </span>
+                <span className="mx-1 h-3 w-px bg-white/10" />
+                <span className="inline-flex items-center gap-1.5">
+                    <Star size={13} className="text-amber-400/80" />
+                    <span className="tabular-nums">+300</span>
+                    <span className="text-gray-600">· 1 por evento</span>
+                </span>
+            </div>
+            <p className="text-[11px] text-gray-600">
+                Verás dibujos al azar. Reacciona a los que quieras y carga más cuando termines.
+            </p>
+        </div>
+    );
+}
+
+// ─── ESTADO VACÍO (sin más dibujos) ──────────────────────────────────────────────
+function EmptyVoting({ onRetry, loading }: { onRetry: () => void; loading: boolean }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="relative max-w-md mx-auto text-center py-12 px-6"
+        >
+            {/* Halo de fondo */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="w-56 h-56 rounded-full bg-blue-500/10 blur-3xl" />
+            </div>
+
+            {/* Icono animado con destellos */}
+            <div className="relative mx-auto mb-6 w-24 h-24">
+                <motion.div
+                    aria-hidden
+                    className="absolute inset-0 rounded-full bg-blue-500/15"
+                    animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0.3, 0.6] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                    className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-500/25 to-violet-500/20 border-2 border-white/10 flex items-center justify-center text-blue-300"
+                    initial={{ rotate: -8, scale: 0.8 }}
+                    animate={{ rotate: 0, scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}
+                >
+                    <PartyPopper size={40} />
+                </motion.div>
+                <motion.div
+                    className="absolute -top-1 -right-1 text-amber-300"
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                >
+                    <Sparkles size={20} />
+                </motion.div>
+                <motion.div
+                    className="absolute -bottom-1 -left-2 text-violet-300"
+                    animate={{ scale: [1, 1.25, 1], opacity: [0.4, 0.9, 0.4] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                >
+                    <Sparkles size={14} />
+                </motion.div>
+            </div>
+
+            <h3 className="relative text-xl sm:text-2xl font-black text-white mb-2">
+                ¡Has visto todos los dibujos!
+            </h3>
+            <p className="relative text-sm text-gray-400 mb-7 leading-relaxed">
+                No quedan más dibujos por votar de momento. Gracias por participar — vuelve más tarde
+                por si hay nuevas creaciones.
+            </p>
+
+            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                    onClick={onRetry}
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                >
+                    <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                    Comprobar de nuevo
+                </button>
+                <Link
+                    href="/dashboard"
+                    className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white px-5 py-3 rounded-full border-2 border-white/10 hover:border-white/20 transition-colors"
+                >
+                    <ArrowLeft size={15} /> Volver
+                </Link>
+            </div>
+        </motion.div>
     );
 }
 
