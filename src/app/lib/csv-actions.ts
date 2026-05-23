@@ -20,6 +20,20 @@ export type PollImportRow = {
     maxOptions?: number;
 };
 
+export type TierImportRow = {
+    label: string;
+    color?: string;
+};
+
+export type QuestionImportRow = {
+    text: string;
+    description?: string;
+    type: "RADIO" | "CHECKBOX";
+    isRequired?: boolean;
+    pageIndex?: number;
+    options: string[];
+};
+
 export type BulkImportError = {
     row: number;
     value: string;
@@ -254,5 +268,113 @@ export async function bulkCreatePolls(
         await triggerDataChanged(eventId, session.user.id, "polls");
     }
 
+    return { created, errors };
+}
+
+// ─── Bulk create tiers (modo TIERLIST) ────────────────────────────────────────
+
+const DEFAULT_TIER_COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#64748b"];
+
+export async function bulkCreateTiers(eventId: string, rows: TierImportRow[]): Promise<BulkImportResult> {
+    const session = await auth();
+    if (!session?.user?.id) return { created: 0, errors: [{ row: 0, value: "", reason: "No autenticado" }] };
+    if (!rows.length) return { created: 0, errors: [] };
+
+    const { hasAccess, owner } = await getEventAccessAndPlan(eventId, session.user.id, "canManagePolls");
+    if (!hasAccess || !owner) return { created: 0, errors: [{ row: 0, value: "", reason: "Sin permisos para gestionar tiers" }] };
+
+    const plan = await getPlanFromUser(owner);
+    const limit = plan.limits.tierlistMaxTiers;
+
+    let currentCount = await prisma.tierlistTier.count({ where: { eventId } });
+    const last = await prisma.tierlistTier.findFirst({ where: { eventId }, orderBy: { order: "desc" }, select: { order: true } });
+    let nextOrder = (last?.order ?? -1) + 1;
+
+    const errors: BulkImportError[] = [];
+    const valid: { rowNum: number; value: string; data: { eventId: string; label: string; color: string; order: number } }[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+        const { label, color } = rows[i];
+        const rowNum = i + 1;
+        if (!label?.trim()) { errors.push({ row: rowNum, value: label ?? "", reason: "El nombre del tier es obligatorio" }); continue; }
+        if (label.trim().length > 50) { errors.push({ row: rowNum, value: label, reason: "El nombre supera los 50 caracteres" }); continue; }
+        if (currentCount >= limit) { errors.push({ row: rowNum, value: label, reason: `Límite de ${limit} tiers alcanzado` }); continue; }
+        const hex = color && /^#[0-9a-fA-F]{6}$/.test(color.trim()) ? color.trim() : DEFAULT_TIER_COLORS[nextOrder % DEFAULT_TIER_COLORS.length];
+        valid.push({ rowNum, value: label, data: { eventId, label: label.trim(), color: hex, order: nextOrder } });
+        nextOrder++; currentCount++;
+    }
+
+    let created = 0;
+    for (let i = 0; i < valid.length; i += 50) {
+        const chunk = valid.slice(i, i + 50);
+        try {
+            const res = await prisma.tierlistTier.createMany({ data: chunk.map((c) => c.data) });
+            created += res.count;
+        } catch {
+            for (const c of chunk) errors.push({ row: c.rowNum, value: c.value, reason: "Error al guardar en base de datos" });
+        }
+    }
+
+    if (created > 0) {
+        revalidatePath(`/dashboard/event/${eventId}`);
+        await triggerDataChanged(eventId, session.user.id, "tiers");
+    }
+    return { created, errors };
+}
+
+// ─── Bulk create questions (modo PREGUNTAS) ───────────────────────────────────
+
+export async function bulkCreateQuestions(eventId: string, rows: QuestionImportRow[]): Promise<BulkImportResult> {
+    const session = await auth();
+    if (!session?.user?.id) return { created: 0, errors: [{ row: 0, value: "", reason: "No autenticado" }] };
+    if (!rows.length) return { created: 0, errors: [] };
+
+    const { hasAccess, owner } = await getEventAccessAndPlan(eventId, session.user.id, "canManagePolls");
+    if (!hasAccess || !owner) return { created: 0, errors: [{ row: 0, value: "", reason: "Sin permisos para gestionar preguntas" }] };
+
+    const plan = await getPlanFromUser(owner);
+    const limit = plan.limits.preguntasMaxQuestions;
+    const maxOptions = plan.limits.preguntasMaxOptions;
+
+    let currentCount = await prisma.question.count({ where: { eventId } });
+    const last = await prisma.question.findFirst({ where: { eventId }, orderBy: { order: "desc" }, select: { order: true } });
+    let nextOrder = (last?.order ?? -1) + 1;
+
+    const errors: BulkImportError[] = [];
+    let created = 0;
+
+    // Crear una a una (cada pregunta lleva opciones anidadas)
+    for (let i = 0; i < rows.length; i++) {
+        const { text, description, type, isRequired, pageIndex, options } = rows[i];
+        const rowNum = i + 1;
+        if (!text?.trim()) { errors.push({ row: rowNum, value: text ?? "", reason: "El texto de la pregunta es obligatorio" }); continue; }
+        if (text.trim().length > 300) { errors.push({ row: rowNum, value: text, reason: "La pregunta supera los 300 caracteres" }); continue; }
+        const opts = (options ?? []).map((o) => o.trim()).filter(Boolean).slice(0, maxOptions);
+        if (opts.length < 2) { errors.push({ row: rowNum, value: text, reason: "Cada pregunta necesita al menos 2 opciones" }); continue; }
+        if (currentCount >= limit) { errors.push({ row: rowNum, value: text, reason: `Límite de ${limit} preguntas alcanzado` }); continue; }
+
+        try {
+            await prisma.question.create({
+                data: {
+                    eventId,
+                    text: text.trim(),
+                    description: description?.trim() || null,
+                    type: type === "CHECKBOX" ? "CHECKBOX" : "RADIO",
+                    isRequired: !!isRequired,
+                    pageIndex: Math.max(0, pageIndex ?? 0),
+                    order: nextOrder,
+                    options: { create: opts.map((o, idx) => ({ text: o.slice(0, 200), order: idx })) },
+                },
+            });
+            created++; nextOrder++; currentCount++;
+        } catch {
+            errors.push({ row: rowNum, value: text, reason: "Error al guardar en base de datos" });
+        }
+    }
+
+    if (created > 0) {
+        revalidatePath(`/dashboard/event/${eventId}`);
+        await triggerDataChanged(eventId, session.user.id, "questions");
+    }
     return { created, errors };
 }

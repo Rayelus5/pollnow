@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { GripVertical, Plus, Pencil, Trash2, Save, X, CircleHelp, CheckSquare, Circle } from "lucide-react";
+import { GripVertical, Plus, Pencil, Trash2, Save, X, CircleHelp, CheckSquare, Circle, Search, FileSpreadsheet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PLANS } from "@/lib/plans";
 import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions } from "@/app/lib/preguntas-actions";
+import { bulkCreateQuestions } from "@/app/lib/csv-actions";
+import CsvManagerModal, { type CsvManagerConfig, type ParsedRow } from "@/components/dashboard/CsvManagerModal";
 
 type QOption = { id?: string; text: string; order?: number };
 type Question = {
@@ -35,6 +37,8 @@ export default function QuestionManager({
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showCsv, setShowCsv] = useState(false);
 
     useEffect(() => {
         setQuestions([...initialQuestions].sort((a, b) => a.order - b.order));
@@ -45,6 +49,46 @@ export default function QuestionManager({
     const maxOptions = PLANS[planKey]?.limits?.preguntasMaxOptions ?? 5;
     const maxPerPage = PLANS[planKey]?.limits?.preguntasMaxPerPage ?? 4;
     const atLimit = questions.length >= limit;
+    const canImportCsv = planSlug === "enterprise" || planSlug === "unlimited";
+
+    const filteredQuestions = questions.filter((q) => q.text.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const csvConfig: CsvManagerConfig = {
+        title: "Preguntas",
+        headers: ["pregunta", "descripcion", "tipo", "obligatoria", "pagina", "opciones"],
+        requiredHeaders: ["pregunta", "opciones"],
+        example: 'pregunta,descripcion,tipo,obligatoria,pagina,opciones\n"¿Color favorito?","",radio,si,1,"Rojo|Verde|Azul"',
+        hints: [
+            { col: "pregunta", desc: "obligatorio, máx. 300 caracteres" },
+            { col: "tipo", desc: "radio (una opción) o checkbox (varias)" },
+            { col: "obligatoria", desc: "si / no" },
+            { col: "pagina", desc: "número de página (empieza en 1)" },
+            { col: "opciones", desc: "lista separada por | (ej. A|B|C), mín. 2" },
+        ],
+        sampleHref: "/csv/ejemplo_preguntas.csv",
+        parseRow: (row, rowIndex): ParsedRow => {
+            const text = (row.pregunta ?? "").trim();
+            if (!text) return { ok: false, rowIndex, value: "", error: "Pregunta obligatoria" };
+            if (text.length > 300) return { ok: false, rowIndex, value: text, error: "Supera 300 caracteres" };
+            const options = (row.opciones ?? "").split("|").map((o) => o.trim()).filter(Boolean);
+            if (options.length < 2) return { ok: false, rowIndex, value: text, error: "Mín. 2 opciones (separadas por |)" };
+            const type = (row.tipo ?? "").toLowerCase() === "checkbox" ? "CHECKBOX" : "RADIO";
+            const isRequired = ["si", "sí", "true", "1", "yes"].includes((row.obligatoria ?? "").toLowerCase().trim());
+            const pageIndex = Math.max(0, (parseInt(row.pagina ?? "1", 10) || 1) - 1);
+            return { ok: true, rowIndex, value: text, data: { text, description: row.descripcion?.trim() || undefined, type, isRequired, pageIndex, options } };
+        },
+        onImport: (rows) => bulkCreateQuestions(eventId, rows as Parameters<typeof bulkCreateQuestions>[1]),
+        exportHeaders: ["pregunta", "descripcion", "tipo", "obligatoria", "pagina", "opciones"],
+        exportData: [...questions].sort((a, b) => a.order - b.order).map((q) => [
+            q.text,
+            q.description ?? "",
+            q.type === "CHECKBOX" ? "checkbox" : "radio",
+            q.isRequired ? "si" : "no",
+            String(q.pageIndex + 1),
+            q.options.map((o) => o.text).join("|"),
+        ]),
+        exportFilename: `preguntas-${eventId}.csv`,
+    };
 
     async function handleCreate(fd: FormData) {
         setError(null);
@@ -79,21 +123,43 @@ export default function QuestionManager({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            {/* Header (mismo estilo que Nominados) */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-4">
                 <div className="flex items-center gap-2.5">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Preguntas</h3>
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Preguntas</h3>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 font-mono ${atLimit ? "text-red-400 border-red-500/30 bg-red-500/10" : "text-gray-500 border-gray-700"}`}>
                         {questions.length} / {limit}
                     </span>
                 </div>
-                {canManage && (
-                    <button
-                        onClick={() => (atLimit ? setError(`Has alcanzado el límite de ${limit} preguntas de tu plan.`) : setIsCreating(true))}
-                        className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                        <Plus size={14} /> Nueva pregunta
-                    </button>
-                )}
+
+                <div className="flex w-full md:w-auto gap-3">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Buscar preguntas..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-neutral-900 border-2 border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                        />
+                    </div>
+                    {canManage && canImportCsv && (
+                        <button
+                            onClick={() => setShowCsv(true)}
+                            className="bg-amber-500/10 text-amber-400 border-2 border-amber-500/20 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-amber-500/20 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                            <FileSpreadsheet size={14} /> CSV
+                        </button>
+                    )}
+                    {canManage && (
+                        <button
+                            onClick={() => (atLimit ? setError(`Has alcanzado el límite de ${limit} preguntas de tu plan.`) : setIsCreating(true))}
+                            className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                            <Plus size={14} /> Nuevo
+                        </button>
+                    )}
+                </div>
             </div>
 
             <p className="text-[11px] text-gray-600">
@@ -110,8 +176,8 @@ export default function QuestionManager({
                 <Droppable droppableId="questions">
                     {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
-                            {questions.map((q, index) => (
-                                <Draggable key={q.id} draggableId={q.id} index={index} isDragDisabled={!canManage || editingId === q.id}>
+                            {filteredQuestions.map((q, index) => (
+                                <Draggable key={q.id} draggableId={q.id} index={index} isDragDisabled={!canManage || editingId === q.id || searchQuery.length > 0}>
                                     {(prov) => (
                                         <div ref={prov.innerRef} {...prov.draggableProps} className="bg-neutral-900/60 border-2 border-white/8 rounded-xl overflow-hidden">
                                             {editingId === q.id ? (
@@ -170,6 +236,14 @@ export default function QuestionManager({
                     <CircleHelp size={28} className="text-gray-700" />
                     Aún no hay preguntas. Crea la primera.
                 </div>
+            )}
+
+            {showCsv && canManage && (
+                <CsvManagerModal
+                    config={csvConfig}
+                    onClose={() => setShowCsv(false)}
+                    onImported={() => router.refresh()}
+                />
             )}
         </div>
     );

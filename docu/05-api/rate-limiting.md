@@ -1,6 +1,6 @@
 ---
 title: Rate limiting
-updated: 2026-05-22
+updated: 2026-05-23
 ---
 
 # Rate limiting (Upstash)
@@ -38,26 +38,34 @@ Retry-After: <segundos>   (solo en 429)
 | Ruta | Clave | Límite (por 60s) |
 |------|-------|------------------|
 | `/api/generate-image` | user / ip | 5 (auth) · 2 (anónimo) |
+| `/api/drawing/upload` | ip | 5 |
 | `/api/admin/send-email` | user | 5 |
 | `/api/polls` (crear) | ip | 10 |
 | `/api/collaborators/invite` | ip | 10 |
 | `/api/events/[id]/like` | user | 15 |
 | `/api/polls/[id]/vote` | ip | 15 |
+| `/api/tierlist-votes` | ip | 15 |
+| `/api/preguntas-votes` | ip | 15 |
+| `/api/participant-image/rehost` | user | 15 |
 | `/api/chat` | ip | 15 |
 | `/api/events/[id]/vote` | user | 20 |
 | `/api/collaborators/respond` | ip | 20 |
 | `/api/collaborators/[eventId]` (DELETE) | ip | 20 |
+| `/api/search-images` | user | 20 |
 | `/api/users/search` | ip | 30 |
 | `/api/events/random` | ip | 30 |
 | `/api/admin/*/batch` | user | 30 |
 | `/api/collaborators/[eventId]` (PATCH) | ip | 30 |
 | `/api/support/messages/[chatId]` | user | 30 |
 | `/api/tags` | ip | 60 |
+| `/api/drawing/react` | ip | 60 |
 | `/api/polls/[id]` (GET) | ip | 60 |
 | `/api/polls/[id]/results` | ip | 60 |
 | `/api/collaborators/[eventId]` (GET) | ip | 60 |
 
-El **webhook de Stripe está exento** (se valida por firma).
+`/api/drawing/batch` y `/api/drawing/results` son lecturas sin rate limit. Los **crons**
+(`/api/cron/*`) y el **webhook de Stripe** están exentos (se validan por `CRON_SECRET` y por
+firma respectivamente).
 
 ## Configuración
 

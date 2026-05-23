@@ -1,6 +1,6 @@
 ---
 title: Variables de entorno
-updated: 2026-05-22
+updated: 2026-05-23
 ---
 
 # Variables de entorno
@@ -48,13 +48,22 @@ exponen al cliente.
 | `PUSHER_APP_ID`, `PUSHER_KEY`, `PUSHER_SECRET`, `PUSHER_CLUSTER` | Servidor |
 | `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | Cliente |
 
+## Almacenamiento de imágenes (Vercel Blob) — **nuevo en v3.0 (modos)**
+
+| Variable | Uso |
+|----------|-----|
+| `BLOB_READ_WRITE_TOKEN` | Subida/borrado de dibujos (modo DIBUJO) e imágenes de nominados re-alojadas. En Vercel se autoconfigura al crear un store Blob; en local cópiala del dashboard. |
+
+Ver [event-modes.md](../04-subsystems/event-modes.md) (almacenamiento y limpieza de blobs).
+
 ## Email e IA
 
 | Variable | Uso |
 |----------|-----|
 | `RESEND_API_KEY` | Envío de emails |
 | `GEMINI_API_KEY` | Chatbot (Google Generative AI) |
-| `POLLINATIONS_API_KEY` | Generación de imágenes |
+| `POLLINATIONS_API_KEY` | Generación de imágenes (IA) |
+| `PEXELS_API_KEY` | Búsqueda de imágenes de nominados ("Buscar en internet"). Opcional: sin ella solo se usan resultados de Wikimedia. |
 
 ## Otras
 
@@ -64,6 +73,7 @@ exponen al cliente.
 | `NEXT_PUBLIC_DEMO_EVENT_URL` | Enlace al evento demo |
 | `ADMIN_IP_WHITELIST` | IPs permitidas para admin |
 | `IP_ADDRESS` | (uso interno) |
+| `CRON_SECRET` | Bearer que valida los crons (`expire-subscriptions`, `drawing-phases`, `blob-gc`). Vercel lo envía como `Authorization: Bearer <CRON_SECRET>` solo si está definido. |
 
 ## Checklist de despliegue (Vercel)
 

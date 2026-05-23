@@ -26,7 +26,8 @@ type EventRow = {
     isPublic: boolean;
     createdAt: Date;
     status: "DRAFT" | "PENDING" | "APPROVED" | "DENIED";
-    _count: { polls: number; participants: number };
+    mode?: "GALA" | "TIERLIST" | "PREGUNTAS" | "DIBUJO";
+    _count: { polls: number; participants: number; tiers?: number; questions?: number; drawings?: number };
 };
 
 type DashboardTabsProps = {

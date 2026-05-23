@@ -22,7 +22,7 @@ export default async function DashboardPage() {
             where: { userId: session.user.id },
             orderBy: { createdAt: "desc" },
             include: {
-                _count: { select: { polls: true, participants: true, collaborators: true } },
+                _count: { select: { polls: true, participants: true, collaborators: true, tiers: true, questions: true, drawings: true } },
             },
         }),
         // Notificaciones (sistema + colaboración)
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
             include: {
                 event: {
                     include: {
-                        _count: { select: { polls: true, participants: true } },
+                        _count: { select: { polls: true, participants: true, tiers: true, questions: true, drawings: true } },
                     },
                 },
             },
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
             include: {
                 event: {
                     include: {
-                        _count: { select: { polls: true, participants: true } },
+                        _count: { select: { polls: true, participants: true, tiers: true, questions: true, drawings: true } },
                     },
                 },
                 invitedBy: {

@@ -1,6 +1,6 @@
 # Pollnow
 
-> Plataforma de **galas digitales** y votaciones interactivas en tiempo real. Crea premios tipo "Game Awards / Oscars", invita a tu comunidad y revela los resultados en directo con modo Gala.
+> Plataforma de **eventos de votación interactiva** en tiempo real. Crea galas tipo "Game Awards", tierlists, formularios o concursos de dibujo, invita a tu comunidad y revela los resultados en directo.
 
 **Versión:** 3.0 · **Stack:** Next.js 16 · React 19 · Prisma + PostgreSQL (Neon) · Tailwind v4
 
@@ -8,13 +8,15 @@
 
 ## ✨ Funcionalidades
 
+- 🎭 **4 modos de evento** — **Gala** (premios por categorías), **Tierlist** (ordenar nominados en tiers), **Preguntas** (formulario tipo test) y **Dibujo** (estilo Gartic Phone). Ver [event-modes](./docu/04-subsystems/event-modes.md).
 - 🏆 **Modo Gala** — resultados sellados hasta la fecha del evento, revelados con confeti.
 - 🔒 **Voto anónimo** — un voto por persona vía huella digital, sin registro forzoso.
-- 🗳️ **Votaciones flexibles** — categorías con opción única, múltiple o múltiple limitada.
+- 🎨 **Modo Dibujo** — lienzo HTML5 propio, votación por lotes a escala, almacenamiento en Vercel Blob.
+- 🖼️ **Imágenes de nominados** — manual, por URL, generadas con IA o **buscadas en internet** (Pexels + Wikimedia).
 - 👥 **Colaboración en equipo** — invita colaboradores con permisos granulares.
-- 📊 **Estadísticas** — resultados por categoría, timeline de actividad, votantes.
-- 🌐 **Explorador público** — directorio de galas con búsqueda, etiquetas, likes y votos.
-- 💳 **Planes de suscripción** — Free → Premium / Plus / Unlimited / Enterprise (Stripe).
+- 📊 **Estadísticas por modo** — resultados, timeline de actividad, votantes.
+- 🌐 **Explorador público** — directorio de eventos con búsqueda, etiquetas, likes y votos.
+- 💳 **Planes de suscripción** — Free → Premium / Plus / Unlimited / Enterprise (Stripe), gestionables desde admin.
 - 🛡️ **Panel admin** — moderación, usuarios, soporte, promociones y **gestión de planes**.
 - ⚡ **Rate limiting distribuido**, caché por capas y SEO técnico (sitemap, OG, JSON-LD).
 
@@ -61,6 +63,7 @@ La documentación completa vive en [`/docu`](./docu/INDEX.md):
 - [Visión general y modelo de dominio](./docu/01-overview/README.md)
 - [Puesta en marcha](./docu/02-getting-started/setup.md)
 - [Arquitectura y runtime](./docu/03-architecture/overview.md)
+- [Modos de evento (Gala, Tierlist, Preguntas, Dibujo)](./docu/04-subsystems/event-modes.md)
 - [Planes y facturación](./docu/04-subsystems/billing-plans.md)
 - [Rate limiting](./docu/05-api/rate-limiting.md)
 - [Redis (Upstash)](./docu/07-infrastructure/redis-upstash.md)

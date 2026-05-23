@@ -1,0 +1,4 @@
+pregunta,descripcion,tipo,obligatoria,pagina,opciones
+"¿Cuál es tu color favorito?","Elige solo uno",radio,si,1,"Rojo|Verde|Azul|Amarillo"
+"¿Qué plataformas usas?","Puedes elegir varias",checkbox,no,1,"PC|PlayStation|Xbox|Switch|Móvil"
+"¿Recomendarías el evento?","",radio,si,2,"Sí|No|Tal vez"

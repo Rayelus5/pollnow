@@ -1,28 +1,31 @@
 ---
 title: Visión general y modelo de dominio
-updated: 2026-05-22
+updated: 2026-05-23
 ---
 
 # Visión general
 
-Pollnow permite crear **galas digitales**: eventos de premios con categorías votables. El
-organizador crea un evento, define categorías (polls) y nominados (participantes), comparte el
-enlace y la audiencia vota. Los resultados pueden sellarse hasta la fecha de la gala (**Modo
-Gala**) y revelarse en directo.
+Pollnow permite crear **eventos de votación interactiva**. El organizador crea un evento, lo
+configura según su **modo**, comparte el enlace y la audiencia participa. Desde v3.0 hay 4
+modos: **Gala** (premios por categorías), **Tierlist** (ordenar nominados en tiers),
+**Preguntas** (formulario tipo test) y **Dibujo** (estilo Gartic Phone). Ver
+[event-modes.md](../04-subsystems/event-modes.md).
 
 ## Modelo de dominio (entidades principales)
 
 | Entidad | Descripción |
 |---------|-------------|
 | **User** | Cuenta. Incluye rol (`USER`/`MODERATOR`/`ADMIN`) y campos de suscripción Stripe. |
-| **Event** | La gala. Tiene `slug`, `accessKey` (privadas), `isPublic`, `status` (`DRAFT`/`PENDING`/`APPROVED`/`DENIED`), `galaDate`, `tags[]`. |
-| **Participant** | Nominado de un evento (nombre + imagen). |
-| **Poll** | Categoría de votación. `votingType`: `SINGLE` / `MULTIPLE` / `LIMITED_MULTIPLE`. |
-| **Option** | Vincula un Participant a un Poll (un nominado en una categoría). |
-| **Vote** / **VoteOption** | Voto (papeleta) y sus opciones elegidas. Voto anónimo por `voterHash`. |
+| **Event** | El evento. Tiene `mode` (`GALA`/`TIERLIST`/`PREGUNTAS`/`DIBUJO`), `slug`, `accessKey`, `isPublic`, `status`, `galaDate`, `tags[]` y campos de DIBUJO (`drawingPrompt`, `drawingPhase`, `drawingDeadline`, `votingDeadline`, `drawingTimeLimit`). |
+| **Participant** | Nominado de un evento (nombre + imagen). Usado por GALA y TIERLIST. |
+| **Poll** / **Option** | Categoría de votación (GALA) y vínculo Participant↔Poll. `votingType`: `SINGLE`/`MULTIPLE`/`LIMITED_MULTIPLE`. |
+| **Vote** / **VoteOption** | Voto (papeleta GALA) y sus opciones. Voto anónimo por `voterHash`. |
+| **TierlistTier** / **TierlistVote** / **TierlistVoteEntry** | Modo TIERLIST: tiers, voto y asignación nominado→tier. |
+| **Question** / **QuestionOption** / **QuestionAnswer** | Modo PREGUNTAS: formulario (CHECKBOX/RADIO) y respuestas. |
+| **DrawingSubmission** / **DrawingReaction** | Modo DIBUJO: dibujos (en Vercel Blob) y reacciones (LIKE/DISLIKE/SUPERLIKE). |
 | **EventLike** / **EventVote** | Like y voto (±1) sobre el evento en el explorador público. |
 | **EventCollaborator** / **CollaboratorInvitation** | Colaboración en equipo con permisos. |
-| **SubscriptionPlan** | Definición de planes (límites, precio, stripePriceId) — editable desde admin. |
+| **SubscriptionPlan** | Definición de planes (límites por modo, precio, stripePriceId, features) — editable desde admin. |
 | **Report**, **ModerationLog**, **SupportChat**, **Notification**, **Raffle**, **AnnouncementBar**, **PromotionConfig** | Moderación, soporte, sorteos y marketing. |
 
 ## Planes (tiers)
@@ -35,8 +38,10 @@ Gala**) y revelarse en directo.
 | Unlimited | 20 | 30 | 100 | 15 |
 | Enterprise | 150 | 50 | 1000 | 30 |
 
-Los límites se almacenan en la tabla `SubscriptionPlan` y se gestionan desde `/admin/plans`.
-Ver [billing-plans.md](../04-subsystems/billing-plans.md).
+Cada plan tiene además **límites por modo** (tiers/opciones de tierlist, preguntas/opciones,
+eventos de dibujo y tiempos). Todos se almacenan en `SubscriptionPlan` y se gestionan desde
+`/admin/plans`. Ver [billing-plans.md](../04-subsystems/billing-plans.md) y
+[event-modes.md](../04-subsystems/event-modes.md).
 
 ## Ciclo de vida de una votación
 

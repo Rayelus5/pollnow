@@ -1,6 +1,6 @@
 ---
 title: Documentación de Pollnow
-updated: 2026-05-22
+updated: 2026-05-23
 ---
 
 # 📚 Documentación de Pollnow
@@ -33,6 +33,7 @@ planes gestionables desde admin y SEO técnico completo.
 - [Modelo de runtime, rendering y caché](./03-architecture/overview.md)
 
 ### 04 · Subsistemas
+- [Modos de evento (Gala, Tierlist, Preguntas, Dibujo)](./04-subsystems/event-modes.md)
 - [Planes y facturación (SubscriptionPlan en BD + Stripe)](./04-subsystems/billing-plans.md)
 
 ### 05 · API

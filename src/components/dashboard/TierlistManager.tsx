@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { GripVertical, Plus, Pencil, Trash2, Save, X, Layers } from "lucide-react";
+import { GripVertical, Plus, Pencil, Trash2, Save, X, Layers, Search, FileSpreadsheet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PLANS } from "@/lib/plans";
 import { createTier, updateTier, deleteTier, reorderTiers } from "@/app/lib/tierlist-actions";
+import { bulkCreateTiers } from "@/app/lib/csv-actions";
+import CsvManagerModal, { type CsvManagerConfig, type ParsedRow } from "@/components/dashboard/CsvManagerModal";
 
 type Tier = { id: string; label: string; color: string; order: number };
 
@@ -27,6 +29,8 @@ export default function TierlistManager({
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showCsv, setShowCsv] = useState(false);
 
     useEffect(() => {
         setTiers([...initialTiers].sort((a, b) => a.order - b.order));
@@ -35,6 +39,31 @@ export default function TierlistManager({
     const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
     const limit = PLANS[planKey]?.limits?.tierlistMaxTiers ?? 5;
     const atLimit = tiers.length >= limit;
+    const canImportCsv = planSlug === "enterprise" || planSlug === "unlimited";
+
+    const filteredTiers = tiers.filter((t) => t.label.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const csvConfig: CsvManagerConfig = {
+        title: "Tiers",
+        headers: ["nombre", "color"],
+        requiredHeaders: ["nombre"],
+        example: "nombre,color\nS,#ef4444\nA,#f97316",
+        hints: [
+            { col: "nombre", desc: "obligatorio, máx. 50 caracteres" },
+            { col: "color", desc: "opcional, hex (ej. #ef4444)" },
+        ],
+        sampleHref: "/csv/ejemplo_tiers.csv",
+        parseRow: (row, rowIndex): ParsedRow => {
+            const label = (row.nombre ?? "").trim();
+            if (!label) return { ok: false, rowIndex, value: "", error: "Nombre obligatorio" };
+            if (label.length > 50) return { ok: false, rowIndex, value: label, error: "Supera 50 caracteres" };
+            return { ok: true, rowIndex, value: label, data: { label, color: (row.color ?? "").trim() || undefined } };
+        },
+        onImport: (rows) => bulkCreateTiers(eventId, rows as { label: string; color?: string }[]),
+        exportHeaders: ["nombre", "color"],
+        exportData: tiers.map((t) => [t.label, t.color]),
+        exportFilename: `tiers-${eventId}.csv`,
+    };
 
     async function handleCreate(formData: FormData) {
         setError(null);
@@ -69,21 +98,43 @@ export default function TierlistManager({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            {/* Header (mismo estilo que Nominados) */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div className="flex items-center gap-2.5">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Tiers (Categorías)</h3>
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Tiers</h3>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 font-mono ${atLimit ? "text-red-400 border-red-500/30 bg-red-500/10" : "text-gray-500 border-gray-700"}`}>
                         {tiers.length} / {limit}
                     </span>
                 </div>
-                {canManage && (
-                    <button
-                        onClick={() => (atLimit ? setError(`Has alcanzado el límite de ${limit} tiers de tu plan.`) : setIsCreating(true))}
-                        className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors cursor-pointer"
-                    >
-                        <Plus size={14} /> Nuevo tier
-                    </button>
-                )}
+
+                <div className="flex w-full md:w-auto gap-3">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Buscar tiers..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-neutral-900 border-2 border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                        />
+                    </div>
+                    {canManage && canImportCsv && (
+                        <button
+                            onClick={() => setShowCsv(true)}
+                            className="bg-amber-500/10 text-amber-400 border-2 border-amber-500/20 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-amber-500/20 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                            <FileSpreadsheet size={14} /> CSV
+                        </button>
+                    )}
+                    {canManage && (
+                        <button
+                            onClick={() => (atLimit ? setError(`Has alcanzado el límite de ${limit} tiers de tu plan.`) : setIsCreating(true))}
+                            className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors whitespace-nowrap cursor-pointer"
+                        >
+                            <Plus size={14} /> Nuevo
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && (
@@ -102,8 +153,8 @@ export default function TierlistManager({
                 <Droppable droppableId="tiers">
                     {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
-                            {tiers.map((tier, index) => (
-                                <Draggable key={tier.id} draggableId={tier.id} index={index} isDragDisabled={!canManage || editingId === tier.id}>
+                            {filteredTiers.map((tier, index) => (
+                                <Draggable key={tier.id} draggableId={tier.id} index={index} isDragDisabled={!canManage || editingId === tier.id || searchQuery.length > 0}>
                                     {(prov) => (
                                         <div
                                             ref={prov.innerRef}
@@ -160,6 +211,14 @@ export default function TierlistManager({
                     <Layers size={28} className="text-gray-700" />
                     Aún no hay tiers. Crea el primero (S, A, B…).
                 </div>
+            )}
+
+            {showCsv && canManage && (
+                <CsvManagerModal
+                    config={csvConfig}
+                    onClose={() => setShowCsv(false)}
+                    onImported={() => router.refresh()}
+                />
             )}
         </div>
     );

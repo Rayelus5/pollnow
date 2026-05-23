@@ -1,6 +1,6 @@
 ---
 title: Arquitectura y runtime
-updated: 2026-05-22
+updated: 2026-05-23
 ---
 
 # Arquitectura y runtime
@@ -49,3 +49,20 @@ updated: 2026-05-22
 PostgreSQL en Neon, vía Prisma. **Flujo `db push`** (no migraciones — ver
 [setup](../02-getting-started/setup.md)). Conexión pooled (`DATABASE_URL`) en runtime y
 directa (`DATABASE_URL_UNPOOLED`) para operaciones de esquema.
+
+## Almacenamiento de objetos (Vercel Blob)
+
+Las imágenes pesadas/de volumen (dibujos del modo DIBUJO e imágenes de nominados re-alojadas
+desde "Buscar en internet") se guardan en **Vercel Blob** bajo `events/{eventId}/...`, no en la
+BD. La limpieza de huérfanos se hace inline al borrar evento/usuario y con un cron GC de
+respaldo. Ver [event-modes.md](../04-subsystems/event-modes.md).
+
+## Crons (`vercel.json`)
+
+| Cron | Frecuencia | Función |
+|------|-----------|---------|
+| `/api/cron/expire-subscriptions` | diario | Caduca suscripciones manuales vencidas |
+| `/api/cron/drawing-phases` | diario | Respaldo del avance de fase de eventos DIBUJO (la fase real se calcula on-read) |
+| `/api/cron/blob-gc` | diario | Borra blobs huérfanos (eventos ya inexistentes) |
+
+Todos se protegen con `CRON_SECRET` (Bearer). En plan Hobby de Vercel los crons corren a diario.

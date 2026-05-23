@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import clsx from "clsx";
-import { Users } from "lucide-react";
+import { Users, Trophy, ListOrdered, CircleHelp, Palette } from "lucide-react";
+
+type EventMode = "GALA" | "TIERLIST" | "PREGUNTAS" | "DIBUJO";
 
 type DashboardEventCardProps = {
     event: {
@@ -15,9 +17,13 @@ type DashboardEventCardProps = {
         isPublic: boolean;
         createdAt: Date;
         status: "DRAFT" | "PENDING" | "APPROVED" | "DENIED";
+        mode?: EventMode;
         _count: {
             polls: number;
             participants: number;
+            tiers?: number;
+            questions?: number;
+            drawings?: number;
         };
     };
     /** true si el usuario actual es colaborador (no dueño) → borde verde */
@@ -25,6 +31,27 @@ type DashboardEventCardProps = {
     /** true si el usuario es dueño y tiene al menos un colaborador → icono de equipo */
     hasCollaborators?: boolean;
 };
+
+const MODE_META: Record<EventMode, { label: string; Icon: typeof Trophy; color: string }> = {
+    GALA: { label: "Gala", Icon: Trophy, color: "text-amber-400" },
+    TIERLIST: { label: "Tierlist", Icon: ListOrdered, color: "text-blue-400" },
+    PREGUNTAS: { label: "Preguntas", Icon: CircleHelp, color: "text-violet-400" },
+    DIBUJO: { label: "Dibujo", Icon: Palette, color: "text-pink-400" },
+};
+
+/** Estadísticas a mostrar en el pie de la card según el modo del evento. */
+function modeStats(mode: EventMode, c: DashboardEventCardProps["event"]["_count"]): { value: number; label: string }[] {
+    switch (mode) {
+        case "TIERLIST":
+            return [{ value: c.tiers ?? 0, label: "Tiers" }, { value: c.participants, label: "Nominados" }];
+        case "PREGUNTAS":
+            return [{ value: c.questions ?? 0, label: "Preguntas" }];
+        case "DIBUJO":
+            return [{ value: c.drawings ?? 0, label: "Dibujos" }];
+        default:
+            return [{ value: c.polls, label: "Categorías" }, { value: c.participants, label: "Nominados" }];
+    }
+}
 
 export default function DashboardEventCard({ event, isShared = false, hasCollaborators = false }: DashboardEventCardProps) {
     const router = useRouter();
@@ -42,6 +69,11 @@ export default function DashboardEventCard({ event, isShared = false, hasCollabo
         ? "bg-green-900/30 text-green-400"
         : "bg-yellow-900/30 text-yellow-400";
 
+    const mode = event.mode ?? "GALA";
+    const modeMeta = MODE_META[mode];
+    const ModeIcon = modeMeta.Icon;
+    const stats = modeStats(mode, event._count);
+
     return (
         <div
             onClick={handleClick}
@@ -58,6 +90,11 @@ export default function DashboardEventCard({ event, isShared = false, hasCollabo
                     <div className="min-h-40 max-h-40">
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex gap-2 items-center flex-wrap">
+                                <span className="flex items-center gap-1 text-[10px] p-1.5 rounded-full border-2 border-white/10 text-gray-300 font-semibold">
+                                    <ModeIcon className={clsx("w-4 h-4", modeMeta.color)} />
+                                    {/* {modeMeta.label} */}
+                                </span>
+
                                 <div
                                     className={clsx(
                                         "px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider",
@@ -107,16 +144,12 @@ export default function DashboardEventCard({ event, isShared = false, hasCollabo
                     </div>
 
                     <div className="flex items-center justify-start gap-4 text-xs text-gray-500 font-mono border-t-2 border-white/10 pt-4">
-                        <div className="flex items-center gap-1">
-                            <span className="text-white font-bold">{event._count.polls}</span>{" "}
-                            Categorías
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-white font-bold">
-                                {event._count.participants}
-                            </span>{" "}
-                            Nominados
-                        </div>
+                        {stats.map((s) => (
+                            <div key={s.label} className="flex items-center gap-1">
+                                <span className="text-white font-bold">{s.value}</span>{" "}
+                                {s.label}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
