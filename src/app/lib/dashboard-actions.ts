@@ -3,10 +3,14 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlanFromUser } from "@/lib/user-plan";
+import { canCreateDrawingEvent, clampDrawingTime } from "@/lib/event-modes";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import { z } from "zod";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
+
+const EVENT_MODES = ["GALA", "TIERLIST", "PREGUNTAS", "DIBUJO"] as const;
+type EventModeValue = (typeof EVENT_MODES)[number];
 
 async function triggerDataChanged(eventId: string, triggeredBy: string, dataType: string) {
     try {
@@ -98,6 +102,12 @@ export async function createEvent(formData: FormData) {
 
   const { title, description } = validated.data;
 
+  // --- MODO DEL EVENTO ---
+  const modeRaw = (formData.get("mode") as string | null)?.toUpperCase();
+  const mode: EventModeValue = EVENT_MODES.includes(modeRaw as EventModeValue)
+    ? (modeRaw as EventModeValue)
+    : "GALA";
+
   const slug =
     title
       .toLowerCase()
@@ -111,6 +121,51 @@ export async function createEvent(formData: FormData) {
   const defaultGalaDate = new Date();
   defaultGalaDate.setDate(defaultGalaDate.getDate() + 2);
 
+  // Datos espec\u00edficos de modo (solo se rellenan para DIBUJO)
+  const drawingData: {
+    drawingPrompt?: string;
+    drawingTimeLimit?: number | null;
+    drawingPhase?: "DRAWING";
+    drawingDeadline?: Date;
+    votingDeadline?: Date;
+    galaDate?: Date;
+  } = {};
+
+  if (mode === "DIBUJO") {
+    // 1) El plan debe permitirlo y no superar el m\u00e1ximo de eventos DIBUJO
+    const check = await canCreateDrawingEvent(session.user.id, plan);
+    if (!check.ok) return { error: check.error };
+
+    // 2) Fechas obligatorias: cierre de dibujo < cierre de votaci\u00f3n
+    const drawingDeadlineStr = formData.get("drawingDeadline") as string | null;
+    const votingDeadlineStr = formData.get("votingDeadline") as string | null;
+    const drawingDeadline = drawingDeadlineStr ? new Date(drawingDeadlineStr) : null;
+    const votingDeadline = votingDeadlineStr ? new Date(votingDeadlineStr) : null;
+
+    if (!drawingDeadline || isNaN(drawingDeadline.getTime()) || !votingDeadline || isNaN(votingDeadline.getTime())) {
+      return { error: "Debes indicar las fechas de cierre de dibujo y de votaci\u00f3n." };
+    }
+    if (drawingDeadline <= new Date()) {
+      return { error: "La fecha de cierre de dibujo debe ser futura." };
+    }
+    if (votingDeadline <= drawingDeadline) {
+      return { error: "El cierre de votaci\u00f3n debe ser posterior al cierre de dibujo." };
+    }
+
+    // 3) Tiempo por participante (clamp al rango del plan; "ilimitado" si lo permite)
+    const wantsUnlimited = formData.get("drawingUnlimited") === "on";
+    const timeRaw = formData.get("drawingTimeLimit") as string | null;
+    const requested = wantsUnlimited ? null : timeRaw ? parseInt(timeRaw, 10) : null;
+    const timeLimit = clampDrawingTime(requested, plan);
+
+    drawingData.drawingPrompt = ((formData.get("drawingPrompt") as string | null) ?? "").slice(0, 500);
+    drawingData.drawingTimeLimit = timeLimit;
+    drawingData.drawingPhase = "DRAWING";
+    drawingData.drawingDeadline = drawingDeadline;
+    drawingData.votingDeadline = votingDeadline;
+    drawingData.galaDate = votingDeadline; // El "fin" del evento DIBUJO es el cierre de votaci\u00f3n
+  }
+
   try {
     const newEvent = await prisma.event.create({
       data: {
@@ -119,9 +174,19 @@ export async function createEvent(formData: FormData) {
         tags: tagsRaw ? tagsRaw.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean) : [],
         slug,
         userId: session.user.id,
-        isPublic: false,
+        isPublic: false, // DIBUJO siempre privado; el resto nace privado igualmente
         status: "DRAFT",
-        galaDate: defaultGalaDate,
+        mode,
+        galaDate: drawingData.galaDate ?? defaultGalaDate,
+        ...(mode === "DIBUJO"
+          ? {
+              drawingPrompt: drawingData.drawingPrompt,
+              drawingTimeLimit: drawingData.drawingTimeLimit,
+              drawingPhase: drawingData.drawingPhase,
+              drawingDeadline: drawingData.drawingDeadline,
+              votingDeadline: drawingData.votingDeadline,
+            }
+          : {}),
       },
     });
 

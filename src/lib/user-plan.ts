@@ -27,22 +27,44 @@ type DbPlanRow = {
 };
 
 function mapRow(row: DbPlanRow): ResolvedPlan {
-    const l = (row.limits ?? {}) as Record<string, number | null | undefined>;
-    const num = (v: number | null | undefined, fallback: number) =>
-        v === null || v === undefined ? fallback : v;
+    const l = (row.limits ?? {}) as Record<string, number | boolean | null | undefined>;
+    // Fallback por SLUG a los límites hardcodeados: cubre planes de BD creados antes
+    // de que existieran campos nuevos (TIERLIST/PREGUNTAS/DIBUJO), evitando que un
+    // límite ausente en el JSON resuelva a 0 y bloquee funciones que sí debería tener.
+    const fb = FALLBACK_PLANS.find((p) => p.slug === row.slug)?.limits;
+
+    const num = (v: number | boolean | null | undefined, fallback: number) =>
+        v === null || v === undefined ? fallback : (v as number);
+    // Para tiempos: si el JSON trae el campo se respeta (incluido null = sin tope);
+    // si está ausente se usa el valor hardcodeado del plan.
+    const numOrNull = (v: number | boolean | null | undefined, fallback: number | null): number | null =>
+        v === undefined ? fallback : v === null ? null : (v as number);
+    const bool = (v: number | boolean | null | undefined, fallback: boolean) =>
+        v === undefined ? fallback : v === true;
+
     return {
         name: row.name,
         slug: row.slug,
         quota: row.quota,
         limits: {
-            pollsPerEvent: num(l.pollsPerEvent, 0),
-            participantsPerEvent: num(l.participantsPerEvent, 0),
-            collaboratorsPerEvent: num(l.collaboratorsPerEvent, 0),
+            pollsPerEvent: num(l.pollsPerEvent, fb?.pollsPerEvent ?? 0),
+            participantsPerEvent: num(l.participantsPerEvent, fb?.participantsPerEvent ?? 0),
+            collaboratorsPerEvent: num(l.collaboratorsPerEvent, fb?.collaboratorsPerEvent ?? 0),
             // null/ausente = ilimitado
             maxSharedEvents:
                 l.maxSharedEvents === null || l.maxSharedEvents === undefined
                     ? Infinity
-                    : l.maxSharedEvents,
+                    : (l.maxSharedEvents as number),
+            // TIERLIST / PREGUNTAS / DIBUJO (fallback al valor hardcodeado del plan)
+            tierlistMaxTiers: num(l.tierlistMaxTiers, fb?.tierlistMaxTiers ?? 0),
+            tierlistMaxOptions: num(l.tierlistMaxOptions, fb?.tierlistMaxOptions ?? 0),
+            preguntasMaxQuestions: num(l.preguntasMaxQuestions, fb?.preguntasMaxQuestions ?? 0),
+            preguntasMaxOptions: num(l.preguntasMaxOptions, fb?.preguntasMaxOptions ?? 0),
+            preguntasMaxPerPage: num(l.preguntasMaxPerPage, fb?.preguntasMaxPerPage ?? 0),
+            drawingMaxEvents: num(l.drawingMaxEvents, fb?.drawingMaxEvents ?? 0),
+            drawingMinTimeSecs: numOrNull(l.drawingMinTimeSecs, fb?.drawingMinTimeSecs ?? null),
+            drawingMaxTimeSecs: numOrNull(l.drawingMaxTimeSecs, fb?.drawingMaxTimeSecs ?? null),
+            drawingAllowUnlimited: bool(l.drawingAllowUnlimited, fb?.drawingAllowUnlimited ?? false),
         },
         price: row.price,
         priceId: row.stripePriceId,

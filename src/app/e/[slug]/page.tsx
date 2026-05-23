@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import HomeHero from "@/components/HomeHero";
+import TierlistVotingClient from "@/components/TierlistVotingClient";
+import TierlistResultsClient from "@/components/TierlistResultsClient";
+import PreguntasVotingClient from "@/components/PreguntasVotingClient";
+import DrawingVotingClient from "@/components/DrawingVotingClient";
+import { computeDrawingPhase } from "@/lib/event-modes";
+import { getModeStats } from "@/app/lib/stats-actions";
 import { Lock } from "lucide-react";
 import { getCurrentUserPlan } from "@/lib/user-plan";
 import type { Metadata } from "next";
@@ -88,6 +95,101 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
         );
     }
     // ---------------------------
+
+    // ─── RUTEO POR MODO DE EVENTO (v3.0) ───
+    if (event.mode === "TIERLIST") {
+        const tiers = await prisma.tierlistTier.findMany({ where: { eventId: event.id }, orderBy: { order: "asc" } });
+        const ended = new Date() >= (event.galaDate ?? new Date("2999-01-01"));
+
+        if (ended) {
+            // Resultados: tierlist agregada por consenso
+            const stats = await getModeStats(event.id, "TIERLIST");
+            const tlStats = stats && stats.mode === "TIERLIST" ? stats : null;
+            return (
+                <TierlistResultsClient
+                    event={{ title: event.title, description: event.description }}
+                    tiers={tiers}
+                    totalVotes={tlStats?.totalVotes ?? 0}
+                    participants={tlStats?.participants ?? []}
+                />
+            );
+        }
+
+        const participants = await prisma.participant.findMany({
+            where: { eventId: event.id },
+            orderBy: { createdAt: "asc" },
+            select: { id: true, name: true, imageUrl: true },
+        });
+        return (
+            <TierlistVotingClient
+                event={{ id: event.id, title: event.title, description: event.description }}
+                tiers={tiers}
+                participants={participants}
+            />
+        );
+    }
+
+    if (event.mode === "PREGUNTAS") {
+        const closed = new Date() >= (event.galaDate ?? new Date("2999-01-01"));
+        if (closed) {
+            return (
+                <main className="min-h-screen bg-black text-white flex items-center justify-center p-6 text-center">
+                    <div className="bg-neutral-900/50 border-2 border-white/10 p-10 rounded-3xl max-w-md">
+                        <h1 className="text-2xl font-bold mb-2">Formulario cerrado</h1>
+                        <p className="text-gray-400">Este formulario ya no admite respuestas.</p>
+                    </div>
+                </main>
+            );
+        }
+        const questions = await prisma.question.findMany({
+            where: { eventId: event.id },
+            orderBy: { order: "asc" },
+            include: { options: { orderBy: { order: "asc" } } },
+        });
+        return (
+            <PreguntasVotingClient
+                event={{ id: event.id, title: event.title, description: event.description }}
+                questions={questions}
+            />
+        );
+    }
+
+    if (event.mode === "DIBUJO") {
+        const phase = computeDrawingPhase(event);
+        // Persistir la fase si cambió (best-effort; la fuente de verdad es el cálculo por fecha)
+        if (event.drawingPhase && phase !== event.drawingPhase) {
+            prisma.event.update({ where: { id: event.id }, data: { drawingPhase: phase } }).catch(() => {});
+        }
+        const cookieStore = await cookies();
+        const voterId = cookieStore.get("voter_id")?.value ?? "";
+        const [mySub, superCount] = await Promise.all([
+            voterId
+                ? prisma.drawingSubmission.findUnique({
+                      where: { eventId_voterHash: { eventId: event.id, voterHash: voterId } },
+                      select: { imageUrl: true },
+                  })
+                : Promise.resolve(null),
+            voterId
+                ? prisma.drawingReaction.count({ where: { eventId: event.id, voterHash: voterId, type: "SUPERLIKE" } })
+                : Promise.resolve(0),
+        ]);
+        return (
+            <DrawingVotingClient
+                event={{
+                    id: event.id,
+                    title: event.title,
+                    description: event.description,
+                    drawingPrompt: event.drawingPrompt,
+                    drawingTimeLimit: event.drawingTimeLimit,
+                }}
+                phase={phase}
+                alreadySubmitted={!!mySub}
+                myImageUrl={mySub?.imageUrl ?? null}
+                superlikeUsed={superCount > 0}
+            />
+        );
+    }
+    // ─── GALA (formato original) ───
 
     const galaDate = event.galaDate || new Date('2030-01-01');
     const now = new Date();

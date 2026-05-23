@@ -22,6 +22,20 @@ export type PlanLimitsInput = {
     collaboratorsPerEvent: number;
     /** null = ilimitado */
     maxSharedEvents: number | null;
+    // TIERLIST
+    tierlistMaxTiers: number;
+    tierlistMaxOptions: number;
+    // PREGUNTAS
+    preguntasMaxQuestions: number;
+    preguntasMaxOptions: number;
+    preguntasMaxPerPage: number;
+    // DIBUJO
+    drawingMaxEvents: number;
+    /** null = no aplica */
+    drawingMinTimeSecs: number | null;
+    /** null = sin tope (ilimitado) */
+    drawingMaxTimeSecs: number | null;
+    drawingAllowUnlimited: boolean;
 };
 
 export type PlanFormInput = {
@@ -61,6 +75,24 @@ function sanitize(data: PlanFormInput) {
                 data.limits.maxSharedEvents === null
                     ? null
                     : Math.max(0, Math.trunc(data.limits.maxSharedEvents)),
+            // TIERLIST
+            tierlistMaxTiers: Math.max(0, Math.trunc(data.limits.tierlistMaxTiers)),
+            tierlistMaxOptions: Math.max(0, Math.trunc(data.limits.tierlistMaxOptions)),
+            // PREGUNTAS
+            preguntasMaxQuestions: Math.max(0, Math.trunc(data.limits.preguntasMaxQuestions)),
+            preguntasMaxOptions: Math.max(0, Math.trunc(data.limits.preguntasMaxOptions)),
+            preguntasMaxPerPage: Math.max(0, Math.trunc(data.limits.preguntasMaxPerPage)),
+            // DIBUJO
+            drawingMaxEvents: Math.max(0, Math.trunc(data.limits.drawingMaxEvents)),
+            drawingMinTimeSecs:
+                data.limits.drawingMinTimeSecs === null
+                    ? null
+                    : Math.max(0, Math.trunc(data.limits.drawingMinTimeSecs)),
+            drawingMaxTimeSecs:
+                data.limits.drawingMaxTimeSecs === null
+                    ? null
+                    : Math.max(0, Math.trunc(data.limits.drawingMaxTimeSecs)),
+            drawingAllowUnlimited: data.limits.drawingAllowUnlimited === true,
         } as Prisma.InputJsonValue,
         features: (data.features ?? {}) as Prisma.InputJsonValue,
     };

@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PLANS } from "@/lib/plans";
 import { getPlanFromUser } from "@/lib/user-plan";
-import { getEventStats } from "@/app/lib/stats-actions";
+import { getEventStats, getModeStats } from "@/app/lib/stats-actions";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Lock } from "lucide-react";
@@ -11,8 +11,12 @@ import EventSettings from "@/components/dashboard/EventSettings";
 import ParticipantList from "@/components/dashboard/ParticipantList";
 import PollList from "@/components/dashboard/PollList";
 import EventStatistics from "@/components/dashboard/EventStatistics";
+import ModeStatistics from "@/components/dashboard/ModeStatistics";
 import TeamTab from "@/components/dashboard/TeamTab";
-import { Folders, UsersRound } from "lucide-react";
+import TierlistManager from "@/components/dashboard/TierlistManager";
+import QuestionManager from "@/components/dashboard/QuestionManager";
+import DrawingConfig from "@/components/dashboard/DrawingConfig";
+import { Folders, UsersRound, Layers, CircleHelp, Brush } from "lucide-react";
 import clsx from "clsx";
 
 type Props = {
@@ -40,10 +44,24 @@ export default async function EventDashboardPage({ params }: Props) {
                     options: { select: { participantId: true } },
                 },
             },
+            tiers: { orderBy: { order: "asc" } },
+            questions: {
+                orderBy: { order: "asc" },
+                include: { options: { orderBy: { order: "asc" } } },
+            },
         },
     });
 
     if (!event) notFound();
+
+    // Estadísticas del modo DIBUJO (solo si aplica)
+    const drawingStats =
+        event.mode === "DIBUJO"
+            ? {
+                  submissions: await prisma.drawingSubmission.count({ where: { eventId: id } }),
+                  reactions: await prisma.drawingReaction.count({ where: { eventId: id } }),
+              }
+            : { submissions: 0, reactions: 0 };
 
     const isOwner = event.userId === session.user.id;
 
@@ -104,8 +122,10 @@ export default async function EventDashboardPage({ params }: Props) {
         permissions.canViewStats = collaborator.canViewStats ?? event.defaultCanViewStats;
     }
 
-    // 4. Obtener estadísticas del evento
-    const stats = await getEventStats(event.id);
+    // 4. Obtener estadísticas del evento (GALA usa el panel clásico; el resto, stats por modo)
+    const isGala = event.mode === "GALA";
+    const stats = isGala ? await getEventStats(event.id) : null;
+    const modeStats = !isGala ? await getModeStats(event.id, event.mode as "TIERLIST" | "PREGUNTAS" | "DIBUJO") : null;
 
     return (
         <main className="min-h-screen bg-black text-white">
@@ -154,6 +174,7 @@ export default async function EventDashboardPage({ params }: Props) {
                 <EventTabs
                     eventId={event.id}
                     currentUserId={session.user.id}
+                    mode={event.mode}
                     settings={
                         <EventSettings
                             event={event}
@@ -165,13 +186,64 @@ export default async function EventDashboardPage({ params }: Props) {
                         <div className="max-w-7xl tour-participants-section">
                             <div className="mb-6 flex gap-2 items-center">
                                 <UsersRound className="w-6 h-6 text-gray-400" />
-                                <h2 className="text-xl font-bold">Participantes del Evento</h2>
+                                <h2 className="text-xl font-bold">
+                                    {event.mode === "TIERLIST" ? "Nominados de la Tierlist" : "Participantes del Evento"}
+                                </h2>
                             </div>
                             <ParticipantList
                                 initialData={event.participants}
                                 eventId={event.id}
                                 planSlug={plan.slug}
                                 canManageNominees={permissions.canManageNominees}
+                                square={event.mode === "TIERLIST"}
+                                limitOverride={event.mode === "TIERLIST" ? plan.limits.tierlistMaxOptions : undefined}
+                            />
+                        </div>
+                    }
+                    tiers={
+                        <div className="max-w-7xl">
+                            <div className="mb-6 flex gap-2 items-center">
+                                <Layers className="w-6 h-6 text-gray-400" />
+                                <h2 className="text-xl font-bold">Tiers de la Tierlist</h2>
+                            </div>
+                            <TierlistManager
+                                initialTiers={event.tiers}
+                                eventId={event.id}
+                                planSlug={plan.slug}
+                                canManage={permissions.canManagePolls}
+                            />
+                        </div>
+                    }
+                    questions={
+                        <div className="max-w-7xl">
+                            <div className="mb-6 flex gap-2 items-center">
+                                <CircleHelp className="w-6 h-6 text-gray-400" />
+                                <h2 className="text-xl font-bold">Preguntas del Formulario</h2>
+                            </div>
+                            <QuestionManager
+                                initialQuestions={event.questions}
+                                eventId={event.id}
+                                planSlug={plan.slug}
+                                canManage={permissions.canManagePolls}
+                            />
+                        </div>
+                    }
+                    drawing={
+                        <div className="max-w-7xl">
+                            <div className="mb-6 flex gap-2 items-center">
+                                <Brush className="w-6 h-6 text-gray-400" />
+                                <h2 className="text-xl font-bold">Configuración del Dibujo</h2>
+                            </div>
+                            <DrawingConfig
+                                eventId={event.id}
+                                planSlug={plan.slug}
+                                drawingPrompt={event.drawingPrompt}
+                                drawingDeadline={event.drawingDeadline}
+                                votingDeadline={event.votingDeadline}
+                                drawingTimeLimit={event.drawingTimeLimit}
+                                drawingPhase={(event.drawingPhase ?? "DRAWING")}
+                                stats={drawingStats}
+                                canManage={permissions.canEditSettings}
                             />
                         </div>
                     }
@@ -191,12 +263,20 @@ export default async function EventDashboardPage({ params }: Props) {
                         </div>
                     }
                     stats={
-                        <EventStatistics
-                            stats={stats}
-                            planSlug={plan.slug}
-                            isAdmin={isAdmin}
-                            canViewStats={permissions.canViewStats}
-                        />
+                        isGala ? (
+                            <EventStatistics
+                                stats={stats}
+                                planSlug={plan.slug}
+                                isAdmin={isAdmin}
+                                canViewStats={permissions.canViewStats}
+                            />
+                        ) : (
+                            <ModeStatistics
+                                stats={modeStats}
+                                planSlug={plan.slug}
+                                canViewStats={permissions.canViewStats}
+                            />
+                        )
                     }
                     team={
                         <TeamTab

@@ -8,37 +8,52 @@ import "shepherd.js/dist/css/shepherd.css";
 import { getPusherClient, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import type { Channel } from "pusher-js";
 
+type EventMode = "GALA" | "TIERLIST" | "PREGUNTAS" | "DIBUJO";
+
 type EventTabsProps = {
     eventId: string;
     currentUserId: string;
+    mode?: EventMode;
     stats: React.ReactNode;
     settings: React.ReactNode;
     participants: React.ReactNode;
     polls: React.ReactNode;
     team: React.ReactNode;
+    // Slots específicos de modo (v3.0)
+    tiers?: React.ReactNode;
+    questions?: React.ReactNode;
+    drawing?: React.ReactNode;
 };
 
-type TabId = "stats" | "settings" | "participants" | "polls" | "team";
+type TabId = "stats" | "settings" | "participants" | "polls" | "team" | "tiers" | "questions" | "drawing";
 
 export default function EventTabs({
     eventId,
     currentUserId,
+    mode = "GALA",
     stats,
     settings,
     participants,
     polls,
     team,
+    tiers,
+    questions,
+    drawing,
 }: EventTabsProps) {
     const [activeTab, setActiveTab] = useState<TabId>("settings");
     const router = useRouter();
 
-    const tabs = [
-        { id: "settings", label: "Configuración" as const },
-        { id: "participants", label: "Nominados" as const },
-        { id: "polls", label: "Categorías" as const },
-        { id: "stats", label: "Estadísticas" as const },
-        { id: "team", label: "Equipo" as const },
-    ] as const;
+    // Pestañas visibles según el modo del evento
+    const tabs: { id: TabId; label: string }[] = [
+        { id: "settings", label: "Configuración" },
+        ...(mode === "GALA" || mode === "TIERLIST" ? [{ id: "participants" as TabId, label: "Nominados" }] : []),
+        ...(mode === "GALA" ? [{ id: "polls" as TabId, label: "Categorías" }] : []),
+        ...(mode === "TIERLIST" ? [{ id: "tiers" as TabId, label: "Tiers" }] : []),
+        ...(mode === "PREGUNTAS" ? [{ id: "questions" as TabId, label: "Preguntas" }] : []),
+        ...(mode === "DIBUJO" ? [{ id: "drawing" as TabId, label: "Dibujo" }] : []),
+        { id: "stats", label: "Estadísticas" },
+        { id: "team", label: "Equipo" },
+    ];
 
     // Suscribirse a cambios en tiempo real del evento
     useEffect(() => {
@@ -131,33 +146,37 @@ export default function EventTabs({
             ],
         });
 
-        // 4) PARTICIPANTS
-        tour.addStep({
-            id: "participants",
-            beforeShowPromise: () =>
-                new Promise<void>((resolve) => { setActiveTab("participants"); setTimeout(() => resolve(), 350); }),
-            attachTo: { element: ".tour-participants-section", on: "top" as const },
-            title: "Añade nominados",
-            text: ["En esta sección gestionas todos los participantes de tu gala. Puedes crear, editar, subir fotos o generarlas con IA."],
-            buttons: [
-                { text: "Atrás", classes: "shepherd-button-secondary", action() { tour.back(); } },
-                { text: "Siguiente", classes: "shepherd-button-primary", action() { tour.next(); } },
-            ],
-        });
+        // 4) PARTICIPANTS (solo en modos con nominados)
+        if (mode === "GALA" || mode === "TIERLIST") {
+            tour.addStep({
+                id: "participants",
+                beforeShowPromise: () =>
+                    new Promise<void>((resolve) => { setActiveTab("participants"); setTimeout(() => resolve(), 350); }),
+                attachTo: { element: ".tour-participants-section", on: "top" as const },
+                title: "Añade nominados",
+                text: ["En esta sección gestionas todos los participantes. Puedes crear, editar, subir fotos o generarlas con IA."],
+                buttons: [
+                    { text: "Atrás", classes: "shepherd-button-secondary", action() { tour.back(); } },
+                    { text: "Siguiente", classes: "shepherd-button-primary", action() { tour.next(); } },
+                ],
+            });
+        }
 
-        // 5) POLLS
-        tour.addStep({
-            id: "polls",
-            beforeShowPromise: () =>
-                new Promise<void>((resolve) => { setActiveTab("polls"); setTimeout(() => resolve(), 350); }),
-            attachTo: { element: ".tour-polls-section", on: "top" as const },
-            title: "Crea tus categorías",
-            text: ["Aquí creas las categorías de votación (Mejor Actor, Mejor Juego, etc.), eliges el tipo de voto y qué nominados participan."],
-            buttons: [
-                { text: "Atrás", classes: "shepherd-button-secondary", action() { tour.back(); } },
-                { text: "Siguiente", classes: "shepherd-button-primary", action() { tour.next(); } },
-            ],
-        });
+        // 5) POLLS (solo GALA)
+        if (mode === "GALA") {
+            tour.addStep({
+                id: "polls",
+                beforeShowPromise: () =>
+                    new Promise<void>((resolve) => { setActiveTab("polls"); setTimeout(() => resolve(), 350); }),
+                attachTo: { element: ".tour-polls-section", on: "top" as const },
+                title: "Crea tus categorías",
+                text: ["Aquí creas las categorías de votación (Mejor Actor, Mejor Juego, etc.), eliges el tipo de voto y qué nominados participan."],
+                buttons: [
+                    { text: "Atrás", classes: "shepherd-button-secondary", action() { tour.back(); } },
+                    { text: "Siguiente", classes: "shepherd-button-primary", action() { tour.next(); } },
+                ],
+            });
+        }
 
         // 6) STATS
         tour.addStep({
@@ -242,7 +261,7 @@ export default function EventTabs({
 
             {/* CONTENIDO TABS */}
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                {{ stats, settings, participants, polls, team }[activeTab]}
+                {{ stats, settings, participants, polls, team, tiers, questions, drawing }[activeTab]}
             </div>
         </div>
     );

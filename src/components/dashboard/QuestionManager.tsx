@@ -1,0 +1,289 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { GripVertical, Plus, Pencil, Trash2, Save, X, CircleHelp, CheckSquare, Circle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { PLANS } from "@/lib/plans";
+import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions } from "@/app/lib/preguntas-actions";
+
+type QOption = { id?: string; text: string; order?: number };
+type Question = {
+    id: string;
+    text: string;
+    description: string | null;
+    type: "CHECKBOX" | "RADIO";
+    isRequired: boolean;
+    pageIndex: number;
+    order: number;
+    options: QOption[];
+};
+
+export default function QuestionManager({
+    initialQuestions,
+    eventId,
+    planSlug,
+    canManage = true,
+}: {
+    initialQuestions: Question[];
+    eventId: string;
+    planSlug: string;
+    canManage?: boolean;
+}) {
+    const router = useRouter();
+    const [questions, setQuestions] = useState<Question[]>([...initialQuestions].sort((a, b) => a.order - b.order));
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        setQuestions([...initialQuestions].sort((a, b) => a.order - b.order));
+    }, [initialQuestions]);
+
+    const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
+    const limit = PLANS[planKey]?.limits?.preguntasMaxQuestions ?? 8;
+    const maxOptions = PLANS[planKey]?.limits?.preguntasMaxOptions ?? 5;
+    const maxPerPage = PLANS[planKey]?.limits?.preguntasMaxPerPage ?? 4;
+    const atLimit = questions.length >= limit;
+
+    async function handleCreate(fd: FormData) {
+        setError(null);
+        const res = await createQuestion(eventId, fd);
+        if (res?.error) { setError(res.error); return; }
+        setIsCreating(false);
+        router.refresh();
+    }
+
+    async function handleUpdate(id: string, fd: FormData) {
+        setError(null);
+        const res = await updateQuestion(id, eventId, fd);
+        if (res?.error) { setError(res.error); return; }
+        setEditingId(null);
+        router.refresh();
+    }
+
+    async function handleDelete(id: string) {
+        await deleteQuestion(id, eventId);
+        router.refresh();
+    }
+
+    async function onDragEnd(result: DropResult) {
+        if (!result.destination || result.destination.index === result.source.index) return;
+        const reordered = Array.from(questions);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setQuestions(reordered);
+        await reorderQuestions(reordered.map((q, i) => ({ id: q.id, order: i })), eventId);
+        router.refresh();
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Preguntas</h3>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border-2 font-mono ${atLimit ? "text-red-400 border-red-500/30 bg-red-500/10" : "text-gray-500 border-gray-700"}`}>
+                        {questions.length} / {limit}
+                    </span>
+                </div>
+                {canManage && (
+                    <button
+                        onClick={() => (atLimit ? setError(`Has alcanzado el límite de ${limit} preguntas de tu plan.`) : setIsCreating(true))}
+                        className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                        <Plus size={14} /> Nueva pregunta
+                    </button>
+                )}
+            </div>
+
+            <p className="text-[11px] text-gray-600">
+                Máx. {maxOptions} opciones por pregunta · máx. {maxPerPage} preguntas por página. Los resultados son privados (solo tú los ves).
+            </p>
+
+            {error && <div className="p-3 bg-red-500/10 border-2 border-red-500/30 rounded-xl text-red-300 text-sm">{error}</div>}
+
+            {isCreating && (
+                <QuestionForm maxOptions={maxOptions} onSubmit={handleCreate} onCancel={() => setIsCreating(false)} />
+            )}
+
+            <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="questions">
+                    {(provided) => (
+                        <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+                            {questions.map((q, index) => (
+                                <Draggable key={q.id} draggableId={q.id} index={index} isDragDisabled={!canManage || editingId === q.id}>
+                                    {(prov) => (
+                                        <div ref={prov.innerRef} {...prov.draggableProps} className="bg-neutral-900/60 border-2 border-white/8 rounded-xl overflow-hidden">
+                                            {editingId === q.id ? (
+                                                <div className="p-3">
+                                                    <QuestionForm
+                                                        maxOptions={maxOptions}
+                                                        initial={q}
+                                                        onSubmit={(fd) => handleUpdate(q.id, fd)}
+                                                        onCancel={() => setEditingId(null)}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-start gap-3 p-3.5">
+                                                    {canManage && (
+                                                        <span {...prov.dragHandleProps} className="text-gray-600 hover:text-gray-300 cursor-grab mt-1">
+                                                            <GripVertical size={16} />
+                                                        </span>
+                                                    )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="font-semibold text-white">{q.text}</span>
+                                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20 inline-flex items-center gap-1">
+                                                                {q.type === "CHECKBOX" ? <CheckSquare size={10} /> : <Circle size={10} />}
+                                                                {q.type === "CHECKBOX" ? "Múltiple" : "Única"}
+                                                            </span>
+                                                            {q.isRequired && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">Obligatoria</span>}
+                                                            <span className="text-[10px] text-gray-600">Pág. {q.pageIndex + 1}</span>
+                                                        </div>
+                                                        {q.description && <p className="text-xs text-gray-500 mt-0.5">{q.description}</p>}
+                                                        <p className="text-[11px] text-gray-600 mt-1">{q.options.length} opciones</p>
+                                                    </div>
+                                                    {canManage && (
+                                                        <div className="flex items-center gap-1">
+                                                            <button onClick={() => setEditingId(q.id)} className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg cursor-pointer">
+                                                                <Pencil size={15} />
+                                                            </button>
+                                                            <button onClick={() => handleDelete(q.id)} className="h-9 w-9 flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg cursor-pointer">
+                                                                <Trash2 size={15} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </div>
+                    )}
+                </Droppable>
+            </DragDropContext>
+
+            {questions.length === 0 && !isCreating && (
+                <div className="text-center py-12 border-2 border-dashed border-white/8 rounded-xl text-gray-600 text-sm flex flex-col items-center gap-2">
+                    <CircleHelp size={28} className="text-gray-700" />
+                    Aún no hay preguntas. Crea la primera.
+                </div>
+            )}
+        </div>
+    );
+}
+
+function QuestionForm({
+    maxOptions,
+    initial,
+    onSubmit,
+    onCancel,
+}: {
+    maxOptions: number;
+    initial?: Question;
+    onSubmit: (formData: FormData) => void | Promise<void>;
+    onCancel: () => void;
+}) {
+    const [text, setText] = useState(initial?.text ?? "");
+    const [description, setDescription] = useState(initial?.description ?? "");
+    const [type, setType] = useState<"CHECKBOX" | "RADIO">(initial?.type ?? "RADIO");
+    const [isRequired, setIsRequired] = useState(initial?.isRequired ?? false);
+    const [pageIndex, setPageIndex] = useState(initial?.pageIndex ?? 0);
+    const [options, setOptions] = useState<QOption[]>(
+        initial?.options.length ? initial.options.map((o) => ({ id: o.id, text: o.text })) : [{ text: "" }, { text: "" }]
+    );
+
+    const setOptionText = (i: number, val: string) =>
+        setOptions((prev) => prev.map((o, idx) => (idx === i ? { ...o, text: val } : o)));
+    const addOption = () => options.length < maxOptions && setOptions((p) => [...p, { text: "" }]);
+    const removeOption = (i: number) => setOptions((p) => p.filter((_, idx) => idx !== i));
+
+    const handleSubmit = (fd: FormData) => {
+        fd.set("type", type);
+        fd.set("isRequired", isRequired ? "true" : "false");
+        fd.set("pageIndex", String(pageIndex));
+        fd.set("optionsJson", JSON.stringify(options.filter((o) => o.text.trim()).map((o) => ({ id: o.id, text: o.text.trim() }))));
+        return onSubmit(fd);
+    };
+
+    return (
+        <form action={handleSubmit} className="space-y-3 p-3 rounded-xl border-2 border-blue-500/30 bg-blue-950/10">
+            <input
+                name="text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                maxLength={300}
+                required
+                autoFocus
+                placeholder="Texto de la pregunta"
+                className="w-full bg-black border-2 border-white/15 rounded-lg px-3 py-2 text-white text-sm focus:border-blue-500 outline-none"
+            />
+            <input
+                name="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={500}
+                placeholder="Descripción (opcional)"
+                className="w-full bg-black border-2 border-white/15 rounded-lg px-3 py-2 text-white text-sm focus:border-blue-500 outline-none"
+            />
+
+            <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg border-2 border-white/10">
+                    <button type="button" onClick={() => setType("RADIO")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold cursor-pointer ${type === "RADIO" ? "bg-white/10 text-white" : "text-gray-500"}`}>
+                        <Circle size={12} /> Única
+                    </button>
+                    <button type="button" onClick={() => setType("CHECKBOX")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold cursor-pointer ${type === "CHECKBOX" ? "bg-white/10 text-white" : "text-gray-500"}`}>
+                        <CheckSquare size={12} /> Múltiple
+                    </button>
+                </div>
+                <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer">
+                    <input type="checkbox" checked={isRequired} onChange={(e) => setIsRequired(e.target.checked)} /> Obligatoria
+                </label>
+                <label className="flex items-center gap-1.5 text-xs text-gray-400">
+                    Página
+                    <input type="number" min={1} value={pageIndex + 1} onChange={(e) => setPageIndex(Math.max(0, (parseInt(e.target.value, 10) || 1) - 1))} className="w-16 bg-black border-2 border-white/15 rounded px-2 py-1 text-white text-sm outline-none focus:border-blue-500" />
+                </label>
+            </div>
+
+            {/* Opciones */}
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Opciones ({options.length}/{maxOptions})</span>
+                    {options.length < maxOptions && (
+                        <button type="button" onClick={addOption} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer">
+                            <Plus size={12} /> Añadir
+                        </button>
+                    )}
+                </div>
+                {options.map((o, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                        {type === "CHECKBOX" ? <CheckSquare size={14} className="text-gray-600 shrink-0" /> : <Circle size={14} className="text-gray-600 shrink-0" />}
+                        <input
+                            value={o.text}
+                            onChange={(e) => setOptionText(i, e.target.value)}
+                            maxLength={200}
+                            placeholder={`Opción ${i + 1}`}
+                            className="flex-1 bg-black border-2 border-white/15 rounded-lg px-3 py-2 text-white text-sm focus:border-blue-500 outline-none"
+                        />
+                        {options.length > 2 && (
+                            <button type="button" onClick={() => removeOption(i)} className="h-8 w-8 flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg cursor-pointer">
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            <div className="flex gap-2 pt-1">
+                <button type="submit" className="h-10 px-4 bg-white text-black rounded-lg text-sm font-bold flex items-center gap-1.5 hover:bg-gray-100 cursor-pointer">
+                    <Save size={14} /> Guardar
+                </button>
+                <button type="button" onClick={onCancel} className="h-10 px-3 bg-white/5 border-2 border-white/10 text-gray-400 rounded-lg hover:bg-white/10 cursor-pointer">
+                    <X size={14} />
+                </button>
+            </div>
+        </form>
+    );
+}

@@ -15,6 +15,30 @@ export type PlanLimits = {
     collaboratorsPerEvent: number;
     /** Infinity = ilimitado (en BD se almacena como null). */
     maxSharedEvents: number;
+
+    // --- MODO TIERLIST (v3.0) ---
+    /** Máximo de tiers (categorías) por tierlist. */
+    tierlistMaxTiers: number;
+    /** Máximo de nominados (opciones) por tierlist. */
+    tierlistMaxOptions: number;
+
+    // --- MODO PREGUNTAS (v3.0) ---
+    /** Máximo de preguntas por evento. */
+    preguntasMaxQuestions: number;
+    /** Máximo de opciones (box/radio) por pregunta. */
+    preguntasMaxOptions: number;
+    /** Máximo de preguntas por página. */
+    preguntasMaxPerPage: number;
+
+    // --- MODO DIBUJO (v3.0) ---
+    /** Máximo de eventos DIBUJO que puede tener el usuario (0 = no disponible). */
+    drawingMaxEvents: number;
+    /** Tiempo mínimo por participante en segundos (null = no aplica). */
+    drawingMinTimeSecs: number | null;
+    /** Tiempo máximo por participante en segundos (null = sin tope). */
+    drawingMaxTimeSecs: number | null;
+    /** Si puede configurar tiempo ilimitado para dibujar. */
+    drawingAllowUnlimited: boolean;
 };
 
 export type ResolvedPlan = {
@@ -41,6 +65,15 @@ export const PLANS = {
             participantsPerEvent: 12,
             collaboratorsPerEvent: 0,
             maxSharedEvents: 2,
+            tierlistMaxTiers: 5,
+            tierlistMaxOptions: 10,
+            preguntasMaxQuestions: 8,
+            preguntasMaxOptions: 5,
+            preguntasMaxPerPage: 4,
+            drawingMaxEvents: 0,
+            drawingMinTimeSecs: null,
+            drawingMaxTimeSecs: null,
+            drawingAllowUnlimited: false,
         },
         price: 0,
     },
@@ -53,6 +86,15 @@ export const PLANS = {
             participantsPerEvent: 1000,
             collaboratorsPerEvent: 30,
             maxSharedEvents: Infinity,
+            tierlistMaxTiers: 50,
+            tierlistMaxOptions: 120,
+            preguntasMaxQuestions: 70,
+            preguntasMaxOptions: 50,
+            preguntasMaxPerPage: 70,
+            drawingMaxEvents: 15,
+            drawingMinTimeSecs: 10,
+            drawingMaxTimeSecs: null,
+            drawingAllowUnlimited: true,
         },
         price: 0,
         priceId: "enterprise",
@@ -66,6 +108,15 @@ export const PLANS = {
             participantsPerEvent: 30,
             collaboratorsPerEvent: 1,
             maxSharedEvents: Infinity,
+            tierlistMaxTiers: 10,
+            tierlistMaxOptions: 20,
+            preguntasMaxQuestions: 15,
+            preguntasMaxOptions: 10,
+            preguntasMaxPerPage: 15,
+            drawingMaxEvents: 1,
+            drawingMinTimeSecs: 10,
+            drawingMaxTimeSecs: 180,
+            drawingAllowUnlimited: false,
         },
         price: 2.99,
         priceId: "price_1T1tQSAnnRNk3k0PKQVAbjnb",
@@ -79,6 +130,15 @@ export const PLANS = {
             participantsPerEvent: 50,
             collaboratorsPerEvent: 5,
             maxSharedEvents: Infinity,
+            tierlistMaxTiers: 15,
+            tierlistMaxOptions: 35,
+            preguntasMaxQuestions: 30,
+            preguntasMaxOptions: 20,
+            preguntasMaxPerPage: 30,
+            drawingMaxEvents: 3,
+            drawingMinTimeSecs: 10,
+            drawingMaxTimeSecs: null,
+            drawingAllowUnlimited: true,
         },
         price: 8.99,
         priceId: "price_1T1tRmAnnRNk3k0PLPBcN1Pk",
@@ -92,6 +152,15 @@ export const PLANS = {
             participantsPerEvent: 100,
             collaboratorsPerEvent: 15,
             maxSharedEvents: Infinity,
+            tierlistMaxTiers: 25,
+            tierlistMaxOptions: 80,
+            preguntasMaxQuestions: 50,
+            preguntasMaxOptions: 30,
+            preguntasMaxPerPage: 50,
+            drawingMaxEvents: 8,
+            drawingMinTimeSecs: 10,
+            drawingMaxTimeSecs: null,
+            drawingAllowUnlimited: true,
         },
         price: 12.99,
         priceId: "price_1SVz24AnnRNk3k0PvSjAEVQA",

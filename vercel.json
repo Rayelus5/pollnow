@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expire-subscriptions",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/drawing-phases",
+      "schedule": "0 3 * * *"
     }
   ]
 }

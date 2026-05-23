@@ -154,6 +154,7 @@ export async function createEventParticipant(eventId: string, formData: FormData
         where: { id: eventId },
         select: {
             user: true,
+            mode: true,
             _count: { select: { participants: true } },
         },
     });
@@ -161,7 +162,11 @@ export async function createEventParticipant(eventId: string, formData: FormData
 
     const plan = await getPlanFromUser(event.user);
 
-    if (event._count.participants >= plan.limits.participantsPerEvent) {
+    // En TIERLIST los "nominados" se rigen por tierlistMaxOptions; en GALA por participantsPerEvent.
+    const participantLimit =
+        event.mode === "TIERLIST" ? plan.limits.tierlistMaxOptions : plan.limits.participantsPerEvent;
+
+    if (event._count.participants >= participantLimit) {
         console.error("Límite de participantes alcanzado");
         return;
     }

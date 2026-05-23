@@ -598,11 +598,17 @@ export default function ParticipantList({
     eventId,
     planSlug,
     canManageNominees = true,
+    square = false,
+    limitOverride,
 }: {
     initialData: Participant[];
     eventId: string;
     planSlug: string;
     canManageNominees?: boolean;
+    /** Render cuadrado de los avatares (modo TIERLIST). */
+    square?: boolean;
+    /** Sobrescribe el límite de items (p.ej. tierlistMaxOptions en TIERLIST). */
+    limitOverride?: number;
 }) {
     const router = useRouter();
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -614,7 +620,7 @@ export default function ParticipantList({
     const itemsPerPage = 6; // nominados por página
 
     const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
-    const currentLimit = PLANS[planKey]?.limits?.participantsPerEvent || 12;
+    const currentLimit = limitOverride ?? (PLANS[planKey]?.limits?.participantsPerEvent || 12);
     const canImportCsv = planSlug === "enterprise" || planSlug === "unlimited";
     const currentCount = initialData.length;
     const isAtLimit = currentCount >= currentLimit;
@@ -705,9 +711,9 @@ export default function ParticipantList({
                                 <Lock className="text-amber-500" /> Límite Alcanzado
                             </h2>
                             <p className="text-gray-400 text-sm mb-6">
-                                Has alcanzado el máximo de <strong>{currentLimit} participantes</strong> en tu plan actual.
+                                Has alcanzado el máximo de <strong>{currentLimit} {limitOverride ? "elementos" : "participantes"}</strong> en tu plan actual.
                             </p>
-                            <div className="bg-black/40 rounded-xl border-2 border-white/5 p-4 mb-8 space-y-3">
+                            <div className={`bg-black/40 rounded-xl border-2 border-white/5 p-4 mb-8 space-y-3 ${limitOverride ? "hidden" : ""}`}>
                                 <div className="flex justify-between items-center text-sm border-b-2 border-white/5 pb-2">
                                     <span className="text-gray-500">Tu Plan ({PLANS[planKey].name})</span>
                                     <span className="font-mono text-red-400">{currentLimit} participantes</span>
@@ -800,7 +806,7 @@ export default function ParticipantList({
                             ) : (
                                 <div className="flex items-center gap-4 p-3.5">
                                     {/* Avatar */}
-                                    <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 border-2 border-white/10 bg-neutral-800">
+                                    <div className={`w-11 h-11 ${square ? "rounded-lg" : "rounded-full"} overflow-hidden shrink-0 border-2 border-white/10 bg-neutral-800`}>
                                         {p.imageUrl ? (
                                             <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
                                         ) : (

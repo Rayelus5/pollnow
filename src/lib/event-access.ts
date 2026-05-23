@@ -1,0 +1,63 @@
+// src/lib/event-access.ts
+//
+// Helpers compartidos para las server actions de los modos nuevos (TIERLIST,
+// PREGUNTAS, DIBUJO). Replica el patrón ya usado en event-actions.ts pero como
+// módulo reutilizable, para no duplicarlo en cada archivo de acciones.
+
+import { prisma } from "@/lib/prisma";
+import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
+
+export type CollabPermission =
+    | "canManageNominees"
+    | "canManagePolls"
+    | "canEditSettings"
+    | "canDeleteEvent"
+    | "canRegenerateKey";
+
+/** Devuelve true si el usuario es dueño o colaborador con el permiso indicado. */
+export async function checkEventAccess(
+    eventId: string,
+    userId: string,
+    permission: CollabPermission
+): Promise<boolean> {
+    const [event, collab] = await Promise.all([
+        prisma.event.findUnique({
+            where: { id: eventId },
+            select: {
+                userId: true,
+                defaultCanEditSettings: true,
+                defaultCanRegenerateKey: true,
+                defaultCanDeleteEvent: true,
+                defaultCanManageNominees: true,
+                defaultCanManagePolls: true,
+            },
+        }),
+        prisma.eventCollaborator.findUnique({
+            where: { eventId_userId: { eventId, userId } },
+        }),
+    ]);
+    if (!event) return false;
+    if (event.userId === userId) return true;
+    if (!collab) return false;
+
+    const defaultMap: Record<CollabPermission, boolean> = {
+        canEditSettings: event.defaultCanEditSettings,
+        canRegenerateKey: event.defaultCanRegenerateKey,
+        canDeleteEvent: event.defaultCanDeleteEvent,
+        canManageNominees: event.defaultCanManageNominees,
+        canManagePolls: event.defaultCanManagePolls,
+    };
+    return collab[permission] ?? defaultMap[permission] ?? false;
+}
+
+/** Notifica a otros clientes del evento que los datos cambiaron (Pusher, best-effort). */
+export async function triggerDataChanged(eventId: string, triggeredBy: string, dataType: string) {
+    try {
+        await pusherServer.trigger(eventChannel(eventId), PUSHER_EVENTS.DATA_CHANGED, {
+            dataType,
+            triggeredBy,
+        });
+    } catch {
+        // no-op: los fallos de Pusher nunca deben romper la acción
+    }
+}

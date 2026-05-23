@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bouncy } from "ldrs/react";
 import "ldrs/react/Bouncy.css";
-import { Plus, X } from "lucide-react";
+import { Plus, X, ArrowLeft, Trophy, ListOrdered, CircleHelp, Brush, Lock } from "lucide-react";
 import TagsInput from "@/components/ui/TagsInput";
+import { PLANS } from "@/lib/plans";
 
 type CreateEventButtonProps = {
     planSlug: string;
@@ -18,19 +19,41 @@ type CreateEventButtonProps = {
     onCreatingChange?: (isCreating: boolean) => void;
 };
 
+type EventMode = "GALA" | "TIERLIST" | "PREGUNTAS" | "DIBUJO";
+
+const MODES: { id: EventMode; label: string; desc: string; Icon: typeof Trophy }[] = [
+    { id: "GALA", label: "Gala", desc: "Premios por categorías estilo GameAwards.", Icon: Trophy },
+    { id: "TIERLIST", label: "Tierlist", desc: "Ordena nominados en tiers (S, A, B…).", Icon: ListOrdered },
+    { id: "PREGUNTAS", label: "Preguntas", desc: "Formulario tipo test (checkbox / radio).", Icon: CircleHelp },
+    { id: "DIBUJO", label: "Dibujo", desc: "Los participantes dibujan y se vota. Premium+.", Icon: Brush },
+];
+
 export default function CreateEventButton({
     planSlug,
     onCreatingChange,
 }: CreateEventButtonProps) {
     const isPremium = planSlug === "premium" || planSlug === "plus";
 
+    // Límites del plan (display/gating en cliente; el servidor valida de forma autoritativa)
+    const planLimits =
+        Object.values(PLANS).find((p) => p.slug === planSlug)?.limits ?? PLANS.FREE.limits;
+    const drawingAllowed = planLimits.drawingMaxEvents > 0;
+    const drawingAllowUnlimited = planLimits.drawingAllowUnlimited;
+    const drawingMin = planLimits.drawingMinTimeSecs ?? 10;
+    const drawingMax = planLimits.drawingMaxTimeSecs; // number | null
+
     const [isOpen, setIsOpen] = useState(false);
+    const [step, setStep] = useState<1 | 2>(1);
+    const [mode, setMode] = useState<EventMode>("GALA");
     const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loadingPremium, setLoadingPremium] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
     const [title, setTitle] = useState("");
     const [tags, setTags] = useState<string[]>([]);
+    // Estado de campos DIBUJO
+    const [drawingUnlimited, setDrawingUnlimited] = useState(false);
+    const [drawingTime, setDrawingTime] = useState<number>(drawingMin);
 
     const router = useRouter();
 
@@ -38,11 +61,21 @@ export default function CreateEventButton({
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         const allowed = /^[\w\s\-\.,:;!¡?¿()'`´"áéíóúÁÉÍÓÚñÑüÜ]*$/;
-
         if (allowed.test(value)) {
             setTitle(value);
             setServerError(null);
         }
+    };
+
+    const resetAll = () => {
+        setStep(1);
+        setMode("GALA");
+        setTitle("");
+        setTags([]);
+        setServerError(null);
+        setIsQuotaExceeded(false);
+        setDrawingUnlimited(false);
+        setDrawingTime(drawingMin);
     };
 
     async function handleSubmit(formData: FormData) {
@@ -53,13 +86,11 @@ export default function CreateEventButton({
         const res = await createEvent(formData);
 
         if (res?.success && res.eventId) {
-            setIsQuotaExceeded(false);
             setIsOpen(false);
-            setTitle("");
-            setTags([]);
+            resetAll();
             router.push(`/dashboard/event/${res.eventId}`);
         } else {
-            if (res?.error && res.error.toLowerCase().includes("límite")) {
+            if (res?.error && res.error.toLowerCase().includes("límite") && res.error.toLowerCase().includes("plan")) {
                 setIsQuotaExceeded(true);
             } else {
                 setServerError(res?.error || "Ha ocurrido un error al crear el evento.");
@@ -70,19 +101,28 @@ export default function CreateEventButton({
         onCreatingChange?.(false);
     }
 
+    const openModal = () => {
+        resetAll();
+        setIsOpen(true);
+    };
+
     const closeModal = () => {
-        if (isSubmitting) return; // Evitar cerrar mientras envía
+        if (isSubmitting) return;
         setIsOpen(false);
-        setIsQuotaExceeded(false);
+        resetAll();
+    };
+
+    const pickMode = (m: EventMode) => {
+        setMode(m);
         setServerError(null);
-        setTags([]);
+        setStep(2);
     };
 
     return (
         <>
             {/* Botón principal que abre el modal */}
             <button
-                onClick={() => setIsOpen(true)}
+                onClick={openModal}
                 className="tour-create-btn bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2 cursor-pointer"
             >
                 <Plus size={20} /> Nuevo Evento
@@ -136,18 +176,62 @@ export default function CreateEventButton({
                                     </Link>
                                 </div>
                             </>
-                        ) : (
-                            /* CASO NORMAL: FORMULARIO DE CREACIÓN */
+                        ) : step === 1 ? (
+                            /* PASO 1: SELECTOR DE MODO */
                             <>
-                                <h2 className="text-xl font-bold text-white mb-4">
-                                    Crear Nuevo Evento
-                                </h2>
+                                <h2 className="text-xl font-bold text-white mb-1">Elige el tipo de evento</h2>
+                                <p className="text-xs text-gray-500 mb-5">Cada formato tiene su propia forma de votar.</p>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    {MODES.map(({ id, label, desc, Icon }) => {
+                                        const locked = id === "DIBUJO" && !drawingAllowed;
+                                        return (
+                                            <button
+                                                key={id}
+                                                type="button"
+                                                onClick={() => (locked ? setIsQuotaExceeded(true) : pickMode(id))}
+                                                className={`relative text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                                                    locked
+                                                        ? "border-white/10 bg-white/[0.02] opacity-70 hover:opacity-100"
+                                                        : "border-white/15 bg-white/[0.03] hover:border-blue-500/60 hover:bg-blue-500/5"
+                                                }`}
+                                            >
+                                                {locked && (
+                                                    <span className="absolute right-2 top-2 text-amber-400" title="Requiere Premium o superior">
+                                                        <Lock size={14} />
+                                                    </span>
+                                                )}
+                                                <Icon size={22} className={locked ? "text-gray-500" : "text-blue-400"} />
+                                                <div className="mt-2 font-bold text-white text-sm">{label}</div>
+                                                <div className="text-[11px] text-gray-500 leading-snug mt-0.5">{desc}</div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        ) : (
+                            /* PASO 2: FORMULARIO */
+                            <>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(1)}
+                                        disabled={isSubmitting}
+                                        className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                                        title="Cambiar tipo"
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </button>
+                                    <h2 className="text-xl font-bold text-white">
+                                        Nuevo evento · <span className="text-blue-400">{MODES.find((m) => m.id === mode)?.label}</span>
+                                    </h2>
+                                </div>
 
                                 <form action={handleSubmit} className="space-y-4">
+                                    <input type="hidden" name="mode" value={mode} />
+
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase block mb-1">
-                                            Nombre del Evento
-                                        </label>
+                                        <label className="text-xs text-gray-500 uppercase block mb-1">Nombre del Evento</label>
                                         <input
                                             name="title"
                                             required
@@ -159,45 +243,109 @@ export default function CreateEventButton({
                                             autoFocus
                                             disabled={isSubmitting}
                                         />
-                                        <p className="text-[10px] text-gray-600 mt-1">
-                                            Solo letras, números y puntuación básica.
-                                        </p>
+                                        <p className="text-[10px] text-gray-600 mt-1">Solo letras, números y puntuación básica.</p>
                                     </div>
 
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase block mb-1">
-                                            Descripción
-                                        </label>
+                                        <label className="text-xs text-gray-500 uppercase block mb-1">Descripción</label>
                                         <textarea
                                             name="description"
                                             rows={3}
                                             maxLength={100}
-                                            placeholder="¿De qué va esta gala?"
+                                            placeholder={mode === "TIERLIST" ? "El tema de tu tierlist…" : "¿De qué va este evento?"}
                                             className="tour-modal-description w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none"
                                             disabled={isSubmitting}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase block mb-1">
-                                            Etiquetas
-                                        </label>
-                                        <TagsInput
-                                            value={tags}
-                                            onChange={setTags}
-                                            disabled={isSubmitting}
-                                            name="tags"
-                                        />
+                                        <label className="text-xs text-gray-500 uppercase block mb-1">Etiquetas</label>
+                                        <TagsInput value={tags} onChange={setTags} disabled={isSubmitting} name="tags" />
                                     </div>
 
-                                    {/* Error del servidor */}
+                                    {/* CAMPOS EXCLUSIVOS DE DIBUJO */}
+                                    {mode === "DIBUJO" && (
+                                        <div className="space-y-4 p-3 rounded-xl border-2 border-blue-500/20 bg-blue-500/5">
+                                            <div>
+                                                <label className="text-xs text-gray-400 uppercase block mb-1">Tema a dibujar</label>
+                                                <input
+                                                    name="drawingPrompt"
+                                                    maxLength={500}
+                                                    placeholder="Ej: Dibuja tu superhéroe favorito"
+                                                    className="w-full bg-black border-2 border-white/20 rounded p-3 text-white focus:border-blue-500 outline-none transition-colors"
+                                                    disabled={isSubmitting}
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="text-xs text-gray-400 uppercase block mb-1">Cierre dibujo</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        name="drawingDeadline"
+                                                        required
+                                                        className="w-full bg-black border-2 border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none [color-scheme:dark]"
+                                                        disabled={isSubmitting}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs text-gray-400 uppercase block mb-1">Cierre votación</label>
+                                                    <input
+                                                        type="datetime-local"
+                                                        name="votingDeadline"
+                                                        required
+                                                        className="w-full bg-black border-2 border-white/20 rounded p-2 text-white text-sm focus:border-blue-500 outline-none [color-scheme:dark]"
+                                                        disabled={isSubmitting}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="text-xs text-gray-400 uppercase">Tiempo por dibujo</label>
+                                                    {drawingAllowUnlimited && (
+                                                        <label className="flex items-center gap-1.5 text-[11px] text-gray-400 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                name="drawingUnlimited"
+                                                                checked={drawingUnlimited}
+                                                                onChange={(e) => setDrawingUnlimited(e.target.checked)}
+                                                            />
+                                                            Sin límite
+                                                        </label>
+                                                    )}
+                                                </div>
+                                                {!drawingUnlimited && (
+                                                    <div className="flex items-center gap-3">
+                                                        <input
+                                                            type="range"
+                                                            name="drawingTimeLimit"
+                                                            min={drawingMin}
+                                                            max={drawingMax ?? 600}
+                                                            step={5}
+                                                            value={drawingTime}
+                                                            onChange={(e) => setDrawingTime(Number(e.target.value))}
+                                                            className="flex-1 accent-blue-500"
+                                                            disabled={isSubmitting}
+                                                        />
+                                                        <span className="text-sm text-white font-mono w-16 text-right">{drawingTime}s</span>
+                                                    </div>
+                                                )}
+                                                <p className="text-[10px] text-gray-600 mt-1">
+                                                    {drawingAllowUnlimited
+                                                        ? `Mín. ${drawingMin}s · puedes elegir sin límite.`
+                                                        : `Entre ${drawingMin}s y ${drawingMax ?? "?"}s (tu plan no permite tiempo ilimitado).`}
+                                                </p>
+                                            </div>
+                                            <p className="text-[10px] text-amber-400/80">Los eventos de Dibujo son siempre privados.</p>
+                                        </div>
+                                    )}
+
                                     {serverError && (
                                         <div className="p-3 bg-red-500/10 border-2 border-red-500/30 rounded text-red-300 text-sm">
                                             {serverError}
                                         </div>
                                     )}
 
-                                    <div className="flex gap-3 pt-4">
+                                    <div className="flex gap-3 pt-2">
                                         <button
                                             type="button"
                                             onClick={closeModal}
@@ -206,7 +354,6 @@ export default function CreateEventButton({
                                         >
                                             Cancelar
                                         </button>
-
                                         <button
                                             type="submit"
                                             disabled={isSubmitting || title.trim().length < 3}

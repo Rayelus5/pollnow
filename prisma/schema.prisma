@@ -1,11 +1,11 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider  = "postgresql"
-    url       = env("DATABASE_URL")          // conexión pooled (PgBouncer, para queries en runtime)
-    directUrl = env("DATABASE_URL_UNPOOLED") // conexión directa (para prisma migrate)
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // conexión pooled (PgBouncer, para queries en runtime)
+  directUrl = env("DATABASE_URL_UNPOOLED") // conexión directa (para prisma migrate)
 }
 
 // ===================================
@@ -13,47 +13,75 @@ datasource db {
 // ===================================
 
 enum UserRole {
-    USER
-    MODERATOR
-    ADMIN
+  USER
+  MODERATOR
+  ADMIN
 }
 
 enum EventStatus {
-    DRAFT
-    PENDING // En espera de revisión (Nuevo)
-    APPROVED // Publicado (Nuevo)
-    DENIED // Rechazado por admin (Nuevo)
+  DRAFT
+  PENDING // En espera de revisión (Nuevo)
+  APPROVED // Publicado (Nuevo)
+  DENIED // Rechazado por admin (Nuevo)
 }
 
 enum VotingType {
-    SINGLE
-    MULTIPLE
-    LIMITED_MULTIPLE
+  SINGLE
+  MULTIPLE
+  LIMITED_MULTIPLE
+}
+
+// Modo / formato del evento. GALA es el formato original (estilo GameAwards).
+enum EventMode {
+  GALA
+  TIERLIST
+  PREGUNTAS
+  DIBUJO
+}
+
+// Fases de un evento de modo DIBUJO (estilo Gartic Phone).
+enum DrawingPhase {
+  DRAWING // Los participantes dibujan
+  VOTING // Los participantes reaccionan a los dibujos
+  RESULTS // Ranking final (top 100)
+}
+
+// Tipo de respuesta de una pregunta (modo PREGUNTAS). Sin texto libre.
+enum QuestionType {
+  CHECKBOX // Varias opciones
+  RADIO // Una sola opción
+}
+
+// Reacción a un dibujo en la fase de votación (modo DIBUJO).
+enum ReactionType {
+  LIKE // +100
+  DISLIKE // -100
+  SUPERLIKE // +300 (máx. 1 por evento y votante)
 }
 
 enum ReportReason {
-    SPAM
-    INAPPROPRIATE_CONTENT
-    HARASSMENT
-    SCAM
-    OTHER
+  SPAM
+  INAPPROPRIATE_CONTENT
+  HARASSMENT
+  SCAM
+  OTHER
 }
 
 enum InvitationStatus {
-    PENDING
-    ACCEPTED
-    REJECTED
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 enum NotificationType {
-    SYSTEM
-    COLLABORATION
+  SYSTEM
+  COLLABORATION
 }
 
 enum RaffleStatus {
-    ACTIVE
-    CLOSED
-    WINNER_SELECTED
+  ACTIVE
+  CLOSED
+  WINNER_SELECTED
 }
 
 // ===================================
@@ -61,94 +89,94 @@ enum RaffleStatus {
 // ===================================
 
 model User {
-    id                   String            @id @default(uuid())
-    name                 String
-    username             String            @unique
-    email                String            @unique
-    emailVerified        DateTime?
-    passwordHash         String?
-    image                String?
-    role                 UserRole          @default(USER) // Nuevo campo de seguridad
-    ipBan                Boolean           @default(false) // Nuevo campo de seguridad para bloqueo
-    stripeCustomerId     String?           @unique
-    stripeSubscriptionId String?           @unique
-    stripePriceId        String?
-    subscriptionStatus   String?           @default("free")
-    subscriptionEndDate  DateTime?
-    cancelAtPeriodEnd    Boolean           @default(false)
-    welcomeBonusApplied  Boolean           @default(false)
-    emailNotifications   Boolean           @default(true)  // Recibir correos de notificaciones del sistema
-    emailCollaborations  Boolean           @default(true)  // Recibir correos de invitaciones de colaboración
-    createdAt            DateTime          @default(now())
-    updatedAt            DateTime          @updatedAt
+  id                   String    @id @default(uuid())
+  name                 String
+  username             String    @unique
+  email                String    @unique
+  emailVerified        DateTime?
+  passwordHash         String?
+  image                String?
+  role                 UserRole  @default(USER) // Nuevo campo de seguridad
+  ipBan                Boolean   @default(false) // Nuevo campo de seguridad para bloqueo
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
+  subscriptionStatus   String?   @default("free")
+  subscriptionEndDate  DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  welcomeBonusApplied  Boolean   @default(false)
+  emailNotifications   Boolean   @default(true) // Recibir correos de notificaciones del sistema
+  emailCollaborations  Boolean   @default(true) // Recibir correos de invitaciones de colaboración
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-    // Relaciones
-    accounts             Account[]
-    events               Event[]
-    sessions             Session[]
-    votes                Vote[]                    @relation(name: "UserVotes")
-    notifications        Notification[]            @relation("AdminNotifications")
-    receivedNotifications Notification[]           @relation("UserNotifications")
-    supportChats         SupportChat[]             @relation(name: "UserSupportChats")
-    chatMessages         ChatMessage[]             @relation(name: "UserChatMessages")
-    moderationLogs       ModerationLog[]           @relation(name: "AdminActions")
-    reports              Report[]                  @relation(name: "UserReports")
-    eventLikes           EventLike[]
-    eventVotes           EventVote[]
-    // Colaboración
-    collaborations       EventCollaborator[]       @relation("UserCollaborations")
-    sentInvitations      CollaboratorInvitation[]  @relation("SentInvitations")
-    receivedInvitations  CollaboratorInvitation[]  @relation("ReceivedInvitations")
-    // Sorteos
-    wonRaffles           Raffle[]                  @relation("RaffleWinner")
+  // Relaciones
+  accounts              Account[]
+  events                Event[]
+  sessions              Session[]
+  votes                 Vote[]                   @relation(name: "UserVotes")
+  notifications         Notification[]           @relation("AdminNotifications")
+  receivedNotifications Notification[]           @relation("UserNotifications")
+  supportChats          SupportChat[]            @relation(name: "UserSupportChats")
+  chatMessages          ChatMessage[]            @relation(name: "UserChatMessages")
+  moderationLogs        ModerationLog[]          @relation(name: "AdminActions")
+  reports               Report[]                 @relation(name: "UserReports")
+  eventLikes            EventLike[]
+  eventVotes            EventVote[]
+  // Colaboración
+  collaborations        EventCollaborator[]      @relation("UserCollaborations")
+  sentInvitations       CollaboratorInvitation[] @relation("SentInvitations")
+  receivedInvitations   CollaboratorInvitation[] @relation("ReceivedInvitations")
+  // Sorteos
+  wonRaffles            Raffle[]                 @relation("RaffleWinner")
 }
 
 model Account {
-    id                String  @id @default(uuid())
-    userId            String
-    type              String
-    provider          String
-    providerAccountId String
-    refresh_token     String? @db.Text
-    access_token      String? @db.Text
-    expires_at        Int?
-    token_type        String?
-    scope             String?
-    id_token          String? @db.Text
-    session_state     String?
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([provider, providerAccountId])
-    @@index([userId])
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
-    id           String   @id @default(uuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@index([userId])
+  @@index([userId])
 }
 
 model VerificationToken {
-    id         String   @id @default(uuid())
-    email      String
-    token      String   @unique
-    expires    DateTime
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
 
-    @@unique([email, token])
+  @@unique([email, token])
 }
 
 model PasswordResetToken {
-    id      String   @id @default(uuid())
-    email   String
-    token   String   @unique
-    expires DateTime
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
 
-    @@unique([email, token])
+  @@unique([email, token])
 }
 
 // ===================================
@@ -156,124 +184,289 @@ model PasswordResetToken {
 // ===================================
 
 model Event {
-    id             String          @id @default(uuid())
-    userId         String          // Creador del evento
-    title          String          @db.VarChar(100)
-    description    String          @db.Text
-    slug           String          @unique // URL amigable (ej: mejor-pelicula-2024)
-    accessKey      String          @unique @default(uuid()) // Clave privada para administrar (aparte de userId)
-    isPublic       Boolean         @default(false) // Si es visible en la página principal
-    tags           String[]        // Etiquetas para búsqueda (ej: ["cine", "oscar", "fiesta"])
-    galaDate       DateTime        // Fecha de la celebración o fin del evento
-    isAnonymousVoting Boolean       @default(true)
-    createdAt      DateTime        @default(now())
-    updatedAt      DateTime        @updatedAt
+  id                String   @id @default(uuid())
+  userId            String // Creador del evento
+  title             String   @db.VarChar(100)
+  description       String   @db.Text
+  slug              String   @unique // URL amigable (ej: mejor-pelicula-2024)
+  accessKey         String   @unique @default(uuid()) // Clave privada para administrar (aparte de userId)
+  isPublic          Boolean  @default(false) // Si es visible en la página principal
+  tags              String[] // Etiquetas para búsqueda (ej: ["cine", "oscar", "fiesta"])
+  galaDate          DateTime // Fecha de la celebración o fin del evento
+  isAnonymousVoting Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-    status            EventStatus     @default(DRAFT) // <--- CAMBIO: Por defecto nace como borrador
-    reviewReason      String?   
+  status       EventStatus @default(DRAFT) // <--- CAMBIO: Por defecto nace como borrador
+  reviewReason String?
 
-    // Permisos globales por defecto para todos los colaboradores
-    defaultCanEditSettings   Boolean @default(false)
-    defaultCanRegenerateKey  Boolean @default(false)
-    defaultCanDeleteEvent    Boolean @default(false)
-    defaultCanManageNominees Boolean @default(true)
-    defaultCanManagePolls    Boolean @default(true)
-    defaultCanViewStats      Boolean @default(true)
+  // --- MODOS DE EVENTO (v3.0) ---
+  mode EventMode @default(GALA)
 
-    // Relaciones
-    user           User            @relation(fields: [userId], references: [id])
-    participants   Participant[]
-    polls          Poll[]
-    reports        Report[]
-    moderationLogs ModerationLog[]
-    likes          EventLike[]
-    eventVotes     EventVote[]
-    collaborators  EventCollaborator[]
-    invitations    CollaboratorInvitation[]
+  // Campos exclusivos de modo DIBUJO (null/ignorados en el resto de modos)
+  drawingPrompt    String?       @db.VarChar(500) // Tema visible para los participantes
+  drawingTimeLimit Int? // Segundos por participante para dibujar (null = sin límite)
+  drawingPhase     DrawingPhase? // Fase actual (null salvo mode = DIBUJO)
+  drawingDeadline  DateTime? // Fin de la fase de dibujo → pasa a VOTING
+  votingDeadline   DateTime? // Fin de la fase de votación → pasa a RESULTS
 
-    @@index([userId])
-    @@index([slug])
-    @@index([status])
-    @@index([createdAt])
-    @@index([status, createdAt])
+  // Permisos globales por defecto para todos los colaboradores
+  defaultCanEditSettings   Boolean @default(false)
+  defaultCanRegenerateKey  Boolean @default(false)
+  defaultCanDeleteEvent    Boolean @default(false)
+  defaultCanManageNominees Boolean @default(true)
+  defaultCanManagePolls    Boolean @default(true)
+  defaultCanViewStats      Boolean @default(true)
+
+  // Relaciones
+  user           User                     @relation(fields: [userId], references: [id])
+  participants   Participant[]
+  polls          Poll[]
+  reports        Report[]
+  moderationLogs ModerationLog[]
+  likes          EventLike[]
+  eventVotes     EventVote[]
+  collaborators  EventCollaborator[]
+  invitations    CollaboratorInvitation[]
+
+  // Relaciones de los modos nuevos (v3.0)
+  tiers         TierlistTier[]
+  tierlistVotes TierlistVote[]
+  questions     Question[]
+  drawings      DrawingSubmission[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([userId, mode]) // Conteo de eventos DIBUJO por usuario (límite de plan)
 }
 
 model Participant {
-    id          String   @id @default(uuid())
-    name        String   @db.VarChar(100)
-    imageUrl    String?  @db.Text
-    eventId     String
-    createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(100)
+  imageUrl  String?  @db.Text
+  eventId   String
+  createdAt DateTime @default(now())
 
-    // Relaciones
-    nominations Option[]
-    event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  // Relaciones
+  nominations Option[]
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-    @@index([eventId])
-    @@index([createdAt])
+  @@index([eventId])
+  @@index([createdAt])
 }
 
 model Poll {
-    id            String     @id @default(uuid())
-    eventId       String
-    title         String     @db.VarChar(100)
-    description   String?    @db.Text
-    votingType    VotingType @default(SINGLE)
-    maxOptions    Int        @default(2) // Solo aplica a LIMITED_MULTIPLE
-    isPublished   Boolean    @default(false)
-    order         Int        @default(0)
-    createdAt     DateTime   @default(now())
-    updatedAt     DateTime   @updatedAt
+  id          String     @id @default(uuid())
+  eventId     String
+  title       String     @db.VarChar(100)
+  description String?    @db.Text
+  votingType  VotingType @default(SINGLE)
+  maxOptions  Int        @default(2) // Solo aplica a LIMITED_MULTIPLE
+  isPublished Boolean    @default(false)
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-    // Relaciones
-    event         Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    options       Option[]
-    votes         Vote[]
+  // Relaciones
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  options Option[]
+  votes   Vote[]
 
-    @@index([eventId])
+  @@index([eventId])
 }
 
 model Option {
-    id            String       @id @default(uuid())
-    pollId        String
-    subtitle      String?      @db.VarChar(100) // Título del premio/categoría si la opción es un participante
-    participantId String       // El participante nominado
-    order         Int          @default(0)
+  id            String  @id @default(uuid())
+  pollId        String
+  subtitle      String? @db.VarChar(100) // Título del premio/categoría si la opción es un participante
+  participantId String // El participante nominado
+  order         Int     @default(0)
 
-    // Relaciones
-    participant   Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
-    poll          Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
-    votes         VoteOption[]
+  // Relaciones
+  participant Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes       VoteOption[]
 
-    @@unique([pollId, participantId])
+  @@unique([pollId, participantId])
 }
 
 model Vote {
-    id          String       @id @default(uuid())
-    pollId      String
-    createdAt   DateTime     @default(now())
-    voterHash   String       // Hash de la cookie o IP del votante (si no está logeado)
-    userId      String?      // ID del usuario logeado (si está logeado)
-    user        User?        @relation(name: "UserVotes", fields: [userId], references: [id])
-    poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
-    voteOptions VoteOption[]
+  id          String       @id @default(uuid())
+  pollId      String
+  createdAt   DateTime     @default(now())
+  voterHash   String // Hash de la cookie o IP del votante (si no está logeado)
+  userId      String? // ID del usuario logeado (si está logeado)
+  user        User?        @relation(name: "UserVotes", fields: [userId], references: [id])
+  poll        Poll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  voteOptions VoteOption[]
 
-    @@unique([pollId, voterHash])
-    @@index([userId])
-    @@index([createdAt])
-    @@index([pollId, createdAt])
+  @@unique([pollId, voterHash])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([pollId, createdAt])
 }
 
 model VoteOption {
-    id       String @id @default(uuid())
-    voteId   String
-    optionId String
+  id       String @id @default(uuid())
+  voteId   String
+  optionId String
 
-    // Relaciones
-    option   Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
-    vote     Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
+  // Relaciones
+  option Option @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  vote   Vote   @relation(fields: [voteId], references: [id], onDelete: Cascade)
 
-    @@unique([voteId, optionId])
+  @@unique([voteId, optionId])
+}
+
+// ===================================
+// MODO TIERLIST (v3.0)
+// ===================================
+// Un evento TIERLIST tiene un único tema (título/descripción del evento), tiers
+// renombrables y reutiliza `Participant` como "nominados" (cards cuadradas).
+
+model TierlistTier {
+  id      String @id @default(uuid())
+  eventId String
+  label   String @db.VarChar(50) // Nombre editable del tier (S, A, "Mis favoritos"...)
+  color   String @default("#6366f1")
+  order   Int    @default(0)
+
+  event   Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  entries TierlistVoteEntry[]
+
+  @@index([eventId])
+}
+
+// Un voto = la ordenación completa que hace un votante de los nominados en tiers.
+model TierlistVote {
+  id        String   @id @default(uuid())
+  eventId   String
+  voterHash String // Cookie voter_id (igual que en Vote de GALA)
+  userId    String?
+  createdAt DateTime @default(now())
+
+  event   Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  entries TierlistVoteEntry[]
+
+  @@unique([eventId, voterHash])
+  @@index([eventId])
+}
+
+// Asignación de un nominado (participantId) a un tier dentro de un voto.
+model TierlistVoteEntry {
+  id            String @id @default(uuid())
+  voteId        String
+  tierId        String
+  participantId String
+
+  vote TierlistVote @relation(fields: [voteId], references: [id], onDelete: Cascade)
+  tier TierlistTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+
+  @@unique([voteId, participantId]) // Cada nominado en un solo tier por voto
+  @@index([tierId])
+  @@index([participantId])
+}
+
+// ===================================
+// MODO PREGUNTAS (v3.0)
+// ===================================
+// Tipo Google Form. Solo CHECKBOX y RADIO (sin texto libre). Multipágina.
+// Resultados privados (solo el creador).
+
+model Question {
+  id          String       @id @default(uuid())
+  eventId     String
+  text        String       @db.VarChar(300)
+  description String?      @db.VarChar(500)
+  type        QuestionType
+  pageIndex   Int          @default(0) // Paginación multipágina
+  order       Int          @default(0)
+  isRequired  Boolean      @default(false)
+
+  event   Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  options QuestionOption[]
+  answers QuestionAnswer[]
+
+  @@index([eventId])
+}
+
+model QuestionOption {
+  id         String @id @default(uuid())
+  questionId String
+  text       String @db.VarChar(200)
+  order      Int    @default(0)
+
+  question Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  QuestionAnswer[]
+
+  @@index([questionId])
+}
+
+// Una fila = un votante eligió esta opción para esta pregunta.
+model QuestionAnswer {
+  id         String   @id @default(uuid())
+  eventId    String
+  questionId String
+  optionId   String
+  voterHash  String
+  userId     String?
+  createdAt  DateTime @default(now())
+
+  question Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  option   QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, optionId, voterHash]) // No repetir la misma opción dos veces
+  @@index([questionId])
+  @@index([eventId])
+  @@index([voterHash])
+}
+
+// ===================================
+// MODO DIBUJO (v3.0)
+// ===================================
+// Inspirado en Gartic Phone. Diseñado para 50k-100k participaciones por evento.
+// Score denormalizado (actualizado atómicamente en cada reacción): LIKE +100,
+// DISLIKE -100, SUPERLIKE +300. `impressions` permite reparto justo de exposición.
+
+model DrawingSubmission {
+  id             String   @id @default(uuid())
+  eventId        String
+  voterHash      String // Cookie voter_id del autor
+  userId         String?
+  imageUrl       String   @db.Text // URL pública (Vercel Blob)
+  blobKey        String   @db.Text // Key del objeto para poder borrarlo
+  score          Int      @default(0) // Puntuación denormalizada (ranking)
+  likeCount      Int      @default(0)
+  dislikeCount   Int      @default(0)
+  superlikeCount Int      @default(0)
+  impressions    Int      @default(0) // Veces servido en la galería (exposición)
+  createdAt      DateTime @default(now())
+
+  event     Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reactions DrawingReaction[]
+
+  @@unique([eventId, voterHash]) // Un dibujo por votante y evento
+  @@index([eventId, score]) // Top 100 instantáneo
+  @@index([eventId, impressions]) // Muestreo por menor exposición
+}
+
+model DrawingReaction {
+  id           String       @id @default(uuid())
+  submissionId String
+  eventId      String // Desnormalizado para validar "1 superlike por evento/votante"
+  voterHash    String
+  userId       String?
+  type         ReactionType
+  createdAt    DateTime     @default(now())
+
+  submission DrawingSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, voterHash]) // Una reacción por dibujo y votante
+  @@index([submissionId])
+  @@index([eventId, voterHash]) // Contar superlikes del votante en el evento
 }
 
 // ===================================
@@ -282,69 +475,68 @@ model VoteOption {
 
 // NUEVO: Modelo para registrar reportes de usuarios sobre eventos
 model Report {
-    id          String       @id @default(uuid())
-    reporterId  String       // Usuario que reporta
-    eventId     String       // Evento reportado
-    reason      ReportReason // Razón del reporte (enum)
-    details     String       @db.Text
-    isReviewed  Boolean      @default(false)
-    createdAt   DateTime     @default(now())
-    reviewedAt  DateTime?
+  id         String       @id @default(uuid())
+  reporterId String // Usuario que reporta
+  eventId    String // Evento reportado
+  reason     ReportReason // Razón del reporte (enum)
+  details    String       @db.Text
+  isReviewed Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  reviewedAt DateTime?
 
-    // Relaciones
-    reporter    User         @relation(name: "UserReports", fields: [reporterId], references: [id])
-    event       Event        @relation(fields: [eventId], references: [id])
+  // Relaciones
+  reporter User  @relation(name: "UserReports", fields: [reporterId], references: [id])
+  event    Event @relation(fields: [eventId], references: [id])
 
-    @@index([eventId])
-    @@index([reporterId])
-    @@index([isReviewed])
-    @@index([createdAt])
-    @@index([isReviewed, createdAt])
+  @@index([eventId])
+  @@index([reporterId])
+  @@index([isReviewed])
+  @@index([createdAt])
+  @@index([isReviewed, createdAt])
 }
 
 // NUEVO: Historial de acciones tomadas por el admin/moderador
 model ModerationLog {
-    id            String   @id @default(uuid())
-    adminId       String   // Administrador que realiza la acción
-    actionType    String   // Tipo de acción (ej: 'APPROVE_EVENT', 'DENY_EVENT', 'BAN_USER', 'RESET_VOTES')
-    targetType    String   // Tipo de entidad afectada (ej: 'EVENT', 'USER')
-    targetId      String   // ID de la entidad afectada
-    details       String?  @db.Text // Detalles o razón de la acción
-    createdAt     DateTime @default(now())
+  id         String   @id @default(uuid())
+  adminId    String // Administrador que realiza la acción
+  actionType String // Tipo de acción (ej: 'APPROVE_EVENT', 'DENY_EVENT', 'BAN_USER', 'RESET_VOTES')
+  targetType String // Tipo de entidad afectada (ej: 'EVENT', 'USER')
+  targetId   String // ID de la entidad afectada
+  details    String?  @db.Text // Detalles o razón de la acción
+  createdAt  DateTime @default(now())
 
-    // Relaciones
-    admin         User     @relation(name: "AdminActions", fields: [adminId], references: [id])
-    // Relación opcional con el Evento, útil para búsquedas rápidas en la tabla de Eventos
-    eventId       String?
-    event         Event?   @relation(fields: [eventId], references: [id])     
+  // Relaciones
+  admin   User    @relation(name: "AdminActions", fields: [adminId], references: [id])
+  // Relación opcional con el Evento, útil para búsquedas rápidas en la tabla de Eventos
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id])
 
-    @@index([adminId])
-    @@index([targetId])
-    @@index([eventId])
-    @@index([createdAt])
-    @@index([actionType])
+  @@index([adminId])
+  @@index([targetId])
+  @@index([eventId])
+  @@index([createdAt])
+  @@index([actionType])
 }
 
-
 model Notification {
-    id           String           @id @default(uuid())
-    message      String           // El contenido de la notificación
-    link         String?          // Enlace directo a la acción
-    isRead       Boolean          @default(false)
-    createdAt    DateTime         @default(now())
-    adminUserId  String           // Remitente (admin del sistema o dueño del evento)
-    userId       String?          // Destinatario
-    type         NotificationType @default(SYSTEM)
-    invitationId String?          // Referencia a CollaboratorInvitation si type=COLLABORATION
+  id           String           @id @default(uuid())
+  message      String // El contenido de la notificación
+  link         String? // Enlace directo a la acción
+  isRead       Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  adminUserId  String // Remitente (admin del sistema o dueño del evento)
+  userId       String? // Destinatario
+  type         NotificationType @default(SYSTEM)
+  invitationId String? // Referencia a CollaboratorInvitation si type=COLLABORATION
 
-    admin      User  @relation("AdminNotifications", fields: [adminUserId], references: [id])
-    targetUser User? @relation("UserNotifications", fields: [userId], references: [id])
+  admin      User  @relation("AdminNotifications", fields: [adminUserId], references: [id])
+  targetUser User? @relation("UserNotifications", fields: [userId], references: [id])
 
-    @@index([adminUserId])
-    @@index([userId])
-    @@index([isRead])
-    @@index([createdAt])
-    @@index([type])
+  @@index([adminUserId])
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([type])
 }
 
 // ===================================
@@ -352,74 +544,74 @@ model Notification {
 // ===================================
 
 model EventCollaborator {
-    id        String   @id @default(uuid())
-    eventId   String
-    userId    String
-    createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  eventId   String
+  userId    String
+  createdAt DateTime @default(now())
 
-    // Permisos individuales (null = usa los defaults del evento)
-    canEditSettings   Boolean?
-    canRegenerateKey  Boolean?
-    canDeleteEvent    Boolean?
-    canManageNominees Boolean?
-    canManagePolls    Boolean?
-    canViewStats      Boolean?
+  // Permisos individuales (null = usa los defaults del evento)
+  canEditSettings   Boolean?
+  canRegenerateKey  Boolean?
+  canDeleteEvent    Boolean?
+  canManageNominees Boolean?
+  canManagePolls    Boolean?
+  canViewStats      Boolean?
 
-    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    user  User  @relation("UserCollaborations", fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation("UserCollaborations", fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([eventId, userId])
-    @@index([eventId])
-    @@index([userId])
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
 }
 
 model CollaboratorInvitation {
-    id            String           @id @default(uuid())
-    eventId       String
-    invitedById   String
-    invitedUserId String
-    status        InvitationStatus @default(PENDING)
-    createdAt     DateTime         @default(now())
-    respondedAt   DateTime?
+  id            String           @id @default(uuid())
+  eventId       String
+  invitedById   String
+  invitedUserId String
+  status        InvitationStatus @default(PENDING)
+  createdAt     DateTime         @default(now())
+  respondedAt   DateTime?
 
-    event       Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    invitedBy   User  @relation("SentInvitations", fields: [invitedById], references: [id])
-    invitedUser User  @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
+  event       Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  invitedBy   User  @relation("SentInvitations", fields: [invitedById], references: [id])
+  invitedUser User  @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
 
-    @@unique([eventId, invitedUserId])
-    @@index([eventId])
-    @@index([invitedUserId])
-    @@index([status])
-    @@index([eventId, status])
+  @@unique([eventId, invitedUserId])
+  @@index([eventId])
+  @@index([invitedUserId])
+  @@index([status])
+  @@index([eventId, status])
 }
 
 model SupportChat {
-    id            String        @id @default(uuid())
-    userId        String        // Usuario que inicia la conversación
-    adminId       String?       // Administrador asignado (puede ser null)
-    isClosed      Boolean       @default(false)
-    createdAt     DateTime      @default(now())
-    lastMessageAt DateTime      @updatedAt
+  id            String   @id @default(uuid())
+  userId        String // Usuario que inicia la conversación
+  adminId       String? // Administrador asignado (puede ser null)
+  isClosed      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  lastMessageAt DateTime @updatedAt
 
-    user      User            @relation(name: "UserSupportChats", fields: [userId], references: [id])
-    messages  ChatMessage[]
+  user     User          @relation(name: "UserSupportChats", fields: [userId], references: [id])
+  messages ChatMessage[]
 
-    @@index([userId])
-    @@index([isClosed])
-    @@index([lastMessageAt])
+  @@index([userId])
+  @@index([isClosed])
+  @@index([lastMessageAt])
 }
 
 model ChatMessage {
-    id        String   @id @default(uuid())
-    chatId    String
-    senderId  String   // userId o adminId (asumimos que si no es userId, es adminId, pero el senderId tiene que ser un ID de la tabla User)
-    content   String
-    createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  chatId    String
+  senderId  String // userId o adminId (asumimos que si no es userId, es adminId, pero el senderId tiene que ser un ID de la tabla User)
+  content   String
+  createdAt DateTime @default(now())
 
-    chat      SupportChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
-    sender    User        @relation(name: "UserChatMessages", fields: [senderId], references: [id]) // Relación con el User
+  chat   SupportChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender User        @relation(name: "UserChatMessages", fields: [senderId], references: [id]) // Relación con el User
 
-    @@index([chatId])
+  @@index([chatId])
 }
 
 // ===================================
@@ -427,32 +619,32 @@ model ChatMessage {
 // ===================================
 
 model EventLike {
-    id        String   @id @default(uuid())
-    eventId   String
-    userId    String
-    createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  eventId   String
+  userId    String
+  createdAt DateTime @default(now())
 
-    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([eventId, userId])
-    @@index([eventId])
-    @@index([userId])
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
 }
 
 model EventVote {
-    id        String   @id @default(uuid())
-    eventId   String
-    userId    String
-    value     Int      // 1 = upvote, -1 = downvote
-    createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  eventId   String
+  userId    String
+  value     Int // 1 = upvote, -1 = downvote
+  createdAt DateTime @default(now())
 
-    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-    user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([eventId, userId])
-    @@index([eventId])
-    @@index([userId])
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
 }
 
 // ===================================
@@ -460,40 +652,40 @@ model EventVote {
 // ===================================
 
 model PromotionConfig {
-    id           String   @id @default("singleton")
-    isActive     Boolean  @default(false)
-    planSlug     String   @default("plus")
-    durationDays Int      @default(30)
-    updatedAt    DateTime @updatedAt
+  id           String   @id @default("singleton")
+  isActive     Boolean  @default(false)
+  planSlug     String   @default("plus")
+  durationDays Int      @default(30)
+  updatedAt    DateTime @updatedAt
 }
 
 model Raffle {
-    id              String       @id @default(uuid())
-    title           String       @db.VarChar(150)
-    description     String       @db.Text
-    deadline        DateTime
-    showCounter     Boolean      @default(true)
-    maxParticipants Int?
-    condition       String       @default("all_users")
-    status          RaffleStatus @default(ACTIVE)
-    winnerId        String?
-    winner          User?        @relation("RaffleWinner", fields: [winnerId], references: [id])
-    bannerText      String?      @db.VarChar(300)
-    showInBanner    Boolean      @default(false)
-    createdAt       DateTime     @default(now())
-    updatedAt       DateTime     @updatedAt
+  id              String       @id @default(uuid())
+  title           String       @db.VarChar(150)
+  description     String       @db.Text
+  deadline        DateTime
+  showCounter     Boolean      @default(true)
+  maxParticipants Int?
+  condition       String       @default("all_users")
+  status          RaffleStatus @default(ACTIVE)
+  winnerId        String?
+  winner          User?        @relation("RaffleWinner", fields: [winnerId], references: [id])
+  bannerText      String?      @db.VarChar(300)
+  showInBanner    Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-    @@index([status])
-    @@index([deadline])
+  @@index([status])
+  @@index([deadline])
 }
 
 model AnnouncementBar {
-    id        String   @id @default("global")
-    text      String   @db.VarChar(300)
-    link      String?  @db.VarChar(500)
-    linkText  String?  @db.VarChar(100)
-    isActive  Boolean  @default(false)
-    updatedAt DateTime @updatedAt
+  id        String   @id @default("global")
+  text      String   @db.VarChar(300)
+  link      String?  @db.VarChar(500)
+  linkText  String?  @db.VarChar(100)
+  isActive  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
 }
 
 // ===================================
@@ -501,20 +693,20 @@ model AnnouncementBar {
 // ===================================
 
 model SubscriptionPlan {
-    id            String   @id @default(cuid())
-    name          String
-    slug          String   @unique
-    quota         Int      // nº de eventos permitidos
-    limits        Json     // { pollsPerEvent, participantsPerEvent, collaboratorsPerEvent, maxSharedEvents }  (null = ilimitado)
-    features      Json     @default("{}") // flags adicionales (ej: { csvImport: true })
-    price         Float    @default(0)
-    stripePriceId String?  @unique
-    isActive      Boolean  @default(true)
-    sortOrder     Int      @default(0)
-    createdAt     DateTime @default(now())
-    updatedAt     DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  quota         Int // nº de eventos permitidos
+  limits        Json // { pollsPerEvent, participantsPerEvent, collaboratorsPerEvent, maxSharedEvents }  (null = ilimitado)
+  features      Json     @default("{}") // flags adicionales (ej: { csvImport: true })
+  price         Float    @default(0)
+  stripePriceId String?  @unique
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-    @@index([slug])
-    @@index([isActive])
-    @@index([sortOrder])
+  @@index([slug])
+  @@index([isActive])
+  @@index([sortOrder])
 }

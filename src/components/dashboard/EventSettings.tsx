@@ -21,6 +21,7 @@ type EventData = {
     tags: string[];
     status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'DENIED';
     reviewReason: string | null;
+    mode: 'GALA' | 'TIERLIST' | 'PREGUNTAS' | 'DIBUJO';
 };
 
 function formatLocalDatetime(date: Date | string | null) {
@@ -74,6 +75,8 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
 
     const router = useRouter();
     const isUnlimited = planSlug === 'unlimited';
+    const isDibujo = event.mode === "DIBUJO";
+    const isPreguntas = event.mode === "PREGUNTAS";
 
     const isApproved = currentEvent.status === "APPROVED";
     const isPending = currentEvent.status === "PENDING";
@@ -225,9 +228,20 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
                         <label className="block text-sm font-medium text-gray-300 mb-1">Etiquetas</label>
                         <TagsInput value={tags} onChange={setTags} name="tags" />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* DIBUJO: las fechas se gestionan en la pestaña "Dibujo"; el evento es siempre privado.
+                        El grid de abajo queda oculto (display:none) pero su input galaDate sigue enviándose,
+                        preservando el valor actual sin tocarlo. */}
+                    {isDibujo && (
+                        <div className="p-3 rounded-lg border-2 border-amber-500/20 bg-amber-500/5 text-xs text-amber-300">
+                            Este evento de <strong>Dibujo</strong> es siempre privado. Las fechas de cierre de dibujo y votación
+                            se configuran en la pestaña <strong>Dibujo</strong>.
+                        </div>
+                    )}
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 ${isDibujo ? "hidden" : ""}`}>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Fecha de la Gala</label>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                                {isPreguntas ? "Fecha de cierre" : "Fecha de la Gala"}
+                            </label>
                             <input type="datetime-local" name="galaDate" defaultValue={defaultDate} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white dark-calendar focus:border-blue-500 outline-none" />
                         </div>
                         {/* VISIBILIDAD (solo editable si el evento está APROBADO) */}
@@ -277,6 +291,12 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
 
                         </div>
                     </div>
+                    {isPreguntas && (
+                        <div className="p-3 rounded-lg border-2 border-blue-500/20 bg-blue-500/5 text-xs text-blue-300">
+                            Los <strong>resultados de este formulario son privados</strong>: solo tú podrás verlos. El evento puede
+                            publicarse, pero dejará de aparecer en la comunidad cuando llegue su fecha de cierre.
+                        </div>
+                    )}
                     <div className={`p-4 rounded-lg border-2 transition-colors ${isUnlimited ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-70'}`}>
                         <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
@@ -338,7 +358,8 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
             {/* COLUMNA 2: ENLACES Y ZONA PELIGRO (MANTENER IGUAL) */}
             <div className="space-y-8">
 
-                {/* NUEVO: CAJA DE ESTADO DE PUBLICACIÓN */}
+                {/* CAJA DE ESTADO DE PUBLICACIÓN — oculta en DIBUJO (siempre privado, no se publica) */}
+                {!isDibujo && (
                 <div className={`p-6 rounded-xl border-2 ${isApproved ? 'bg-green-900/20 border-green-500/30' :
                     isPending ? 'bg-yellow-900/20 border-yellow-500/30' :
                         isDenied ? 'bg-red-900/20 border-red-500/30' :
@@ -401,6 +422,7 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
                     )}
 
                 </div>
+                )}
 
                 <div className="p-6 border-2 border-blue-500/20 bg-blue-500/5 rounded-xl space-y-4">
                     <div className="flex justify-between items-center">
