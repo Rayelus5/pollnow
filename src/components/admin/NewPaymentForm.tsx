@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
-import { Search, Loader2, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Loader2, CheckCircle2, X } from "lucide-react";
 import { searchUsersForPayment, getUserPublishedEvents, createRevenuePayment } from "@/app/lib/revenue-actions";
 import { MAX_BALANCE, formatEur } from "@/lib/revenue-config";
 
 type UserHit = { id: string; name: string | null; email: string; currentBalance: number; marginAvailable: number };
 type EventHit = { id: string; title: string };
-type Feedback = { type: "success" | "error"; text: string } | null;
+type Toast = { id: number; text: string; type: "success" | "error" };
 
 export default function NewPaymentForm({ onClose }: { onClose: () => void }) {
     const router = useRouter();
@@ -25,7 +26,21 @@ export default function NewPaymentForm({ onClose }: { onClose: () => void }) {
     const [note, setNote] = useState("");
 
     const [submitting, setSubmitting] = useState(false);
-    const [feedback, setFeedback] = useState<Feedback>(null);
+    const [toasts, setToasts] = useState<Toast[]>([]);
+
+    const pushToast = (text: string, type: Toast["type"]) => {
+        const id = Date.now() + Math.random();
+        setToasts((prev) => [...prev, { id, text, type }].slice(-3));
+        setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+    };
+    const removeToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
+
+    // Cerrar con Escape (salvo durante un envío en curso)
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !submitting) onClose(); };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [submitting, onClose]);
 
     useEffect(() => {
         if (debounced.length < 2 || selected) { setResults([]); return; }
@@ -46,119 +61,168 @@ export default function NewPaymentForm({ onClose }: { onClose: () => void }) {
         setEvents([]);
         setEventId("");
         setAmount("");
+        setNote("");
+    }
+
+    /** Reinicia solo los campos del pago para poder enviar otro al mismo usuario. */
+    function resetPaymentFields() {
+        setEventId("");
+        setAmount("");
+        setNote("");
     }
 
     async function handleSubmit() {
-        setFeedback(null);
         if (!selected) return;
         const amountNum = Number(amount.replace(",", "."));
-        if (!eventId) { setFeedback({ type: "error", text: "Selecciona un evento." }); return; }
-        if (!Number.isFinite(amountNum) || amountNum <= 0) { setFeedback({ type: "error", text: "Cantidad inválida." }); return; }
-        if (amountNum > selected.marginAvailable + 1e-9) { setFeedback({ type: "error", text: `Máximo ${formatEur(selected.marginAvailable)} para este usuario.` }); return; }
+        if (!eventId) { pushToast("Selecciona un evento.", "error"); return; }
+        if (!Number.isFinite(amountNum) || amountNum <= 0) { pushToast("Cantidad inválida.", "error"); return; }
+        if (amountNum > selected.marginAvailable + 1e-9) { pushToast(`Máximo ${formatEur(selected.marginAvailable)} para este usuario.`, "error"); return; }
 
         setSubmitting(true);
         const res = await createRevenuePayment({ userId: selected.id, eventId, amount: amountNum, adminNote: note || undefined });
         setSubmitting(false);
-        if (res.error) { setFeedback({ type: "error", text: res.error }); return; }
-        setFeedback({ type: "success", text: "Envío creado correctamente." });
+
+        if (res.error) { pushToast(res.error, "error"); return; }
+
+        // Éxito: NO cerramos. Actualizamos el saldo/margen del usuario localmente,
+        // reiniciamos los campos del pago y seguimos.
+        pushToast(`Enviado ${formatEur(amountNum)} a ${selected.name ?? "el usuario"}.`, "success");
+        setSelected((prev) => prev ? {
+            ...prev,
+            currentBalance: prev.currentBalance + amountNum,
+            marginAvailable: Math.max(0, prev.marginAvailable - amountNum),
+        } : prev);
+        resetPaymentFields();
         router.refresh();
-        setTimeout(onClose, 800);
     }
 
     const atMax = selected ? selected.marginAvailable <= 0 : false;
 
     return (
-        <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6 mb-6">
-            <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold text-white">Nuevo envío</h3>
-                <button onClick={onClose} aria-label="Cerrar" className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer"><X size={16} /></button>
+        <>
+            {/* Toasts (por encima del modal) */}
+            <div className="fixed top-6 inset-x-4 md:inset-x-auto md:right-6 z-[60] flex flex-col items-center md:items-end gap-2 pointer-events-none">
+                <AnimatePresence>
+                    {toasts.map((toast) => (
+                        <motion.div
+                            key={toast.id}
+                            layout
+                            initial={{ opacity: 0, y: -16, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.9 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className={`pointer-events-auto w-full max-w-sm rounded-xl border-2 px-4 py-3 text-sm shadow-lg backdrop-blur-md ${toast.type === "success" ? "bg-emerald-900/80 border-emerald-500/40 text-emerald-100" : "bg-red-900/80 border-red-500/40 text-red-100"}`}
+                        >
+                            <div className="flex items-start justify-between gap-2">
+                                <p>{toast.text}</p>
+                                <button type="button" onClick={() => removeToast(toast.id)} className="ml-2 text-xs text-gray-300 hover:text-white cursor-pointer">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
 
-            {/* Selección de usuario */}
-            {!selected ? (
-                <div className="relative">
-                    <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Usuario</label>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-                        <input
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Busca por nombre o email…"
-                            className="w-full bg-black border-2 border-white/15 rounded-lg py-2.5 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none"
-                        />
-                        {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4 animate-spin" />}
-                    </div>
-                    {results.length > 0 && (
-                        <div className="mt-2 border-2 border-white/10 rounded-lg overflow-hidden divide-y divide-white/5">
-                            {results.map((u) => (
-                                <button key={u.id} onClick={() => selectUser(u)} className="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors cursor-pointer">
-                                    <div className="text-sm text-white font-medium">{u.name}</div>
-                                    <div className="text-xs text-gray-500">{u.email} · saldo {formatEur(u.currentBalance)}</div>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-black/40 border-2 border-white/10">
-                        <div>
-                            <div className="text-sm text-white font-medium">{selected.name}</div>
-                            <div className="text-xs text-gray-500">{selected.email}</div>
-                            <div className="text-xs text-gray-400 mt-1">
-                                Saldo: <span className="text-white font-bold">{formatEur(selected.currentBalance)}</span> ·
-                                Margen hasta {formatEur(MAX_BALANCE)}: <span className="text-emerald-400 font-bold">{formatEur(selected.marginAvailable)}</span>
-                            </div>
-                        </div>
-                        <button onClick={reset} className="text-xs text-blue-400 hover:underline cursor-pointer">Cambiar</button>
+            {/* Modal */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => !submitting && onClose()}>
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Nuevo envío"
+                    className="relative w-full max-w-lg bg-neutral-950 border-2 border-white/10 rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className="text-lg font-bold text-white">Nuevo envío</h3>
+                        <button onClick={onClose} aria-label="Cerrar" className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded-lg cursor-pointer"><X size={16} /></button>
                     </div>
 
-                    {atMax ? (
-                        <div className="flex items-center gap-2 p-3 rounded-lg border-2 border-amber-500/20 bg-amber-500/5 text-amber-300 text-sm">
-                            <AlertCircle size={15} /> Este usuario ya ha alcanzado el saldo máximo de {formatEur(MAX_BALANCE)}.
-                        </div>
-                    ) : (
-                        <>
-                            <div>
-                                <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Evento publicado</label>
-                                <select value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full p-2.5 rounded-lg bg-black border-2 border-white/15 text-white text-sm focus:border-blue-500 outline-none">
-                                    <option value="">Selecciona un evento…</option>
-                                    {events.map((e) => (
-                                        <option key={e.id} value={e.id} className="bg-neutral-900">{e.title} ({e.id.slice(0, 8)})</option>
-                                    ))}
-                                </select>
-                                {events.length === 0 && <p className="text-[11px] text-amber-400 mt-1">Este usuario no tiene eventos publicados.</p>}
-                            </div>
-
-                            <div>
-                                <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Cantidad (€)</label>
+                    {/* Selección de usuario */}
+                    {!selected ? (
+                        <div className="relative">
+                            <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Usuario</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                                 <input
-                                    type="number" step="0.01" min="0.01" max={selected.marginAvailable}
-                                    value={amount} onChange={(e) => setAmount(e.target.value)}
-                                    placeholder={`Máx ${formatEur(selected.marginAvailable)}`}
-                                    className="w-full p-2.5 rounded-lg bg-black border-2 border-white/15 text-white text-sm focus:border-blue-500 outline-none"
+                                    autoFocus
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    placeholder="Busca por nombre o email…"
+                                    className="w-full bg-black border-2 border-white/15 rounded-lg py-2.5 pl-9 pr-4 text-sm text-white focus:border-blue-500 outline-none"
                                 />
+                                {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4 animate-spin" />}
                             </div>
-
-                            <div>
-                                <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Nota para el usuario <span className="normal-case text-gray-600">(opcional)</span></label>
-                                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full p-2.5 rounded-lg bg-black border-2 border-white/15 text-white text-sm focus:border-blue-500 outline-none" />
-                            </div>
-
-                            {feedback && (
-                                <div className={`flex items-center gap-2 text-sm ${feedback.type === "success" ? "text-emerald-400" : "text-red-400"}`}>
-                                    {feedback.type === "success" ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />} {feedback.text}
+                            {results.length > 0 && (
+                                <div className="mt-2 border-2 border-white/10 rounded-lg overflow-hidden divide-y divide-white/5">
+                                    {results.map((u) => (
+                                        <button key={u.id} onClick={() => selectUser(u)} className="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors cursor-pointer">
+                                            <div className="text-sm text-white font-medium">{u.name}</div>
+                                            <div className="text-xs text-gray-500">{u.email} · saldo {formatEur(u.currentBalance)}</div>
+                                        </button>
+                                    ))}
                                 </div>
                             )}
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-black/40 border-2 border-white/10">
+                                <div>
+                                    <div className="text-sm text-white font-medium">{selected.name}</div>
+                                    <div className="text-xs text-gray-500">{selected.email}</div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                        Saldo: <span className="text-white font-bold">{formatEur(selected.currentBalance)}</span> ·
+                                        Margen hasta {formatEur(MAX_BALANCE)}: <span className="text-emerald-400 font-bold">{formatEur(selected.marginAvailable)}</span>
+                                    </div>
+                                </div>
+                                <button onClick={reset} className="text-xs text-blue-400 hover:underline cursor-pointer">Cambiar</button>
+                            </div>
 
-                            <button onClick={handleSubmit} disabled={submitting || events.length === 0}
-                                className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-lg font-bold hover:bg-gray-100 disabled:opacity-50 cursor-pointer">
-                                {submitting ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />} Crear envío
-                            </button>
-                        </>
+                            {atMax ? (
+                                <div className="flex items-center gap-2 p-3 rounded-lg border-2 border-amber-500/20 bg-amber-500/5 text-amber-300 text-sm">
+                                    <CheckCircle2 size={15} /> Este usuario ya ha alcanzado el saldo máximo de {formatEur(MAX_BALANCE)}.
+                                </div>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Evento publicado</label>
+                                        <select value={eventId} onChange={(e) => setEventId(e.target.value)} className="w-full p-2.5 rounded-lg bg-black border-2 border-white/15 text-white text-sm focus:border-blue-500 outline-none">
+                                            <option value="">Selecciona un evento…</option>
+                                            {events.map((e) => (
+                                                <option key={e.id} value={e.id} className="bg-neutral-900">{e.title} ({e.id.slice(0, 8)})</option>
+                                            ))}
+                                        </select>
+                                        {events.length === 0 && <p className="text-[11px] text-amber-400 mt-1">Este usuario no tiene eventos publicados.</p>}
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Cantidad (€)</label>
+                                        <input
+                                            type="number" step="0.01" min="0.01" max={selected.marginAvailable}
+                                            value={amount} onChange={(e) => setAmount(e.target.value)}
+                                            placeholder={`Máx ${formatEur(selected.marginAvailable)}`}
+                                            className="w-full p-2.5 rounded-lg bg-black border-2 border-white/15 text-white text-sm focus:border-blue-500 outline-none"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs uppercase tracking-wider text-gray-500 font-bold block mb-2">Nota para el usuario <span className="normal-case text-gray-600">(opcional)</span></label>
+                                        <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className="w-full p-2.5 rounded-lg bg-black border-2 border-white/15 text-white text-sm focus:border-blue-500 outline-none" />
+                                    </div>
+
+                                    <div className="flex items-center gap-3 pt-1">
+                                        <button onClick={handleSubmit} disabled={submitting || events.length === 0}
+                                            className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-lg font-bold hover:bg-gray-100 disabled:opacity-50 cursor-pointer">
+                                            {submitting ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />} Crear envío
+                                        </button>
+                                        <button onClick={onClose} className="text-sm text-gray-400 hover:text-white cursor-pointer">Cerrar</button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     )}
                 </div>
-            )}
-        </div>
+            </div>
+        </>
     );
 }
