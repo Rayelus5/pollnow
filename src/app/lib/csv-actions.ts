@@ -59,7 +59,7 @@ async function triggerDataChanged(eventId: string, triggeredBy: string, dataType
 }
 
 async function getEventAccessAndPlan(eventId: string, userId: string, permission: "canManageNominees" | "canManagePolls") {
-    const [event, collab] = await Promise.all([
+    const [event, collab, user] = await Promise.all([
         prisma.event.findUnique({
             where: { id: eventId },
             select: { userId: true },
@@ -67,17 +67,21 @@ async function getEventAccessAndPlan(eventId: string, userId: string, permission
         prisma.eventCollaborator.findUnique({
             where: { eventId_userId: { eventId, userId } },
         }),
+        prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
     ]);
 
     if (!event) return { hasAccess: false, owner: null };
 
     const isOwner = event.userId === userId;
+    // Los administradores y moderadores pueden gestionar cualquier evento (igual que en Gala).
+    const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
 
-    if (!isOwner && !collab) return { hasAccess: false, owner: null };
+    if (!isOwner && !isAdmin && !collab) return { hasAccess: false, owner: null };
 
-    const permGranted = isOwner || !!(collab?.[permission]);
+    const permGranted = isOwner || isAdmin || !!(collab?.[permission]);
     if (!permGranted) return { hasAccess: false, owner: null };
 
+    // El plan se calcula siempre sobre el dueño real del evento, no sobre el admin.
     const owner = await prisma.user.findUnique({ where: { id: event.userId } });
     return { hasAccess: true, owner };
 }

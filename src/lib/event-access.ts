@@ -14,13 +14,13 @@ export type CollabPermission =
     | "canDeleteEvent"
     | "canRegenerateKey";
 
-/** Devuelve true si el usuario es dueño o colaborador con el permiso indicado. */
+/** Devuelve true si el usuario es dueño, admin/moderador o colaborador con el permiso indicado. */
 export async function checkEventAccess(
     eventId: string,
     userId: string,
     permission: CollabPermission
 ): Promise<boolean> {
-    const [event, collab] = await Promise.all([
+    const [event, collab, user] = await Promise.all([
         prisma.event.findUnique({
             where: { id: eventId },
             select: {
@@ -35,9 +35,12 @@ export async function checkEventAccess(
         prisma.eventCollaborator.findUnique({
             where: { eventId_userId: { eventId, userId } },
         }),
+        prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
     ]);
     if (!event) return false;
     if (event.userId === userId) return true;
+    // Los administradores y moderadores pueden gestionar cualquier evento (igual que en Gala).
+    if (user?.role === "ADMIN" || user?.role === "MODERATOR") return true;
     if (!collab) return false;
 
     const defaultMap: Record<CollabPermission, boolean> = {
