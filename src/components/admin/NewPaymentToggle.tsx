@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import NewPaymentForm from "@/components/admin/NewPaymentForm";
 
-export default function NewPaymentToggle({ initialUserId }: { initialUserId?: string }) {
+export default function NewPaymentToggle() {
     const [open, setOpen] = useState(false);
 
-    if (open) return <NewPaymentForm onClose={() => setOpen(false)} initialUserId={initialUserId} />;
+    if (open) return <NewPaymentForm onClose={() => setOpen(false)} />;
 
     return (
         <button

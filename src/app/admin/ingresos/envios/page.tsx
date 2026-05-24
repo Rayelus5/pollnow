@@ -82,7 +82,7 @@ export default async function AdminEnviosPage({
                     )}
                 </form>
 
-                <NewPaymentToggle initialUserId={params.userId} />
+                <NewPaymentToggle />
             </div>
 
             {params.userId && (

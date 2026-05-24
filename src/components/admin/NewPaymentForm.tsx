@@ -11,7 +11,7 @@ type UserHit = { id: string; name: string | null; email: string; currentBalance:
 type EventHit = { id: string; title: string };
 type Feedback = { type: "success" | "error"; text: string } | null;
 
-export default function NewPaymentForm({ onClose, initialUserId }: { onClose: () => void; initialUserId?: string }) {
+export default function NewPaymentForm({ onClose }: { onClose: () => void }) {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const [debounced] = useDebounce(query, 300);
