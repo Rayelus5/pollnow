@@ -1,6 +1,6 @@
 ---
 title: Rate limiting
-updated: 2026-05-23
+updated: 2026-05-24
 ---
 
 # Rate limiting (Upstash)
@@ -66,6 +66,14 @@ Retry-After: <segundos>   (solo en 429)
 `/api/drawing/batch` y `/api/drawing/results` son lecturas sin rate limit. Los **crons**
 (`/api/cron/*`) y el **webhook de Stripe** están exentos (se validan por `CRON_SECRET` y por
 firma respectivamente).
+
+### Server Actions con ventana propia
+
+Algunas Server Actions usan el mismo `rateLimit()` con ventanas distintas a 60s:
+
+| Acción | Clave | Límite |
+|--------|-------|--------|
+| `submitBugReport` (Bug Bounty) | `bug-report:<userId>` | **3 / 24h** |
 
 ## Configuración
 

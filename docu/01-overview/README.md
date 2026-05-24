@@ -1,6 +1,6 @@
 ---
 title: Visión general y modelo de dominio
-updated: 2026-05-23
+updated: 2026-05-24
 ---
 
 # Visión general
@@ -15,7 +15,7 @@ modos: **Gala** (premios por categorías), **Tierlist** (ordenar nominados en ti
 
 | Entidad | Descripción |
 |---------|-------------|
-| **User** | Cuenta. Incluye rol (`USER`/`MODERATOR`/`ADMIN`) y campos de suscripción Stripe. |
+| **User** | Cuenta. Incluye rol (`USER`/`MODERATOR`/`ADMIN`), campos de suscripción Stripe, teléfono Bizum (`phonePrefix`/`phoneNumber`) y saldo de ingresos (`currentBalance`/`totalEarned`). |
 | **Event** | El evento. Tiene `mode` (`GALA`/`TIERLIST`/`PREGUNTAS`/`DIBUJO`), `slug`, `accessKey`, `isPublic`, `status`, `galaDate`, `tags[]` y campos de DIBUJO (`drawingPrompt`, `drawingPhase`, `drawingDeadline`, `votingDeadline`, `drawingTimeLimit`). |
 | **Participant** | Nominado de un evento (nombre + imagen). Usado por GALA y TIERLIST. |
 | **Poll** / **Option** | Categoría de votación (GALA) y vínculo Participant↔Poll. `votingType`: `SINGLE`/`MULTIPLE`/`LIMITED_MULTIPLE`. |
@@ -26,6 +26,8 @@ modos: **Gala** (premios por categorías), **Tierlist** (ordenar nominados en ti
 | **EventLike** / **EventVote** | Like y voto (±1) sobre el evento en el explorador público. |
 | **EventCollaborator** / **CollaboratorInvitation** | Colaboración en equipo con permisos. |
 | **SubscriptionPlan** | Definición de planes (límites por modo, precio, stripePriceId, features) — editable desde admin. |
+| **BugReport** | Reporte de bug del programa Bug Bounty (`severity`, `status`, `screenshotUrl`, `adminNotes`). Ver [bug-bounty.md](../04-subsystems/bug-bounty.md). |
+| **RevenuePayment** / **WithdrawalRequest** | Sistema de ingresos: pagos enviados por el admin (vinculados a un evento) y solicitudes de retiro por Bizum. Ver [ingresos.md](../04-subsystems/ingresos.md). |
 | **Report**, **ModerationLog**, **SupportChat**, **Notification**, **Raffle**, **AnnouncementBar**, **PromotionConfig** | Moderación, soporte, sorteos y marketing. |
 
 ## Planes (tiers)

@@ -1,6 +1,6 @@
 ---
 title: Documentación de Pollnow
-updated: 2026-05-23
+updated: 2026-05-24
 ---
 
 # 📚 Documentación de Pollnow
@@ -35,6 +35,8 @@ planes gestionables desde admin y SEO técnico completo.
 ### 04 · Subsistemas
 - [Modos de evento (Gala, Tierlist, Preguntas, Dibujo)](./04-subsystems/event-modes.md)
 - [Planes y facturación (SubscriptionPlan en BD + Stripe)](./04-subsystems/billing-plans.md)
+- [Bug Bounty (reportes de bugs + panel admin)](./04-subsystems/bug-bounty.md)
+- [Sistema de Ingresos (pagos, saldo y retiros Bizum)](./04-subsystems/ingresos.md)
 
 ### 05 · API
 - [Rate limiting (Upstash)](./05-api/rate-limiting.md)
