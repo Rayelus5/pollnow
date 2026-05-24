@@ -30,12 +30,14 @@ export default async function AdminRetirosPage({
 
     const params = await searchParams;
     const currentPage = Math.max(1, Number(params.page ?? "1") || 1);
-    // Por defecto mostramos PENDING al entrar
-    const statusParam = STATUS_FILTERS.includes(params.status as WithdrawalStatus)
-        ? (params.status as WithdrawalStatus)
-        : params.status === "ALL"
+    // Por defecto mostramos PENDING al entrar. "ALL" = sin filtro de estado.
+    const VALID_STATUSES: WithdrawalStatus[] = ["PENDING", "APPROVED", "REJECTED"];
+    const statusParam: WithdrawalStatus | undefined =
+        params.status === "ALL"
             ? undefined
-            : "PENDING";
+            : VALID_STATUSES.includes(params.status as WithdrawalStatus)
+                ? (params.status as WithdrawalStatus)
+                : "PENDING";
 
     const where: Prisma.WithdrawalRequestWhereInput = {};
     if (statusParam) where.status = statusParam;
