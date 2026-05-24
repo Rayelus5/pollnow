@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { format } from "date-fns";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Wallet, ArrowDownToLine, Calendar, Filter } from "lucide-react";
 import AdminPagination from "@/components/admin/AdminPagination";
 import WithdrawalActions from "@/components/admin/WithdrawalActions";
 import { formatEur } from "@/lib/revenue-config";
+import { formatDate } from "@/lib/format-date";
 import { Prisma, WithdrawalStatus } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -109,7 +109,7 @@ export default async function AdminRetirosPage({
                         )}
                         {withdrawals.map((w) => (
                             <tr key={w.id} className={`transition-colors ${w.status === "PENDING" ? "bg-amber-500/5 hover:bg-amber-500/10" : "hover:bg-white/5"}`}>
-                                <td className="p-4 whitespace-nowrap text-gray-500"><span className="flex items-center gap-1"><Calendar size={10} /> {format(w.createdAt, "dd/MM/yy HH:mm")}</span></td>
+                                <td className="p-4 whitespace-nowrap text-gray-500"><span className="flex items-center gap-1"><Calendar size={10} /> {formatDate(w.createdAt, true)}</span></td>
                                 <td className="p-4">
                                     <Link href={`/admin/users/${w.user.id}`} className="group">
                                         <div className="font-medium text-gray-300 group-hover:text-white">{w.user.name}</div>
@@ -130,7 +130,7 @@ export default async function AdminRetirosPage({
                                     {w.status === "PENDING" ? (
                                         <WithdrawalActions id={w.id} amount={w.amount} recipientName={w.recipientName} recipientPhone={w.recipientPhone} />
                                     ) : (
-                                        <span className="text-xs text-gray-600">{w.processedAt ? format(w.processedAt, "dd/MM/yy") : "—"}</span>
+                                        <span className="text-xs text-gray-600">{w.processedAt ? formatDate(w.processedAt) : "—"}</span>
                                     )}
                                 </td>
                             </tr>

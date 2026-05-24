@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { format } from "date-fns";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Wallet, ArrowDownToLine, Calendar } from "lucide-react";
 import AdminPagination from "@/components/admin/AdminPagination";
 import NewPaymentToggle from "@/components/admin/NewPaymentToggle";
 import { formatEur } from "@/lib/revenue-config";
+import { formatDate, madridDayStart, madridDayEnd } from "@/lib/format-date";
 import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -28,8 +28,8 @@ export default async function AdminEnviosPage({
     if (params.userId) where.userId = params.userId;
     if (params.from || params.to) {
         where.createdAt = {};
-        if (params.from) where.createdAt.gte = new Date(params.from);
-        if (params.to) where.createdAt.lte = new Date(`${params.to}T23:59:59`);
+        if (params.from) where.createdAt.gte = madridDayStart(params.from);
+        if (params.to) where.createdAt.lte = madridDayEnd(params.to);
     }
 
     const [payments, total] = await Promise.all([
@@ -106,7 +106,7 @@ export default async function AdminEnviosPage({
                         )}
                         {payments.map((p) => (
                             <tr key={p.id} className="hover:bg-white/5">
-                                <td className="p-4 whitespace-nowrap text-gray-500"><span className="flex items-center gap-1"><Calendar size={10} /> {format(p.createdAt, "dd/MM/yy HH:mm")}</span></td>
+                                <td className="p-4 whitespace-nowrap text-gray-500"><span className="flex items-center gap-1"><Calendar size={10} /> {formatDate(p.createdAt, true)}</span></td>
                                 <td className="p-4">
                                     <Link href={`/admin/users/${p.user.id}`} className="group">
                                         <div className="font-medium text-gray-300 group-hover:text-white">{p.user.name}</div>

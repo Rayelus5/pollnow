@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { format } from "date-fns";
 import { Wallet, TrendingUp, ArrowDownToLine, Phone, X, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { requestWithdrawal } from "@/app/lib/revenue-actions";
 import { MAX_BALANCE, MIN_WITHDRAWAL, WITHDRAWAL_PROCESSING_DAYS, formatEur } from "@/lib/revenue-config";
+import { formatDate } from "@/lib/format-date";
 
 export type PaymentRow = {
     id: string;
@@ -158,7 +158,7 @@ export default function IngresosTab({
                             <tbody className="divide-y divide-white/5 text-gray-300">
                                 {payments.map((p) => (
                                     <tr key={p.id} className="hover:bg-white/5">
-                                        <td className="p-4 whitespace-nowrap text-gray-500">{format(p.createdAt, "dd/MM/yy")}</td>
+                                        <td className="p-4 whitespace-nowrap text-gray-500">{formatDate(p.createdAt)}</td>
                                         <td className="p-4">
                                             {p.event ? (
                                                 <Link href={`/dashboard/event/${p.event.id}`} className="text-blue-400 hover:underline">{p.event.title}</Link>
@@ -196,7 +196,7 @@ export default function IngresosTab({
                             <tbody className="divide-y divide-white/5 text-gray-300">
                                 {withdrawals.map((w) => (
                                     <tr key={w.id} className="hover:bg-white/5">
-                                        <td className="p-4 whitespace-nowrap text-gray-500">{format(w.createdAt, "dd/MM/yy")}</td>
+                                        <td className="p-4 whitespace-nowrap text-gray-500">{formatDate(w.createdAt)}</td>
                                         <td className="p-4 font-bold whitespace-nowrap">{formatEur(w.amount)}</td>
                                         <td className="p-4">{w.method === "BIZUM" ? "Bizum" : w.method}</td>
                                         <td className="p-4">
