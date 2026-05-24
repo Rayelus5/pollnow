@@ -16,7 +16,7 @@ export default async function DashboardPage() {
 
     const plan = await getPlanFromUser(user);
 
-    const [events, notifications, supportChats, collaborations, pendingInvites] = await Promise.all([
+    const [events, notifications, supportChats, collaborations, pendingInvites, revenuePayments, withdrawals] = await Promise.all([
         // Eventos propios
         prisma.event.findMany({
             where: { userId: session.user.id },
@@ -70,6 +70,17 @@ export default async function DashboardPage() {
             },
             orderBy: { createdAt: "desc" },
         }),
+        // Ingresos recibidos
+        prisma.revenuePayment.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: "desc" },
+            include: { event: { select: { id: true, title: true } } },
+        }),
+        // Solicitudes de retiro
+        prisma.withdrawalRequest.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: "desc" },
+        }),
     ]);
 
     // Eventos ajenos (colaboraciones aceptadas)
@@ -107,6 +118,10 @@ export default async function DashboardPage() {
         hasPassword: !!user.passwordHash,
         emailNotifications: user.emailNotifications,
         emailCollaborations: user.emailCollaborations,
+        phonePrefix: user.phonePrefix,
+        phoneNumber: user.phoneNumber,
+        currentBalance: user.currentBalance,
+        totalEarned: user.totalEarned,
     };
 
     return (
@@ -128,6 +143,8 @@ export default async function DashboardPage() {
                     pendingInvitations={pendingInvitations}
                     notifications={notifications}
                     supportChats={supportChats}
+                    payments={revenuePayments}
+                    withdrawals={withdrawals}
                 />
             </div>
         </main>

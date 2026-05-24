@@ -9,10 +9,10 @@ export const metadata = {
 };
 
 const SEVERITIES = [
-    { dot: "#3b82f6", name: "Baja", desc: "Errores visuales, textos incorrectos, UX mejorable", reward: "A criterio del admin" },
-    { dot: "#eab308", name: "Media", desc: "Funcionalidad rota que no compromete datos", reward: "A criterio del admin" },
-    { dot: "#f97316", name: "Alta", desc: "Error que afecta a múltiples usuarios o flujos clave", reward: "A criterio del admin" },
-    { dot: "#ef4444", name: "Crítica", desc: "Vulnerabilidad de seguridad, pérdida de datos, acceso no autorizado", reward: "A criterio del admin" },
+    { dot: "#3b82f6", name: "Baja", desc: "Errores visuales, textos incorrectos, UX mejorable", reward: "Suscripción Premium de 7 días" },
+    { dot: "#eab308", name: "Media", desc: "Funcionalidad rota que no compromete datos", reward: "Suscripción Plus de 15 días" },
+    { dot: "#f97316", name: "Alta", desc: "Error que afecta a múltiples usuarios o flujos clave", reward: "Suscripción Unlimited de 15 días" },
+    { dot: "#ef4444", name: "Crítica", desc: "Vulnerabilidad de seguridad, pérdida de datos, acceso no autorizado", reward: "Depende de la vulnerabilidad" },
 ];
 
 const ELIGIBLE = [

@@ -107,6 +107,15 @@ model User {
   welcomeBonusApplied  Boolean   @default(false)
   emailNotifications   Boolean   @default(true) // Recibir correos de notificaciones del sistema
   emailCollaborations  Boolean   @default(true) // Recibir correos de invitaciones de colaboración
+
+  // Teléfono para Bizum
+  phonePrefix String? // Prefijo del país, ej: "+34"
+  phoneNumber String? // Número sin prefijo, ej: "612345678"
+
+  // Saldo (denormalizado, se actualiza transaccionalmente)
+  currentBalance Float @default(0.0) // Saldo actual disponible (máx €10)
+  totalEarned    Float @default(0.0) // Total histórico acumulado (nunca decrece)
+
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -131,6 +140,9 @@ model User {
   wonRaffles            Raffle[]                 @relation("RaffleWinner")
   // Bug Bounty
   bugReports            BugReport[]
+  // Ingresos
+  receivedPayments      RevenuePayment[]         @relation("ReceivedPayments")
+  withdrawalRequests    WithdrawalRequest[]      @relation("WithdrawalRequests")
 }
 
 model Account {
@@ -236,6 +248,8 @@ model Event {
   tierlistVotes TierlistVote[]
   questions     Question[]
   drawings      DrawingSubmission[]
+  // Ingresos
+  revenuePayments RevenuePayment[] @relation("EventPayments")
 
   @@index([userId])
   @@index([slug])
@@ -750,5 +764,55 @@ model BugReport {
   @@index([userId])
   @@index([status])
   @@index([severity])
+  @@index([createdAt])
+}
+
+// ===================================
+// SISTEMA DE INGRESOS
+// ===================================
+
+model RevenuePayment {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  amount    Float // En euros, máx que lleve el saldo a €10
+  adminNote String?  @db.Text // Nota interna del admin (visible para el usuario en su historial)
+  createdAt DateTime @default(now())
+
+  user  User  @relation("ReceivedPayments", fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation("EventPayments", fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([createdAt])
+}
+
+enum WithdrawalMethod {
+  BIZUM
+}
+
+enum WithdrawalStatus {
+  PENDING // Solicitado por el usuario, pendiente de gestión admin
+  APPROVED // Admin lo marcó como pagado
+  REJECTED // Admin lo rechazó (con motivo)
+}
+
+model WithdrawalRequest {
+  id              String           @id @default(cuid())
+  userId          String
+  amount          Float // Saldo total en el momento de la solicitud
+  method          WithdrawalMethod @default(BIZUM)
+  recipientPhone  String // Número de Bizum (puede diferir del teléfono del perfil)
+  recipientName   String // Nombre real completo del destinatario
+  status          WithdrawalStatus @default(PENDING)
+  rejectionReason String?          @db.Text // Solo si status = REJECTED
+  processedAt     DateTime? // Cuándo el admin lo procesó
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user User @relation("WithdrawalRequests", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
   @@index([createdAt])
 }

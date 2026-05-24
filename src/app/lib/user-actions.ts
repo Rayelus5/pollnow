@@ -80,6 +80,42 @@ export async function updateProfile(formData: FormData) {
 
 
 
+export async function updatePhone(input: { phonePrefix: string; phoneNumber: string }) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No autorizado" };
+
+    const phonePrefix = input.phonePrefix.trim();
+    const phoneNumber = input.phoneNumber.trim().replace(/\D/g, "");
+
+    // Permitir borrar el teléfono (ambos vacíos)
+    if (!phonePrefix && !phoneNumber) {
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: { phonePrefix: null, phoneNumber: null },
+        });
+        revalidatePath("/dashboard");
+        return { success: "Teléfono eliminado." };
+    }
+
+    if (!/^\+\d{1,4}$/.test(phonePrefix)) {
+        return { error: "Prefijo de país inválido." };
+    }
+    // E.164: el número nacional + prefijo no debe pasar de 15 dígitos; mínimo razonable 7 en total
+    const prefixDigits = phonePrefix.replace("+", "");
+    const totalDigits = prefixDigits.length + phoneNumber.length;
+    if (phoneNumber.length < 4 || totalDigits < 7 || totalDigits > 15) {
+        return { error: "El número de teléfono no es válido." };
+    }
+
+    await prisma.user.update({
+        where: { id: session.user.id },
+        data: { phonePrefix, phoneNumber },
+    });
+
+    revalidatePath("/dashboard");
+    return { success: "Teléfono guardado correctamente." };
+}
+
 export async function updateEmailPreferences(prefs: {
     emailNotifications: boolean;
     emailCollaborations: boolean;

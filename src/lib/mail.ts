@@ -515,3 +515,130 @@ function escapeHtml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SISTEMA DE INGRESOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Formatea un importe en euros (formato español: €X,XX). */
+function eur(n: number): string {
+  return `€${n.toFixed(2).replace(".", ",")}`;
+}
+
+function infoRow(label: string, value: string): string {
+  return `<p style="margin:0 0 4px 0; font-size:13px; color:#9ca3af;">${label}</p><p style="margin:0 0 16px 0; font-size:15px; color:#e5e7eb; font-weight:600;">${value}</p>`;
+}
+
+/** Usuario: ha recibido un pago de ingresos. */
+export async function sendRevenuePaymentReceived(params: {
+  to: string;
+  amount: number;
+  eventTitle: string;
+  eventId: string;
+  currentBalance: number;
+  adminNote?: string | null;
+}) {
+  const body = `
+    ${infoRow("Cantidad recibida", eur(params.amount))}
+    ${infoRow("Evento", params.eventTitle)}
+    ${infoRow("Saldo actual", eur(params.currentBalance))}
+    ${params.adminNote ? `<p style="margin:0 0 4px 0; font-size:13px; color:#9ca3af;">Nota</p><div style="margin:0 0 16px 0; padding:12px 14px; border-radius:12px; background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9); font-size:14px; color:#e5e7eb; white-space:pre-wrap;">${escapeHtml(params.adminNote)}</div>` : ""}
+    ${emailButton(`${BASE_URL}/dashboard?tab=ingresos`, "Ver mis ingresos")}
+  `;
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    subject: `💰 Has recibido ${eur(params.amount)} en Pollnow`,
+    text: `Has recibido ${eur(params.amount)} por el evento "${params.eventTitle}". Saldo actual: ${eur(params.currentBalance)}.`,
+    html: wrapEmail({ badge: "Ingresos", title: `Has recibido ${eur(params.amount)}`, bodyHtml: body }),
+  });
+}
+
+/** Usuario: confirmación de solicitud de retiro. */
+export async function sendWithdrawalRequestedUser(params: {
+  to: string;
+  amount: number;
+  processingDays: number;
+}) {
+  const body = `
+    ${infoRow("Cantidad solicitada", eur(params.amount))}
+    ${infoRow("Método", "Bizum")}
+    <p style="margin:0 0 16px 0; font-size:14px; line-height:1.6; color:#9ca3af;">Procesaremos la transferencia en un plazo aproximado de ${params.processingDays} días hábiles.</p>
+    ${emailButton(`${BASE_URL}/dashboard?tab=ingresos`, "Ver estado del retiro")}
+  `;
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    subject: `Solicitud de retiro recibida — ${eur(params.amount)}`,
+    text: `Hemos recibido tu solicitud de retiro de ${eur(params.amount)} por Bizum. Plazo estimado: ${params.processingDays} días hábiles.`,
+    html: wrapEmail({ badge: "Ingresos", title: "Solicitud de retiro recibida", bodyHtml: body }),
+  });
+}
+
+/** Admin: nueva solicitud de retiro pendiente. */
+export async function sendWithdrawalRequestedAdmin(params: {
+  userName: string;
+  userEmail: string;
+  amount: number;
+  recipientPhone: string;
+  recipientName: string;
+}) {
+  const body = `
+    ${infoRow("Usuario", `${params.userName} · ${params.userEmail}`)}
+    ${infoRow("Cantidad", eur(params.amount))}
+    ${infoRow("Bizum (teléfono)", params.recipientPhone)}
+    ${infoRow("Destinatario", params.recipientName)}
+    ${emailButton(`${BASE_URL}/admin/ingresos/retiros`, "Ver solicitud en el panel")}
+  `;
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: ADMIN_NOTIFICATION_EMAIL,
+    subject: `Nueva solicitud de retiro — ${params.userName} ${eur(params.amount)}`,
+    text: `${params.userName} (${params.userEmail}) solicita retirar ${eur(params.amount)} por Bizum a ${params.recipientName} (${params.recipientPhone}).`,
+    html: wrapEmail({ badge: "Ingresos · Admin", title: "Nueva solicitud de retiro", bodyHtml: body }),
+  });
+}
+
+/** Usuario: retiro aprobado/pagado. */
+export async function sendWithdrawalApproved(params: {
+  to: string;
+  amount: number;
+  totalEarned: number;
+}) {
+  const body = `
+    ${infoRow("Cantidad", eur(params.amount))}
+    ${infoRow("Método", "Bizum")}
+    <p style="margin:0 0 16px 0; font-size:14px; line-height:1.6; color:#9ca3af;">Hemos procesado tu retiro. Deberías ver el Bizum en tu cuenta en breve.</p>
+    ${infoRow("Total histórico ganado", eur(params.totalEarned))}
+    ${emailButton(`${BASE_URL}/dashboard?tab=ingresos`, "Ver mis ingresos")}
+  `;
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    subject: `✅ Tu retiro de ${eur(params.amount)} ha sido procesado`,
+    text: `Tu retiro de ${eur(params.amount)} por Bizum ha sido procesado. Total histórico ganado: ${eur(params.totalEarned)}.`,
+    html: wrapEmail({ badge: "Ingresos", title: "Retiro procesado", bodyHtml: body }),
+  });
+}
+
+/** Usuario: retiro rechazado (con motivo). */
+export async function sendWithdrawalRejected(params: {
+  to: string;
+  amount: number;
+  reason: string;
+}) {
+  const body = `
+    ${infoRow("Cantidad solicitada", eur(params.amount))}
+    <p style="margin:0 0 4px 0; font-size:13px; color:#9ca3af;">Motivo del rechazo</p>
+    <div style="margin:0 0 16px 0; padding:12px 14px; border-radius:12px; background:rgba(127,29,29,0.25); border:1px solid rgba(239,68,68,0.4); font-size:14px; color:#fecaca; white-space:pre-wrap;">${escapeHtml(params.reason)}</div>
+    <p style="margin:0 0 16px 0; font-size:14px; line-height:1.6; color:#9ca3af;">Tu saldo sigue disponible y puedes volver a solicitar el retiro cuando quieras.</p>
+    ${emailButton(`${BASE_URL}/dashboard?tab=ingresos`, "Ver mis ingresos")}
+  `;
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    subject: "Tu solicitud de retiro ha sido rechazada",
+    text: `Tu solicitud de retiro de ${eur(params.amount)} ha sido rechazada. Motivo: ${params.reason}. Tu saldo sigue disponible.`,
+    html: wrapEmail({ badge: "Ingresos", title: "Solicitud de retiro rechazada", bodyHtml: body }),
+  });
+}

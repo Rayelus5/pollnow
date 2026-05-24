@@ -15,6 +15,8 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { BookCheck, Users, Mail } from "lucide-react";
 import ProfileForm from "@/components/dashboard/ProfileForm";
+import PhoneBizumCard from "@/components/dashboard/PhoneBizumCard";
+import IngresosTab, { type PaymentRow, type WithdrawalRow } from "@/components/dashboard/IngresosTab";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import PendingInviteCard from "@/components/dashboard/PendingInviteCard";
 import DashboardGuidedTour from "@/components/dashboard/DashboardGuidedTour";
@@ -46,6 +48,10 @@ type DashboardTabsProps = {
         hasPassword: boolean;
         emailNotifications: boolean;
         emailCollaborations: boolean;
+        phonePrefix: string | null;
+        phoneNumber: string | null;
+        currentBalance: number;
+        totalEarned: number;
     };
     plan: {
         slug: string;
@@ -83,9 +89,11 @@ type DashboardTabsProps = {
         createdAt: Date;
         lastMessageAt: Date;
     }[];
+    payments: PaymentRow[];
+    withdrawals: WithdrawalRow[];
 };
 
-type TabId = "events" | "profile" | "notifications" | "support";
+type TabId = "events" | "profile" | "notifications" | "support" | "ingresos";
 
 /* ========== CONFIG =========== */
 const PAGE_SIZE = 6;
@@ -99,6 +107,8 @@ export default function DashboardTabs({
     pendingInvitations,
     notifications,
     supportChats,
+    payments,
+    withdrawals,
 }: DashboardTabsProps) {
     const [isCreatingEvent, setIsCreatingEvent] = useState(false);
     const [pendingInviteCount, setPendingInviteCount] = useState(pendingInvitations.length);
@@ -138,6 +148,7 @@ export default function DashboardTabs({
             label: "Notificaciones",
             badge: notifications.filter((n) => !n.isRead && n.type === "SYSTEM").length || undefined,
         },
+        { id: "ingresos", label: "Ingresos" },
         { id: "support", label: "Soporte" },
         { id: "profile", label: "Mi Cuenta" },
     ];
@@ -235,6 +246,18 @@ export default function DashboardTabs({
 
                 {activeTab === "profile" && (
                     <ProfileTab user={user} plan={plan} />
+                )}
+
+                {activeTab === "ingresos" && (
+                    <IngresosTab
+                        hasPhone={!!user.phoneNumber}
+                        phonePrefix={user.phonePrefix}
+                        phoneNumber={user.phoneNumber}
+                        currentBalance={user.currentBalance}
+                        totalEarned={user.totalEarned}
+                        payments={payments}
+                        withdrawals={withdrawals}
+                    />
                 )}
 
                 {activeTab === "notifications" && (
@@ -444,6 +467,9 @@ function ProfileTab({
 
             {/* FORMULARIOS DE PERFIL */}
             <ProfileForm user={profileUserData} />
+
+            {/* TELÉFONO PARA BIZUM */}
+            <PhoneBizumCard initialPrefix={user.phonePrefix} initialNumber={user.phoneNumber} />
         </section>
     );
 }

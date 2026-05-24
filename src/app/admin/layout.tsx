@@ -16,6 +16,7 @@ import {
     Gift,
     CreditCard,
     Bug,
+    Wallet,
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -61,6 +62,8 @@ export default async function AdminLayout({
 
                         {role === 'ADMIN' && (
                             <>
+                                <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-600 uppercase tracking-wider">Finanzas</div>
+                                <NavLink href="/admin/ingresos" icon={<Wallet size={18} />} label="Ingresos" adminOnly />
                                 <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-600 uppercase tracking-wider">Comunicaciones</div>
                                 <NavLink href="/admin/emails" icon={<Mail size={18} />} label="Emails" adminOnly />
                                 <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-600 uppercase tracking-wider">Marketing</div>

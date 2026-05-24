@@ -55,3 +55,43 @@ body {
 .animate-marquee {
     animation: marquee 28s linear infinite;
 }
+
+/* === react-phone-number-input — tema oscuro Pollnow === */
+.phone-input-dark {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: border-color 0.2s;
+}
+.phone-input-dark:focus-within {
+    border-color: #3b82f6;
+}
+.phone-input-dark .PhoneInputInput {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 0.95rem;
+    width: 100%;
+}
+.phone-input-dark .PhoneInputInput::placeholder {
+    color: #4b5563;
+}
+.phone-input-dark .PhoneInputCountrySelect {
+    background: #0a0a0a;
+    color: #fff;
+    border: none;
+    outline: none;
+}
+.phone-input-dark .PhoneInputCountrySelect option {
+    background: #171717;
+    color: #fff;
+}
+.phone-input-dark .PhoneInputCountryIcon {
+    box-shadow: none;
+}

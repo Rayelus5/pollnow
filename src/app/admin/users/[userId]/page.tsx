@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Mail } from "lucide-react";
+import { ArrowLeft, Calendar, Mail, Wallet, Phone, ArrowDownToLine } from "lucide-react";
+import { formatEur } from "@/lib/revenue-config";
 import UserActions from "@/components/admin/UserActions";
 import { getActivePlans } from "@/lib/user-plan";
 import { planSlugFromUser, planBadge } from "@/lib/plans";
@@ -127,6 +128,35 @@ export default async function AdminUserDetailPage({
                                     </p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Tarjeta de Ingresos */}
+                    <div className="bg-neutral-900 border-2 border-white/10 rounded-xl p-6">
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+                            <Wallet size={15} /> Ingresos
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div className="bg-black/40 rounded-lg p-3 border-2 border-white/5">
+                                <p className="text-[10px] uppercase tracking-wider text-gray-500">Saldo actual</p>
+                                <p className="text-xl font-bold text-white">{formatEur(user.currentBalance)}</p>
+                            </div>
+                            <div className="bg-black/40 rounded-lg p-3 border-2 border-white/5">
+                                <p className="text-[10px] uppercase tracking-wider text-gray-500">Total histórico</p>
+                                <p className="text-xl font-bold text-emerald-400">{formatEur(user.totalEarned)}</p>
+                            </div>
+                        </div>
+                        <p className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+                            <Phone size={14} />
+                            {user.phoneNumber ? `${user.phonePrefix ?? ""} ${user.phoneNumber}` : "Teléfono no registrado"}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            <Link href={`/admin/ingresos/envios?userId=${user.id}`} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300 border-2 border-white/10 transition-colors">
+                                <Wallet size={13} /> Ver envíos
+                            </Link>
+                            <Link href={`/admin/ingresos/retiros?userId=${user.id}`} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-bold text-gray-300 border-2 border-white/10 transition-colors">
+                                <ArrowDownToLine size={13} /> Ver retiros
+                            </Link>
                         </div>
                     </div>
 
