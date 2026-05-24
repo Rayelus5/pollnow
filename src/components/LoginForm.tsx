@@ -5,7 +5,7 @@ import { authenticateCredentials } from '@/app/lib/auth-actions'; // Importamos 
 
 export default function LoginForm() {
     // Usamos el hook moderno de React 19 / Next 15
-    const [errorMessage, dispatch, isPending] = useActionState(authenticateCredentials, undefined);
+    const [state, dispatch, isPending] = useActionState(authenticateCredentials, undefined);
 
     return (
         <form action={dispatch} className="space-y-6">
@@ -21,6 +21,7 @@ export default function LoginForm() {
                     name="email"
                     placeholder="tu@email.com"
                     required
+                    defaultValue={state?.values?.email ?? ''}
                 />
             </div>
 
@@ -40,12 +41,12 @@ export default function LoginForm() {
             </div>
 
             {/* Mensaje de Error del Servidor */}
-            {errorMessage && (
+            {state?.error && (
                 <div className="p-3 bg-red-500/10 border-2 border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-1">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p>{errorMessage}</p>
+                    <p>{state.error}</p>
                 </div>
             )}
 

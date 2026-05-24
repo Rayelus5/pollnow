@@ -9,7 +9,7 @@ export default function RegisterForm() {
     const [state, dispatch, isPending] = useActionState(registerUser, undefined);
 
     // SI HAY ÉXITO: Mostramos mensaje de confirmación
-    if (state && typeof state === 'object' && 'success' in state) {
+    if (state && 'success' in state) {
         return (
             <div className="text-center space-y-6 py-8 animate-in fade-in slide-in-from-bottom-4">
                 <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto text-blue-400">
@@ -41,6 +41,7 @@ export default function RegisterForm() {
                     type="text"
                     placeholder="ej: ray"
                     required
+                    defaultValue={state && 'values' in state ? (state.values?.name ?? '') : ''}
                     // --- RESTRICCIONES HTML ---
                     pattern="[a-z0-9_]+"
                     maxLength={25}
@@ -66,6 +67,7 @@ export default function RegisterForm() {
                     type="email"
                     placeholder="tu@email.com"
                     required
+                    defaultValue={state && 'values' in state ? (state.values?.email ?? '') : ''}
                     className="w-full p-4 rounded-xl bg-white/5 border-2 border-white/20 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 />
             </div>
@@ -84,10 +86,10 @@ export default function RegisterForm() {
                 />
             </div>
 
-            {/* Manejo de error (si state es string, es un mensaje de error) */}
-            {state && typeof state === 'string' && (
+            {/* Manejo de error */}
+            {state && 'error' in state && state.error && (
                 <div className="p-3 bg-red-500/10 border-2 border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
-                    <p>{state}</p>
+                    <p>{state.error}</p>
                 </div>
             )}
 

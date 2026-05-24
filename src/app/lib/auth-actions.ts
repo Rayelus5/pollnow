@@ -26,8 +26,19 @@ const loginSchema = z.object({
     password: z.string().min(1, "Introduce tu contraseña"),
 });
 
+// --- ESTADOS DE FORMULARIO ---
+// Devolvemos los valores válidos para que el form los conserve vía `defaultValue`
+// (React resetea los inputs no controlados a su defaultValue tras la acción).
+export type LoginState = { error?: string; values?: { email?: string } };
+export type RegisterState =
+    | { error?: string; values?: { name?: string; email?: string } }
+    | { success: string };
+
 // --- 1. REGISTRO DE USUARIO ---
-export async function registerUser(prevState: string | undefined, formData: FormData) {
+export async function registerUser(
+    prevState: RegisterState | undefined,
+    formData: FormData
+): Promise<RegisterState> {
     const rawName = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
@@ -41,7 +52,14 @@ export async function registerUser(prevState: string | undefined, formData: Form
 
     if (!validatedFields.success) {
         const fieldErrors = validatedFields.error.flatten().fieldErrors;
-        return fieldErrors.name?.[0] || fieldErrors.email?.[0] || fieldErrors.password?.[0] || "Datos inválidos";
+        return {
+            error: fieldErrors.name?.[0] || fieldErrors.email?.[0] || fieldErrors.password?.[0] || "Datos inválidos",
+            // Conservar solo los campos que NO han dado error
+            values: {
+                name: fieldErrors.name ? undefined : cleanName,
+                email: fieldErrors.email ? undefined : email,
+            },
+        };
     }
 
     const data = validatedFields.data;
@@ -53,11 +71,15 @@ export async function registerUser(prevState: string | undefined, formData: Form
 
         // DETECCIÓN DE CUENTA GOOGLE EN REGISTRO
         if (existingUser && !existingUser.passwordHash) {
-            return "Esta cuenta usa Google. Por favor inicia sesión con Google.";
+            return {
+                error: "Esta cuenta usa Google. Por favor inicia sesión con Google.",
+                values: { name: data.name, email: data.email },
+            };
         }
 
         if (existingUser) {
-            return "Este email ya está registrado.";
+            // El email es el campo problemático → se limpia, el nombre se conserva
+            return { error: "Este email ya está registrado.", values: { name: data.name } };
         }
 
         const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -88,19 +110,27 @@ export async function registerUser(prevState: string | undefined, formData: Form
 
     } catch (error: any) {
         console.error("Register error:", error);
-        return "Error interno al crear usuario.";
+        return { error: "Error interno al crear usuario.", values: { name: data.name, email: data.email } };
     }
 }
 
 // --- 2. LOGIN CON CREDENCIALES ---
-export async function authenticateCredentials(prevState: string | undefined, formData: FormData) {
+export async function authenticateCredentials(
+    prevState: LoginState | undefined,
+    formData: FormData
+): Promise<LoginState | undefined> {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
     // Validación básica
     const validatedFields = loginSchema.safeParse({ email, password });
     if (!validatedFields.success) {
-        return "Formato de datos inválido.";
+        const fieldErrors = validatedFields.error.flatten().fieldErrors;
+        return {
+            error: fieldErrors.email?.[0] || fieldErrors.password?.[0] || "Formato de datos inválido.",
+            // Conservar el email solo si su formato es válido
+            values: fieldErrors.email ? undefined : { email },
+        };
     }
 
     // cerrar sesión primero antes de iniciar sesión (solo cerrar sesión si ya tiene sesión iniciada)
@@ -112,11 +142,11 @@ export async function authenticateCredentials(prevState: string | undefined, for
         const user = await prisma.user.findUnique({ where: { email } });
 
         if (user && !user.passwordHash) {
-            return "Esta cuenta está vinculada a Google. Usa el botón de Google.";
+            return { error: "Esta cuenta está vinculada a Google. Usa el botón de Google.", values: { email } };
         }
 
         if (user && !user.emailVerified) {
-            return "Debes verificar tu correo antes de entrar.";
+            return { error: "Debes verificar tu correo antes de entrar.", values: { email } };
         }
 
         // Intento de Login
@@ -130,9 +160,10 @@ export async function authenticateCredentials(prevState: string | undefined, for
         if (error instanceof AuthError) {
             switch (error.type) {
                 case 'CredentialsSignin':
-                    return 'Credenciales incorrectas.';
+                    // Credenciales incorrectas → conservar email, limpiar contraseña
+                    return { error: 'Credenciales incorrectas.', values: { email } };
                 default:
-                    return 'Algo salió mal al iniciar sesión.';
+                    return { error: 'Algo salió mal al iniciar sesión.', values: { email } };
             }
         }
         // Next.js usa errores para redirigir, hay que relanzarlos
