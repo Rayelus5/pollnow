@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { MAINTENANCE_MODE } from "@/lib/config";
 import ChatBot from "@/components/ia/ChatBot";
 import CookieConsent from "@/components/CookieConsent";
@@ -115,18 +115,7 @@ export default function RootLayout({
         {showUI && <HelpButtonWrapper />}
 
         {/* FOOTER (solo si no está en mantenimiento) */}
-        {showUI && (
-          <footer className="py-8 text-center text-sm text-gray-300 border-t-2 border-white/15">
-            <div className="flex justify-center gap-6 mb-4">
-              <Link href="/legal/terms" className="hover:text-white transition-colors">Términos</Link>
-              <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacidad</Link>
-              <Link href="/legal/cookies" className="hover:text-white transition-colors">Cookies</Link>
-            </div>
-            <p className="mb-5">Copyright © {new Date().getFullYear()} POLLNOW - Todos los derechos reservados | Creado con 💙 por Rayelus.</p>
-
-            <Link href="/credits" className="text-zinc-600 hover:text-blue-400 transition-colors">-  Agradecimientos -</Link>
-          </footer>
-        )}
+        {showUI && <Footer />}
 
       </body>
     </html>
