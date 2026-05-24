@@ -5,6 +5,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // --- CONFIGURACIÓN DEL REMITENTE ---
 const EMAIL_FROM = 'POLLNOW App <contacto@rayelus.com>';
+// Email donde el admin recibe notificaciones del sistema (bug reports, retiros, etc.)
+const ADMIN_NOTIFICATION_EMAIL = 'contacto@rayelus.com';
 // ----------------------------------
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -408,4 +410,108 @@ export async function sendAdminBroadcastBatch(
   }
 
   return { sent, failed };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers de plantilla (estilo oscuro coherente con los emails existentes)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Envuelve el contenido en la tarjeta oscura estándar de POLLNOW. */
+function wrapEmail(opts: { badge: string; title: string; bodyHtml: string }): string {
+  return `
+<!DOCTYPE html>
+<html lang="es">
+  <body style="margin:0; padding:24px 0; background-color:#020617;">
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width:600px; margin:0 auto; padding:0 16px;">
+      <div style="border-radius:24px; border:1px solid #1f2937; background-color:#020617; box-shadow:0 18px 45px rgba(15,23,42,0.85); padding:32px 28px;">
+        <div style="display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(15,23,42,0.9); border:1px solid rgba(75,85,99,0.9); margin-bottom:20px;">
+          <span style="font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#e5e7eb; font-weight:600;">${opts.badge}</span>
+        </div>
+        <h2 style="margin:0 0 16px 0; font-size:22px; line-height:1.2; color:#f9fafb; font-weight:800;">${opts.title}</h2>
+        ${opts.bodyHtml}
+      </div>
+      <p style="margin:16px 0 0 0; font-size:11px; line-height:1.6; color:#6b7280; text-align:center;">
+        POLLNOW · Gestión de eventos y galas interactivas
+      </p>
+    </div>
+  </body>
+</html>`;
+}
+
+/** Botón CTA estándar (oscuro con borde). */
+function emailButton(href: string, label: string): string {
+  return `<a href="${href}" style="display:inline-block; padding:12px 26px; font-size:14px; font-weight:600; text-decoration:none; border-radius:999px; background:#020617; color:#f9fafb; border:1px solid rgba(148,163,184,0.9); text-align:center; margin:8px 0 4px 0;">${label}</a>`;
+}
+
+const SEVERITY_LABEL: Record<string, string> = { LOW: "Baja", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Crítica" };
+const SEVERITY_COLOR: Record<string, string> = { LOW: "#3b82f6", MEDIUM: "#eab308", HIGH: "#f97316", CRITICAL: "#ef4444" };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUG BOUNTY
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function sendBugReportToAdmin(params: {
+  reportId: string;
+  title: string;
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  pageUrl: string;
+  description: string;
+  screenshotUrl?: string | null;
+  reporterName: string;
+  reporterEmail: string;
+  reporterId: string;
+}) {
+  const color = SEVERITY_COLOR[params.severity];
+  const sevLabel = SEVERITY_LABEL[params.severity];
+  const body = `
+    <p style="margin:0 0 4px 0; font-size:13px; color:#9ca3af;">Severidad</p>
+    <p style="margin:0 0 16px 0;"><span style="display:inline-block; padding:4px 12px; border-radius:999px; background:${color}22; color:${color}; border:1px solid ${color}55; font-size:12px; font-weight:700; text-transform:uppercase;">${sevLabel}</span></p>
+
+    <p style="margin:0 0 4px 0; font-size:13px; color:#9ca3af;">Usuario que reporta</p>
+    <p style="margin:0 0 16px 0; font-size:14px; color:#e5e7eb;">
+      ${params.reporterName} · ${params.reporterEmail}<br/>
+      <a href="${BASE_URL}/admin/users/${params.reporterId}" style="color:#60a5fa; font-size:12px;">Ver perfil en el panel</a>
+    </p>
+
+    <p style="margin:0 0 4px 0; font-size:13px; color:#9ca3af;">Página donde ocurre</p>
+    <p style="margin:0 0 16px 0; font-size:14px;"><a href="${params.pageUrl}" style="color:#60a5fa; word-break:break-all;">${params.pageUrl}</a></p>
+
+    <p style="margin:0 0 4px 0; font-size:13px; color:#9ca3af;">Descripción</p>
+    <div style="margin:0 0 16px 0; padding:14px 16px; border-radius:12px; background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9); font-size:14px; line-height:1.6; color:#e5e7eb; white-space:pre-wrap;">${escapeHtml(params.description)}</div>
+
+    ${params.screenshotUrl ? `<p style="margin:0 0 16px 0;"><a href="${params.screenshotUrl}" style="color:#60a5fa; font-size:13px;">Ver captura adjunta</a></p>` : ""}
+
+    ${emailButton(`${BASE_URL}/admin/bugs/${params.reportId}`, "Ver reporte en el panel")}
+  `;
+
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: ADMIN_NOTIFICATION_EMAIL,
+    subject: `BUG REPORT - ${params.severity}: ${params.title}`,
+    text: `Nuevo bug report (${sevLabel})\nTítulo: ${params.title}\nUsuario: ${params.reporterName} (${params.reporterEmail})\nPágina: ${params.pageUrl}\n\n${params.description}\n\nVer: ${BASE_URL}/admin/bugs/${params.reportId}`,
+    html: wrapEmail({ badge: "Bug Bounty", title: `Nuevo reporte: ${escapeHtml(params.title)}`, bodyHtml: body }),
+  });
+}
+
+export async function sendBugReplyToUser(params: { to: string; subject: string; message: string }) {
+  const body = `
+    <div style="margin:0 0 20px 0; padding:16px 18px; border-radius:12px; background:rgba(15,23,42,0.9); border:1px solid rgba(55,65,81,0.9); font-size:14px; line-height:1.7; color:#e5e7eb; white-space:pre-wrap;">${escapeHtml(params.message)}</div>
+    ${emailButton(`${BASE_URL}/bug-bounty`, "Ir al programa Bug Bounty")}
+  `;
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    subject: params.subject,
+    text: params.message,
+    html: wrapEmail({ badge: "Bug Bounty", title: "Respuesta a tu reporte", bodyHtml: body }),
+  });
+}
+
+/** Escapa HTML básico para insertar texto de usuario en los emails. */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

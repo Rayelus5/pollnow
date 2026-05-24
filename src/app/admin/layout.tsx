@@ -15,6 +15,7 @@ import {
     Mail,
     Gift,
     CreditCard,
+    Bug,
 } from "lucide-react";
 
 export default async function AdminLayout({
@@ -49,6 +50,7 @@ export default async function AdminLayout({
                         <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-gray-600 uppercase tracking-wider">Moderación</div>
                         <NavLink href="/admin/reviews" icon={<CheckSquare size={18} />} label="Solicitudes" highlight />
                         <NavLink href="/admin/reports" icon={<ShieldAlert size={18} />} label="Reportes" />
+                        <NavLink href="/admin/bugs" icon={<Bug size={18} />} label="Bugs" />
                         <NavLink href="/admin/chats" icon={<MessageCircleMore size={18} />} label="Chats" />
                         <NavLink href="/admin/logs" icon={<Logs size={18} />} label="Logs" />
 
