@@ -219,7 +219,7 @@ export default function TierlistManager({
                                             ) : (
                                                 <div className="flex items-center gap-3 p-3">
                                                     {canManage && (
-                                                        <span {...prov.dragHandleProps} className="text-gray-600 hover:text-gray-300 cursor-grab">
+                                                        <span {...prov.dragHandleProps} aria-label={`Reordenar tier ${tier.label}`} className="text-gray-600 hover:text-gray-300 cursor-grab">
                                                             <GripVertical size={16} />
                                                         </span>
                                                     )}
@@ -232,10 +232,10 @@ export default function TierlistManager({
                                                     <span className="flex-1 font-semibold text-white truncate">{tier.label}</span>
                                                     {canManage && (
                                                         <div className="flex items-center gap-1">
-                                                            <button onClick={() => setEditingId(tier.id)} className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg cursor-pointer">
+                                                            <button onClick={() => setEditingId(tier.id)} aria-label={`Editar tier ${tier.label}`} className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg cursor-pointer">
                                                                 <Pencil size={15} />
                                                             </button>
-                                                            <button onClick={() => handleDelete(tier.id)} className="h-9 w-9 flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg cursor-pointer">
+                                                            <button onClick={() => handleDelete(tier.id)} aria-label={`Eliminar tier ${tier.label}`} className="h-9 w-9 flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg cursor-pointer">
                                                                 <Trash2 size={15} />
                                                             </button>
                                                         </div>
@@ -412,7 +412,7 @@ function TierForm({
                 <button type="submit" className="h-10 px-4 bg-white text-black rounded-lg text-sm font-bold flex items-center gap-1.5 hover:bg-gray-100 cursor-pointer">
                     <Save size={14} /> Guardar
                 </button>
-                <button type="button" onClick={onCancel} className="h-10 px-3 bg-white/5 border-2 border-white/10 text-gray-400 rounded-lg hover:bg-white/10 cursor-pointer">
+                <button type="button" onClick={onCancel} aria-label="Cancelar" className="h-10 px-3 bg-white/5 border-2 border-white/10 text-gray-400 rounded-lg hover:bg-white/10 cursor-pointer">
                     <X size={14} />
                 </button>
             </div>

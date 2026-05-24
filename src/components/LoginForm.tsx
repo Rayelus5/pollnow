@@ -12,7 +12,7 @@ export default function LoginForm() {
         <form action={dispatch} className="space-y-6">
 
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                <label htmlFor="email" className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
                     Email
                 </label>
                 <input
@@ -27,7 +27,7 @@ export default function LoginForm() {
             </div>
 
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                <label htmlFor="password" className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
                     Contraseña
                 </label>
                 <input

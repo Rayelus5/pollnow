@@ -33,10 +33,11 @@ export default function RegisterForm() {
         <form action={dispatch} className="space-y-5">
 
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                <label htmlFor="name" className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
                     Nombre de Usuario
                 </label>
                 <input
+                    id="name"
                     name="name"
                     type="text"
                     placeholder="ej: ray"
@@ -59,10 +60,11 @@ export default function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                <label htmlFor="email" className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
                     Email
                 </label>
                 <input
+                    id="email"
                     name="email"
                     type="email"
                     placeholder="tu@email.com"
@@ -73,10 +75,11 @@ export default function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
+                <label htmlFor="password" className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">
                     Contraseña
                 </label>
                 <input
+                    id="password"
                     name="password"
                     type="password"
                     placeholder="Mínimo 6 caracteres"

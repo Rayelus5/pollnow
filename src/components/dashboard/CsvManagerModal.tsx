@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FileSpreadsheet, X, Upload, Download, AlertCircle, CheckCircle2, XCircle, RefreshCw, Import } from "lucide-react";
 import type { BulkImportResult } from "@/app/lib/csv-actions";
@@ -92,6 +92,15 @@ export default function CsvManagerModal({
     const [importing, setImporting] = useState(false);
     const [result, setResult] = useState<BulkImportResult | null>(null);
 
+    // Cerrar con la tecla Escape (salvo durante una importación en curso)
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && !importing) onClose(!!result?.created);
+        };
+        document.addEventListener("keydown", onKeyDown);
+        return () => document.removeEventListener("keydown", onKeyDown);
+    }, [importing, result, onClose]);
+
     const validRows = parsedRows.filter((r): r is Extract<ParsedRow, { ok: true }> => r.ok);
     const invalidRows = parsedRows.filter((r): r is Extract<ParsedRow, { ok: false }> => !r.ok);
 
@@ -152,6 +161,9 @@ export default function CsvManagerModal({
             onClick={() => !importing && onClose(!!result?.created)}
         >
             <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-label={`${config.title} · CSV`}
                 initial={{ scale: 0.97, opacity: 0, y: 8 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.97, opacity: 0, y: 8 }}
                 transition={{ type: "spring", stiffness: 320, damping: 28 }}
                 className="relative bg-zinc-950 border-2 border-white/10 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl"
@@ -165,7 +177,7 @@ export default function CsvManagerModal({
                         </div>
                         <h2 className="text-base font-bold text-white">{config.title} · CSV</h2>
                     </div>
-                    <button onClick={() => !importing && onClose(!!result?.created)} className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer">
+                    <button onClick={() => !importing && onClose(!!result?.created)} aria-label="Cerrar" className="h-8 w-8 flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer">
                         <X size={16} />
                     </button>
                 </div>

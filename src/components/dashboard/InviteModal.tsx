@@ -35,6 +35,15 @@ export default function InviteModal({ eventId, onClose, onInvited }: Props) {
         inputRef.current?.focus();
     }, []);
 
+    // Cerrar con la tecla Escape
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        document.addEventListener("keydown", onKeyDown);
+        return () => document.removeEventListener("keydown", onKeyDown);
+    }, [onClose]);
+
     // Buscar usuarios
     useEffect(() => {
         if (debouncedQuery.length < 2) {
@@ -88,6 +97,9 @@ export default function InviteModal({ eventId, onClose, onInvited }: Props) {
 
             {/* Modal */}
             <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Invitar colaborador"
                 className="relative w-full max-w-md bg-neutral-900 border-2 border-white/10 rounded-2xl shadow-2xl overflow-hidden"
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -107,6 +119,7 @@ export default function InviteModal({ eventId, onClose, onInvited }: Props) {
                     </div>
                     <button
                         onClick={onClose}
+                        aria-label="Cerrar"
                         className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer"
                     >
                         <X className="w-4 h-4 text-gray-400" />
