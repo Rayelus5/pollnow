@@ -3,8 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { generateVerificationToken } from "@/lib/tokens";
-import { sendVerificationEmail } from "@/lib/mail";
+import { generateVerificationToken, generatePasswordResetToken } from "@/lib/tokens";
+import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/mail";
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import { applyWelcomeBonus } from "@/lib/promotion-utils";
@@ -189,4 +189,99 @@ export async function authenticateGoogle() {
 // --- 4. LOGOUT ---
 export async function logoutUser() {
     await signOut({ redirectTo: "/" });
+}
+
+// --- 5. RECUPERACIÓN DE CONTRASEÑA ---
+const requestResetSchema = z.object({
+    email: z.string().email("Email inválido"),
+});
+
+const resetPasswordSchema = z.object({
+    token: z.string().min(1, "Token no válido"),
+    password: z.string().min(6, "Mínimo 6 caracteres"),
+});
+
+// Mensaje neutro: nunca confirmamos si el email existe (seguridad).
+const NEUTRAL_RESET_MESSAGE = "Si ese email está registrado, recibirás un enlace en breve.";
+
+export type ResetState = { error?: string; success?: string };
+
+// 5A. Solicitar email de recuperación
+export async function requestPasswordReset(
+    prevState: ResetState | undefined,
+    formData: FormData
+): Promise<ResetState> {
+    const email = formData.get('email') as string;
+
+    const validatedFields = requestResetSchema.safeParse({ email });
+    if (!validatedFields.success) {
+        return { error: validatedFields.error.flatten().fieldErrors.email?.[0] || "Email inválido" };
+    }
+
+    try {
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        // Solo enviamos si el usuario existe Y tiene contraseña (no cuentas Google).
+        // En cualquier otro caso devolvemos el mismo mensaje neutro.
+        if (user?.passwordHash) {
+            const resetToken = await generatePasswordResetToken(email);
+            await sendPasswordResetEmail(resetToken.email, resetToken.token);
+        }
+
+        return { success: NEUTRAL_RESET_MESSAGE };
+    } catch (error) {
+        console.error("Password reset request error:", error);
+        return { error: "No hemos podido procesar la solicitud. Inténtalo de nuevo." };
+    }
+}
+
+// 5B. Establecer nueva contraseña con el token
+export async function resetPassword(
+    prevState: ResetState | undefined,
+    formData: FormData
+): Promise<ResetState> {
+    const token = formData.get('token') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    const validatedFields = resetPasswordSchema.safeParse({ token, password });
+    if (!validatedFields.success) {
+        const fieldErrors = validatedFields.error.flatten().fieldErrors;
+        return { error: fieldErrors.token?.[0] || fieldErrors.password?.[0] || "Datos inválidos" };
+    }
+
+    if (password !== confirmPassword) {
+        return { error: "Las contraseñas no coinciden." };
+    }
+
+    try {
+        const existingToken = await prisma.passwordResetToken.findUnique({ where: { token } });
+
+        if (!existingToken) {
+            return { error: "El enlace no es válido o ya ha sido utilizado." };
+        }
+
+        if (existingToken.expires < new Date()) {
+            await prisma.passwordResetToken.delete({ where: { id: existingToken.id } });
+            return { error: "El enlace ha caducado. Solicita uno nuevo." };
+        }
+
+        const user = await prisma.user.findUnique({ where: { email: existingToken.email } });
+        if (!user) {
+            return { error: "El enlace no es válido o ya ha sido utilizado." };
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { passwordHash: hashedPassword },
+        });
+
+        await prisma.passwordResetToken.delete({ where: { id: existingToken.id } });
+
+        return { success: "Contraseña actualizada. Ya puedes iniciar sesión." };
+    } catch (error) {
+        console.error("Password reset error:", error);
+        return { error: "No hemos podido actualizar la contraseña. Inténtalo de nuevo." };
+    }
 }
