@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { GripVertical, Plus, Pencil, Trash2, Save, X, Layers, Search, FileSpreadsheet } from "lucide-react";
+import { GripVertical, Plus, Pencil, Trash2, Save, X, Layers, Search, FileSpreadsheet, Sparkles, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PLANS } from "@/lib/plans";
 import { createTier, updateTier, deleteTier, reorderTiers } from "@/app/lib/tierlist-actions";
@@ -12,6 +12,33 @@ import CsvManagerModal, { type CsvManagerConfig, type ParsedRow } from "@/compon
 type Tier = { id: string; label: string; color: string; order: number };
 
 const PRESET_COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#64748b"];
+
+// Plantillas de tiers (hardcoded por ahora). El array es escalable: añadir una
+// nueva plantilla es solo un objeto más, sin tocar la UI.
+type TierTemplate = {
+    id: string;
+    name: string;
+    description: string;
+    tiers: { label: string; color: string }[];
+};
+
+// Azul · Verde · Amarillo · Naranja · Rojo · Rosa · Morado (tokens de DESIGN.md)
+const TEMPLATE_COLORS = ["#3b82f6", "#22c55e", "#eab308", "#f97316", "#ef4444", "#ec4899", "#8b5cf6"];
+
+const TIER_TEMPLATES: TierTemplate[] = [
+    {
+        id: "basica",
+        name: "Básica",
+        description: "Tiers clásicos por letras",
+        tiers: ["S++", "S", "A", "B", "C", "D", "E"].map((label, i) => ({ label, color: TEMPLATE_COLORS[i] })),
+    },
+    {
+        id: "detallada",
+        name: "Detallada",
+        description: "Tiers descriptivos",
+        tiers: ["Excelente", "Muy bien", "Bien", "Normal", "Mal", "Muy mal", "Horrible"].map((label, i) => ({ label, color: TEMPLATE_COLORS[i] })),
+    },
+];
 
 export default function TierlistManager({
     initialTiers,
@@ -31,6 +58,7 @@ export default function TierlistManager({
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [showCsv, setShowCsv] = useState(false);
+    const [applyingTemplate, setApplyingTemplate] = useState<string | null>(null);
 
     useEffect(() => {
         setTiers([...initialTiers].sort((a, b) => a.order - b.order));
@@ -86,6 +114,21 @@ export default function TierlistManager({
 
     async function handleDelete(tierId: string) {
         await deleteTier(tierId, eventId);
+        router.refresh();
+    }
+
+    async function handleApplyTemplate(template: TierTemplate) {
+        setError(null);
+        setApplyingTemplate(template.id);
+        // Respetamos el límite del plan: enviamos solo los primeros `limit` tiers
+        // para no generar errores de "límite alcanzado".
+        const rows = template.tiers.slice(0, limit);
+        const res = await bulkCreateTiers(eventId, rows);
+        setApplyingTemplate(null);
+        if (res.created === 0 && res.errors.length > 0) {
+            setError(res.errors[0].reason);
+            return;
+        }
         router.refresh();
     }
 
@@ -210,10 +253,20 @@ export default function TierlistManager({
             </DragDropContext>
 
             {tiers.length === 0 && !isCreating && (
-                <div className="text-center py-12 border-2 border-dashed border-white/8 rounded-xl text-gray-600 text-sm flex flex-col items-center gap-2">
-                    <Layers size={28} className="text-gray-700" />
-                    Aún no hay tiers. Crea el primero (S, A, B…).
-                </div>
+                canManage ? (
+                    <TierTemplatePicker
+                        templates={TIER_TEMPLATES}
+                        limit={limit}
+                        applyingId={applyingTemplate}
+                        onApply={handleApplyTemplate}
+                        onManual={() => setIsCreating(true)}
+                    />
+                ) : (
+                    <div className="text-center py-12 border-2 border-dashed border-white/8 rounded-xl text-gray-600 text-sm flex flex-col items-center gap-2">
+                        <Layers size={28} className="text-gray-700" />
+                        Aún no hay tiers.
+                    </div>
+                )
             )}
 
             {showCsv && canManage && (
@@ -223,6 +276,88 @@ export default function TierlistManager({
                     onImported={() => router.refresh()}
                 />
             )}
+        </div>
+    );
+}
+
+function TierTemplatePicker({
+    templates,
+    limit,
+    applyingId,
+    onApply,
+    onManual,
+}: {
+    templates: TierTemplate[];
+    limit: number;
+    applyingId: string | null;
+    onApply: (template: TierTemplate) => void;
+    onManual: () => void;
+}) {
+    const isApplying = applyingId !== null;
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center gap-2 text-gray-300">
+                <Sparkles size={16} className="text-blue-400" />
+                <h4 className="text-sm font-bold">Empieza con una plantilla</h4>
+            </div>
+            <p className="text-xs text-gray-500 -mt-2">
+                Crea todos los tiers de golpe, o créalos manualmente uno a uno.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {templates.map((template) => {
+                    const capped = template.tiers.length > limit;
+                    const previewTiers = template.tiers.slice(0, limit);
+                    const applyingThis = applyingId === template.id;
+                    return (
+                        <button
+                            key={template.id}
+                            type="button"
+                            onClick={() => onApply(template)}
+                            disabled={isApplying}
+                            className="group text-left p-4 rounded-xl border-2 border-white/10 bg-neutral-900/60 hover:border-blue-500/40 hover:bg-blue-950/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="font-bold text-white text-sm">{template.name}</span>
+                                {applyingThis && <Loader2 size={14} className="text-blue-400 animate-spin" />}
+                            </div>
+                            <p className="text-[11px] text-gray-500 mb-3">{template.description}</p>
+
+                            {/* Preview de tiers coloreados */}
+                            <div className="flex flex-wrap gap-1">
+                                {previewTiers.map((t, i) => (
+                                    <span
+                                        key={i}
+                                        className="h-6 min-w-6 px-1.5 rounded-md flex items-center justify-center text-[10px] font-bold text-black/80"
+                                        style={{ backgroundColor: t.color }}
+                                        title={t.label}
+                                    >
+                                        {t.label.length > 6 ? t.label.slice(0, 5) + "…" : t.label}
+                                    </span>
+                                ))}
+                            </div>
+
+                            {capped && (
+                                <p className="text-[10px] text-amber-400/80 mt-2">
+                                    Tu plan permite {limit} tiers: se crearán los primeros {limit}.
+                                </p>
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+
+            <div className="text-center pt-1">
+                <button
+                    type="button"
+                    onClick={onManual}
+                    disabled={isApplying}
+                    className="text-xs text-gray-400 hover:text-white underline underline-offset-2 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                    Crear tiers manualmente
+                </button>
+            </div>
         </div>
     );
 }
