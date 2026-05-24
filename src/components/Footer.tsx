@@ -41,7 +41,7 @@ export default function Footer() {
     const year = new Date().getFullYear();
 
     return (
-        <footer className="border-t-2 border-white/10 bg-neutral-950/60 mt-20" aria-label="Pie de página">
+        <footer className="border-t-2 border-white/10 bg-neutral-950/60" aria-label="Pie de página">
             <div className="max-w-6xl mx-auto px-6 py-14">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
                     {/* Columna 1 — Marca */}
