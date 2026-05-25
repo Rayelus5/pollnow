@@ -82,8 +82,28 @@ export default function IngresosTab({
         <div className="space-y-10">
             {/* Resumen de saldo */}
             <section>
-                <h2 className="text-2xl font-bold mb-1">Mis Ingresos</h2>
-                <p className="text-gray-400 text-sm mb-6">Recompensas recibidas por tus eventos en Pollnow.</p>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold">Mis Ingresos</h2>
+                        <p className="text-gray-400 text-sm">Recompensas recibidas por tus eventos en Pollnow.</p>
+                    </div>
+                    <div className="flex justify-end">
+                        <button
+                            onClick={() => canWithdraw && setModalOpen(true)}
+                            disabled={!canWithdraw}
+                            title={hasPending
+                                ? "Tienes una solicitud de retiro en proceso"
+                                : !canWithdraw
+                                    ? `Mínimo de retiro: ${formatEur(MIN_WITHDRAWAL)}. Te faltan ${formatEur(missing)}`
+                                    : undefined}
+                            className={canWithdraw
+                                ? "bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2 cursor-pointer"
+                                : "bg-white/5 text-gray-500 px-6 py-2 rounded-full font-bold border-2 border-white/10 flex items-center gap-2 cursor-not-allowed"}
+                        >
+                            <ArrowDownToLine size={18} /> Solicitar retiro
+                        </button>
+                    </div>
+                </div>
 
                 <div className="grid sm:grid-cols-2 gap-4 mb-6">
                     <div className="bg-neutral-900/60 border-2 border-white/10 rounded-2xl p-6">
@@ -114,27 +134,12 @@ export default function IngresosTab({
                         <Info size={16} className="text-amber-400 shrink-0" />
                         Tienes una solicitud de retiro en proceso.
                     </div>
-                ) : canWithdraw ? (
-                    <button
-                        onClick={() => setModalOpen(true)}
-                        className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold px-6 py-3.5 rounded-xl shadow-lg shadow-blue-900/20 hover:scale-[1.02] transition-all cursor-pointer"
-                    >
-                        <ArrowDownToLine size={18} /> Solicitar retiro
-                    </button>
-                ) : (
-                    <div className="inline-flex flex-col gap-1">
-                        <button
-                            disabled
-                            title={`Mínimo de retiro: ${formatEur(MIN_WITHDRAWAL)}. Te faltan ${formatEur(missing)}`}
-                            className="inline-flex items-center gap-2 bg-white/5 text-gray-500 font-bold px-6 py-3.5 rounded-xl border-2 border-white/10 cursor-not-allowed"
-                        >
-                            <ArrowDownToLine size={18} /> Solicitar retiro
-                        </button>
-                        <span className="text-[11px] text-gray-500">
-                            Mínimo {formatEur(MIN_WITHDRAWAL)}. Te faltan {formatEur(missing)}.
-                        </span>
+                ) : !canWithdraw ? (
+                    <div className="flex items-center gap-2 p-4 rounded-xl border-2 border-white/10 bg-white/5 text-gray-400 text-sm">
+                        <Info size={16} className="text-gray-500 shrink-0" />
+                        El retiro mínimo es de {formatEur(MIN_WITHDRAWAL)}. Te faltan {formatEur(missing)} para poder solicitarlo.
                     </div>
-                )}
+                ) : null}
             </section>
 
             {/* Historial de ingresos */}

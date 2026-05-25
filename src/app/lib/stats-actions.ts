@@ -6,30 +6,75 @@ import { prisma } from "@/lib/prisma";
 // Devuelve un payload distinto según el modo del evento. GALA sigue usando
 // getEventStats (abajo). El resto agregan sus propios votos/respuestas/reacciones.
 
-export type ModeStats =
-    | { mode: "TIERLIST"; totalVotes: number; participants: { id: string; name: string; imageUrl: string | null; placements: number; topTierId: string | null; topTier: { label: string; color: string } | null; tiers: { tierId: string; label: string; color: string; count: number }[] }[] }
-    | { mode: "PREGUNTAS"; totalRespondents: number; questions: { id: string; text: string; type: string; totalAnswers: number; options: { id: string; text: string; count: number; pct: number }[] }[] }
-    | { mode: "DIBUJO"; submissions: number; reactions: number; likes: number; dislikes: number; superlikes: number; top: { id: string; imageUrl: string; score: number; likeCount: number; dislikeCount: number; superlikeCount: number }[] };
+/** Identidad de un votante. `isAnonymous` = no estaba logueado (sin userId). */
+export type Voter = { name: string; image: string | null; isAnonymous: boolean };
 
-export async function getModeStats(eventId: string, mode: "TIERLIST" | "PREGUNTAS" | "DIBUJO"): Promise<ModeStats | null> {
+export type ModeStats =
+    | { mode: "TIERLIST"; totalVotes: number; participants: { id: string; name: string; imageUrl: string | null; placements: number; topTierId: string | null; topTier: { label: string; color: string } | null; tiers: { tierId: string; label: string; color: string; count: number; voters?: Voter[] }[] }[] }
+    | { mode: "PREGUNTAS"; totalRespondents: number; questions: { id: string; text: string; type: string; totalAnswers: number; options: { id: string; text: string; count: number; pct: number; voters?: Voter[] }[] }[] }
+    | { mode: "DIBUJO"; submissions: number; reactions: number; likes: number; dislikes: number; superlikes: number; top: { id: string; imageUrl: string; score: number; likeCount: number; dislikeCount: number; superlikeCount: number; author?: Voter | null; reactors?: { type: string; voter: Voter }[] }[] };
+
+/**
+ * Estadísticas por modo. Si `includeVoters` es true (plan suficiente + voto NO anónimo),
+ * se adjunta la identidad de los votantes registrados (los no logueados aparecen como "Anónimo").
+ */
+/**
+ * Resuelve un conjunto de userIds a identidades. Los modelos de voto solo guardan
+ * `userId` (sin relación `user`), así que cargamos los usuarios en una sola query.
+ */
+async function buildVoterResolver(userIds: (string | null | undefined)[]) {
+    const ids = [...new Set(userIds.filter((x): x is string => !!x))];
+    const users = ids.length
+        ? await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, image: true } })
+        : [];
+    const map = new Map(users.map((u) => [u.id, u]));
+    return (userId: string | null | undefined): Voter => {
+        if (!userId) return { name: "Anónimo", image: null, isAnonymous: true };
+        const u = map.get(userId);
+        return { name: u?.name || "Anónimo", image: u?.image || null, isAnonymous: false };
+    };
+}
+
+export async function getModeStats(
+    eventId: string,
+    mode: "TIERLIST" | "PREGUNTAS" | "DIBUJO",
+    opts?: { includeVoters?: boolean }
+): Promise<ModeStats | null> {
+    const includeVoters = opts?.includeVoters === true;
+
     if (mode === "TIERLIST") {
         const [totalVotes, tiers, participants, entries] = await Promise.all([
             prisma.tierlistVote.count({ where: { eventId } }),
             prisma.tierlistTier.findMany({ where: { eventId }, orderBy: { order: "asc" }, select: { id: true, label: true, color: true } }),
             prisma.participant.findMany({ where: { eventId }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, imageUrl: true } }),
-            prisma.tierlistVoteEntry.findMany({ where: { vote: { eventId } }, select: { tierId: true, participantId: true } }),
+            prisma.tierlistVoteEntry.findMany({
+                where: { vote: { eventId } },
+                select: { tierId: true, participantId: true, vote: { select: { userId: true } } },
+            }),
         ]);
         const tierById = new Map(tiers.map((t) => [t.id, t]));
+        const resolveVoter = includeVoters ? await buildVoterResolver(entries.map((e) => e.vote.userId)) : null;
         // count[participantId][tierId]
         const count = new Map<string, Map<string, number>>();
+        // voters[`${participantId}|${tierId}`]
+        const votersByPT = new Map<string, Voter[]>();
         for (const e of entries) {
             if (!count.has(e.participantId)) count.set(e.participantId, new Map());
             const m = count.get(e.participantId)!;
             m.set(e.tierId, (m.get(e.tierId) ?? 0) + 1);
+            if (resolveVoter) {
+                const key = `${e.participantId}|${e.tierId}`;
+                const list = votersByPT.get(key) ?? [];
+                list.push(resolveVoter(e.vote.userId));
+                votersByPT.set(key, list);
+            }
         }
         const result = participants.map((p) => {
             const m = count.get(p.id) ?? new Map<string, number>();
-            const tierCounts = tiers.map((t) => ({ tierId: t.id, label: t.label, color: t.color, count: m.get(t.id) ?? 0 }));
+            const tierCounts = tiers.map((t) => ({
+                tierId: t.id, label: t.label, color: t.color, count: m.get(t.id) ?? 0,
+                ...(includeVoters ? { voters: votersByPT.get(`${p.id}|${t.id}`) ?? [] } : {}),
+            }));
             let placements = 0;
             let topTierId: string | null = null;
             let topCount = -1;
@@ -55,27 +100,75 @@ export async function getModeStats(eventId: string, mode: "TIERLIST" | "PREGUNTA
             prisma.questionAnswer.findMany({ where: { eventId }, select: { voterHash: true }, distinct: ["voterHash"] }),
         ]);
         const countByOption = new Map(answers.map((a) => [a.optionId, a._count.optionId]));
+        const votersByOption = new Map<string, Voter[]>();
+        if (includeVoters) {
+            const answerRows = await prisma.questionAnswer.findMany({ where: { eventId }, select: { optionId: true, userId: true } });
+            const resolveVoter = await buildVoterResolver(answerRows.map((a) => a.userId));
+            for (const a of answerRows) {
+                const list = votersByOption.get(a.optionId) ?? [];
+                list.push(resolveVoter(a.userId));
+                votersByOption.set(a.optionId, list);
+            }
+        }
         const qStats = questions.map((q) => {
             const opts = q.options.map((o) => ({ id: o.id, text: o.text, count: countByOption.get(o.id) ?? 0 }));
             const totalAnswers = opts.reduce((acc, o) => acc + o.count, 0);
             return {
                 id: q.id, text: q.text, type: q.type, totalAnswers,
-                options: opts.map((o) => ({ ...o, pct: totalAnswers > 0 ? Math.round((o.count / totalAnswers) * 100) : 0 })),
+                options: opts.map((o) => ({
+                    ...o,
+                    pct: totalAnswers > 0 ? Math.round((o.count / totalAnswers) * 100) : 0,
+                    ...(includeVoters ? { voters: votersByOption.get(o.id) ?? [] } : {}),
+                })),
             };
         });
         return { mode: "PREGUNTAS", totalRespondents: respondents.length, questions: qStats };
     }
 
     // DIBUJO
-    const [submissions, agg, top] = await Promise.all([
+    const [submissions, agg, topRows] = await Promise.all([
         prisma.drawingSubmission.count({ where: { eventId } }),
         prisma.drawingReaction.groupBy({ by: ["type"], where: { eventId }, _count: { type: true } }),
-        prisma.drawingSubmission.findMany({ where: { eventId }, orderBy: [{ score: "desc" }, { createdAt: "asc" }], take: 10, select: { id: true, imageUrl: true, score: true, likeCount: true, dislikeCount: true, superlikeCount: true } }),
+        prisma.drawingSubmission.findMany({
+            where: { eventId },
+            orderBy: [{ score: "desc" }, { createdAt: "asc" }],
+            take: 10,
+            select: { id: true, imageUrl: true, score: true, likeCount: true, dislikeCount: true, superlikeCount: true, userId: true },
+        }),
     ]);
     const byType = new Map(agg.map((a) => [a.type, a._count.type]));
     const likes = byType.get("LIKE") ?? 0;
     const dislikes = byType.get("DISLIKE") ?? 0;
     const superlikes = byType.get("SUPERLIKE") ?? 0;
+
+    // Reacciones (con identidad) para los dibujos del top
+    const reactorsBySubmission = new Map<string, { type: string; voter: Voter }[]>();
+    if (includeVoters && topRows.length > 0) {
+        const reacts = await prisma.drawingReaction.findMany({
+            where: { submissionId: { in: topRows.map((t) => t.id) } },
+            select: { submissionId: true, type: true, userId: true },
+        });
+        const resolveVoter = await buildVoterResolver([
+            ...reacts.map((r) => r.userId),
+            ...topRows.map((t) => t.userId),
+        ]);
+        for (const r of reacts) {
+            const list = reactorsBySubmission.get(r.submissionId) ?? [];
+            list.push({ type: r.type, voter: resolveVoter(r.userId) });
+            reactorsBySubmission.set(r.submissionId, list);
+        }
+        const top = topRows.map((t) => ({
+            id: t.id, imageUrl: t.imageUrl, score: t.score, likeCount: t.likeCount, dislikeCount: t.dislikeCount, superlikeCount: t.superlikeCount,
+            author: resolveVoter(t.userId),
+            reactors: reactorsBySubmission.get(t.id) ?? [],
+        }));
+        return { mode: "DIBUJO", submissions, reactions: likes + dislikes + superlikes, likes, dislikes, superlikes, top };
+    }
+
+    const top = topRows.map((t) => ({
+        id: t.id, imageUrl: t.imageUrl, score: t.score, likeCount: t.likeCount, dislikeCount: t.dislikeCount, superlikeCount: t.superlikeCount,
+    }));
+
     return { mode: "DIBUJO", submissions, reactions: likes + dislikes + superlikes, likes, dislikes, superlikes, top };
 }
 

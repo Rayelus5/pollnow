@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { PLANS } from "@/lib/plans";
 import { createQuestion, updateQuestion, deleteQuestion, reorderQuestions } from "@/app/lib/preguntas-actions";
 import { bulkCreateQuestions } from "@/app/lib/csv-actions";
+import { useToast } from "@/components/ui/ToastProvider";
 import CsvManagerModal, { type CsvManagerConfig, type ParsedRow } from "@/components/dashboard/CsvManagerModal";
 
 type QOption = { id?: string; text: string; order?: number };
@@ -33,6 +34,7 @@ export default function QuestionManager({
     canManage?: boolean;
 }) {
     const router = useRouter();
+    const toast = useToast();
     const [questions, setQuestions] = useState<Question[]>([...initialQuestions].sort((a, b) => a.order - b.order));
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
@@ -96,21 +98,25 @@ export default function QuestionManager({
     async function handleCreate(fd: FormData) {
         setError(null);
         const res = await createQuestion(eventId, fd);
-        if (res?.error) { setError(res.error); return; }
+        if (res?.error) { setError(res.error); toast.error(res.error); return; }
         setIsCreating(false);
+        toast.success("Pregunta creada");
         router.refresh();
     }
 
     async function handleUpdate(id: string, fd: FormData) {
         setError(null);
         const res = await updateQuestion(id, eventId, fd);
-        if (res?.error) { setError(res.error); return; }
+        if (res?.error) { setError(res.error); toast.error(res.error); return; }
         setEditingId(null);
+        toast.success("Pregunta actualizada");
         router.refresh();
     }
 
     async function handleDelete(id: string) {
-        await deleteQuestion(id, eventId);
+        const res = await deleteQuestion(id, eventId);
+        if (res?.error) { toast.error(res.error); return; }
+        toast.success("Pregunta eliminada");
         router.refresh();
     }
 

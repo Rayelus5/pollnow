@@ -8,6 +8,7 @@ import ChatBot from "@/components/ia/ChatBot";
 import CookieConsent from "@/components/CookieConsent";
 import HelpButtonWrapper from "@/components/HelpButtonWrapper";
 import AnnouncementBarWrapper from "@/components/AnnouncementBarWrapper";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -99,23 +100,25 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
 
-        {/* ANNOUNCEMENT BAR (solo si no está en mantenimiento) */}
-        {showUI && <AnnouncementBarWrapper />}
+        <ToastProvider>
+          {/* ANNOUNCEMENT BAR (solo si no está en mantenimiento) */}
+          {showUI && <AnnouncementBarWrapper />}
 
-        {/* NAVBAR (solo si no está en mantenimiento) */}
-        {showUI && <Navbar />}
+          {/* NAVBAR (solo si no está en mantenimiento) */}
+          {showUI && <Navbar />}
 
-        {/* Si hay navbar aplicamos padding, si no, lo quitamos */}
-        <div className={showUI ? "pt-16" : ""}>
-          {children}
-        </div>
+          {/* Si hay navbar aplicamos padding, si no, lo quitamos */}
+          <div className={showUI ? "pt-16" : ""}>
+            {children}
+          </div>
 
-        <ChatBot />
-        <CookieConsent />
-        {showUI && <HelpButtonWrapper />}
+          <ChatBot />
+          <CookieConsent />
+          {showUI && <HelpButtonWrapper />}
 
-        {/* FOOTER (solo si no está en mantenimiento) */}
-        {showUI && <Footer />}
+          {/* FOOTER (solo si no está en mantenimiento) */}
+          {showUI && <Footer />}
+        </ToastProvider>
 
       </body>
     </html>

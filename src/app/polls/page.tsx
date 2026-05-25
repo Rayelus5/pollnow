@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import ExploreClient from "@/components/polls/ExploreClient";
+import SideRailAds from "@/components/ads/SideRailAds";
 import { auth } from "@/auth";
+import { getCurrentUserPlan } from "@/lib/user-plan";
 import { unstable_cache } from "next/cache";
 import type { Metadata } from "next";
 
@@ -133,6 +135,9 @@ export default async function ExplorePage({ searchParams }: Props) {
     const session = await auth();
     const userId = session?.user?.id || null;
 
+    const plan = await getCurrentUserPlan();
+    const showAds = plan.slug === "free" || plan.slug === "premium";
+
     // Listado público cacheado (sin datos por-usuario)
     const baseEvents = await getPublicEventsData(query, tag, status);
 
@@ -175,16 +180,18 @@ export default async function ExplorePage({ searchParams }: Props) {
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[800px] bg-blue-900/10 rounded-[100%] blur-[120px]" />
                 <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-purple-900/10 rounded-[100%] blur-[120px]" />
             </div>
-            <ExploreClient
-                events={paginatedEvents}
-                isLoggedIn={!!userId}
-                currentTag={tag}
-                currentSort={sort}
-                currentStatus={status}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalEvents={totalEvents}
-            />
+            <SideRailAds showAds={showAds}>
+                <ExploreClient
+                    events={paginatedEvents}
+                    isLoggedIn={!!userId}
+                    currentTag={tag}
+                    currentSort={sort}
+                    currentStatus={status}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalEvents={totalEvents}
+                />
+            </SideRailAds>
         </main>
     );
 }

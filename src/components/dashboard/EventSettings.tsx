@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { updateEvent, deleteEvent, rotateEventKey, requestEventPublication } from "@/app/lib/dashboard-actions";
 import TagsInput from "@/components/ui/TagsInput";
-import { Save, Trash2, AlertTriangle, RefreshCw, Copy, Send, Clock, Check, CheckCircle, XCircle } from "lucide-react";
+import { useToast } from "@/components/ui/ToastProvider";
+import {
+    Save, Trash2, AlertTriangle, RefreshCw, Copy, Send, Clock, Check, CheckCircle, XCircle,
+    Info, Calendar, ShieldCheck, Globe, Lock, EyeOff,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from 'react-dom';
 import { Bouncy } from 'ldrs/react'
@@ -52,6 +56,35 @@ function SubmitButton() {
     );
 }
 
+function SectionCard({
+    icon,
+    title,
+    description,
+    children,
+    accent = "text-blue-400",
+    className = "",
+}: {
+    icon: React.ReactNode;
+    title: string;
+    description?: string;
+    children: React.ReactNode;
+    accent?: string;
+    className?: string;
+}) {
+    return (
+        <div className={`p-6 bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-lg ${className}`}>
+            <div className="flex items-center gap-3 mb-5 border-b-2 border-neutral-800 pb-4">
+                <div className={`p-2 rounded-lg bg-white/5 border-2 border-white/5 ${accent}`}>{icon}</div>
+                <div>
+                    <h3 className="text-base font-bold text-white">{title}</h3>
+                    {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+                </div>
+            </div>
+            {children}
+        </div>
+    );
+}
+
 type Permissions = {
     canEditSettings: boolean;
     canDeleteEvent: boolean;
@@ -72,8 +105,8 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
     const [copied, setCopied] = useState(false);
     const [showRequestModal, setShowRequestModal] = useState(false);
 
-
     const router = useRouter();
+    const toast = useToast();
     const isUnlimited = planSlug === 'unlimited';
     const isDibujo = event.mode === "DIBUJO";
     const isPreguntas = event.mode === "PREGUNTAS";
@@ -108,6 +141,7 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
         }
 
         setCopied(true);
+        toast.info("Enlace copiado al portapapeles");
         setTimeout(() => setCopied(false), 1500);
     };
 
@@ -141,39 +175,56 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
             tags,
         }));
 
-        await updateEvent(event.id, formData);
+        try {
+            await updateEvent(event.id, formData);
+            toast.success("Configuración guardada correctamente");
+        } catch (e) {
+            console.error("Error al guardar la configuración", e);
+            toast.error("No se pudo guardar la configuración. Inténtalo de nuevo.");
+        }
     };
 
     const handleDelete = async () => {
         setIsDeleting(true);
-        await deleteEvent(event.id);
+        try {
+            await deleteEvent(event.id);
+            // En caso de éxito, deleteEvent redirige al dashboard.
+        } catch (e) {
+            console.error("Error al eliminar el evento", e);
+            toast.error("No se pudo eliminar el evento.");
+            setIsDeleting(false);
+        }
     };
 
     const handleRotateKey = async () => { setShowConfirm(true); };
     const confirmRotate = async () => {
         setShowConfirm(false);
         setIsRegenerating(true);
-        await rotateEventKey(event.id);
-        setIsRegenerating(false);
+        try {
+            await rotateEventKey(event.id);
+            toast.success("Clave de acceso regenerada");
+        } catch (e) {
+            console.error("Error al regenerar la clave", e);
+            toast.error("No se pudo regenerar la clave.");
+        } finally {
+            setIsRegenerating(false);
+        }
     };
 
-    // --- LÓGICA NUEVA: SOLICITAR PUBLICACIÓN ---
+    // --- LÓGICA: SOLICITAR PUBLICACIÓN ---
 
-    // Abre el modal
     const handleOpenRequestModal = () => {
         setShowRequestModal(true);
     };
 
-    // Confirmación dentro del modal
     const confirmRequestPublication = async () => {
         setIsRequesting(true);
         try {
             const res = await requestEventPublication(event.id);
 
-            // Si hubo error en la server action, opcionalmente lo puedes mostrar con un toast
             if (!res || !("success" in res) || !res.success || !res.event) {
                 console.error("Error al solicitar publicación:", res?.error);
-                // aquí podrías hacer setAlgúnError(...) si quieres
+                toast.error(res?.error ?? "No se pudo enviar el evento a revisión.");
                 return;
             }
 
@@ -185,11 +236,11 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
             }));
 
             setShowRequestModal(false);
-
-            // Opcional: si quieres forzar que el resto del dashboard se sincronice:
+            toast.success("Evento enviado a revisión");
             router.refresh();
         } catch (e) {
             console.error("Error al solicitar publicación", e);
+            toast.error("No se pudo enviar el evento a revisión.");
         } finally {
             setIsRequesting(false);
         }
@@ -202,117 +253,141 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
     return (
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            {/* COLUMNA 1: FORMULARIO */}
+            {/* COLUMNA 1: FORMULARIO EN SECCIONES */}
             <div className="space-y-8">
 
-
-
-                {/* FORMULARIO ORIGINAL */}
                 {!canEdit && (
                     <div className="px-4 py-2.5 rounded-lg bg-amber-500/10 border-2 border-amber-500/20 text-xs text-amber-400 font-medium">
                         No tienes permiso para editar la configuración de este evento.
                     </div>
                 )}
 
-                <form action={handleFormSubmit} className={`space-y-6 p-6 bg-neutral-900 border-2 border-neutral-800 rounded-xl shadow-lg tour-event-settings-card ${!canEdit ? "opacity-60 pointer-events-none" : ""}`}>
-                    <h2 className="text-2xl font-bold text-white mb-4 border-b-2 border-neutral-700 pb-3">Configuración General</h2>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">Nombre del Evento</label>
-                        <input name="title" maxLength={40} defaultValue={currentEvent.title} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required disabled={!canEdit} />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
-                        <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" disabled={!canEdit} />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">Etiquetas</label>
-                        <TagsInput value={tags} onChange={setTags} name="tags" />
-                    </div>
-                    {/* DIBUJO: las fechas se gestionan en la pestaña "Dibujo"; el evento es siempre privado.
-                        El grid de abajo queda oculto (display:none) pero su input galaDate sigue enviándose,
-                        preservando el valor actual sin tocarlo. */}
-                    {isDibujo && (
-                        <div className="p-3 rounded-lg border-2 border-amber-500/20 bg-amber-500/5 text-xs text-amber-300">
-                            Este evento de <strong>Dibujo</strong> es siempre privado. Las fechas de cierre de dibujo y votación
-                            se configuran en la pestaña <strong>Dibujo</strong>.
-                        </div>
-                    )}
-                    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 ${isDibujo ? "hidden" : ""}`}>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
-                                {isPreguntas ? "Fecha de cierre" : "Fecha de la Gala"}
-                            </label>
-                            <input type="datetime-local" name="galaDate" defaultValue={defaultDate} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white dark-calendar focus:border-blue-500 outline-none" />
-                        </div>
-                        {/* VISIBILIDAD (solo editable si el evento está APROBADO) */}
-                        <div className={!canEditVisibility ? "opacity-60" : ""}>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">
-                                Visibilidad
-                            </label>
+                <form action={handleFormSubmit} className={`space-y-8 tour-event-settings-card ${!canEdit ? "opacity-60 pointer-events-none" : ""}`}>
 
-                            <label
-                                className={`flex items-center gap-3 p-3 border-2 border-white/10 rounded-lg bg-black transition-colors h-[50px] ${canEditVisibility
-                                    ? "cursor-pointer hover:border-white/30"
-                                    : "cursor-not-allowed"
-                                    }`}
-                            >
-                                <input
-                                    type="checkbox"
-                                    name="isPublic"
-                                    disabled={!canEditVisibility} // AQUÍ SE BLOQUEA REALMENTE
-                                    defaultChecked={currentEvent.isPublic}
-                                    onChange={(e) => {
-                                        if (!canEditVisibility) return; // doble seguridad
-                                        setCurrentEvent({
-                                            ...currentEvent,
-                                            isPublic: e.target.checked,
-                                        });
-                                    }}
-                                    className="accent-blue-500 w-5 h-5 disabled:opacity-50"
-                                />
-                                <span className="text-sm text-gray-300">Evento Público</span>
-                            </label>
+                    {/* SECCIÓN: INFORMACIÓN BÁSICA */}
+                    <SectionCard
+                        icon={<Info size={18} />}
+                        title="Información básica"
+                        description="Cómo se presenta tu evento a los participantes."
+                    >
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Nombre del Evento</label>
+                                <input name="title" maxLength={40} defaultValue={currentEvent.title} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors" required disabled={!canEdit} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Descripción</label>
+                                <textarea name="description" maxLength={100} defaultValue={currentEvent.description || ""} rows={3} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition-colors resize-none" disabled={!canEdit} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Etiquetas</label>
+                                <TagsInput value={tags} onChange={setTags} name="tags" />
+                            </div>
+                        </div>
+                    </SectionCard>
 
-                            {/* Mensajito explicativo según estado */}
-                            {!canEditVisibility && (
-                                isDenied ? (
-                                    <p className="mt-1 text-xs text-red-400">
-                                        El evento ha sido <strong>DENEGADO</strong>. Revisa los motivos en la sección
-                                        de solicitudes y corrige el contenido antes de volver a enviarlo.
-                                    </p>
-                                ) : (
-                                    <p className="mt-2 text-xs text-yellow-400">
-                                        Tu evento todavía no ha sido aprobado por el equipo de revisión.
-                                        No puedes cambiar la visibilidad hasta que esté <strong>APROBADO</strong>.
-                                    </p>
-                                )
+                    {/* SECCIÓN: FECHAS Y VISIBILIDAD — oculta en DIBUJO */}
+                    {isDibujo ? (
+                        <div className="p-4 rounded-xl border-2 border-amber-500/20 bg-amber-500/5 text-xs text-amber-300 flex items-start gap-2">
+                            <Lock size={16} className="shrink-0 mt-0.5" />
+                            <span>
+                                Este evento de <strong>Dibujo</strong> es siempre privado. Las fechas de cierre de dibujo y votación
+                                se configuran en la pestaña <strong>Dibujo</strong>.
+                            </span>
+                        </div>
+                    ) : (
+                        <SectionCard
+                            icon={<Calendar size={18} />}
+                            title="Fechas y visibilidad"
+                            description={isPreguntas ? "Cuándo se cierra y quién puede verlo." : "Cuándo es la gala y quién puede verla."}
+                        >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                                        {isPreguntas ? "Fecha de cierre" : "Fecha de la Gala"}
+                                    </label>
+                                    <input type="datetime-local" name="galaDate" defaultValue={defaultDate} className="w-full bg-black border-2 border-white/20 rounded-lg p-3 text-white dark-calendar focus:border-blue-500 outline-none" />
+                                </div>
+                                {/* VISIBILIDAD (solo editable si el evento está APROBADO) */}
+                                <div className={!canEditVisibility ? "opacity-60" : ""}>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                                        Visibilidad
+                                    </label>
+                                    <label
+                                        className={`flex items-center gap-3 p-3 border-2 border-white/10 rounded-lg bg-black transition-colors h-[50px] ${canEditVisibility
+                                            ? "cursor-pointer hover:border-white/30"
+                                            : "cursor-not-allowed"
+                                            }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="isPublic"
+                                            disabled={!canEditVisibility}
+                                            defaultChecked={currentEvent.isPublic}
+                                            onChange={(e) => {
+                                                if (!canEditVisibility) return;
+                                                setCurrentEvent({
+                                                    ...currentEvent,
+                                                    isPublic: e.target.checked,
+                                                });
+                                            }}
+                                            className="accent-blue-500 w-5 h-5 disabled:opacity-50"
+                                        />
+                                        <span className="text-sm text-gray-300">Evento Público</span>
+                                    </label>
+
+                                    {!canEditVisibility && (
+                                        isDenied ? (
+                                            <p className="mt-1 text-xs text-red-400">
+                                                El evento ha sido <strong>DENEGADO</strong>. Revisa los motivos en la sección
+                                                de solicitudes y corrige el contenido antes de volver a enviarlo.
+                                            </p>
+                                        ) : (
+                                            <p className="mt-2 text-xs text-yellow-400">
+                                                Tu evento todavía no ha sido aprobado por el equipo de revisión.
+                                                No puedes cambiar la visibilidad hasta que esté <strong>APROBADO</strong>.
+                                            </p>
+                                        )
+                                    )}
+                                </div>
+                            </div>
+
+                            {isPreguntas && (
+                                <div className="mt-5 p-3 rounded-lg border-2 border-blue-500/20 bg-blue-500/5 text-xs text-blue-300 flex items-start gap-2">
+                                    <Info size={16} className="shrink-0 mt-0.5" />
+                                    <span>
+                                        Los <strong>resultados de este formulario son privados</strong>: solo tú podrás verlos. El evento puede
+                                        publicarse, pero dejará de aparecer en la comunidad cuando llegue su fecha de cierre.
+                                    </span>
+                                </div>
                             )}
-
-
-                        </div>
-                    </div>
-                    {isPreguntas && (
-                        <div className="p-3 rounded-lg border-2 border-blue-500/20 bg-blue-500/5 text-xs text-blue-300">
-                            Los <strong>resultados de este formulario son privados</strong>: solo tú podrás verlos. El evento puede
-                            publicarse, pero dejará de aparecer en la comunidad cuando llegue su fecha de cierre.
-                        </div>
+                        </SectionCard>
                     )}
-                    <div className={`p-4 rounded-lg border-2 transition-colors ${isUnlimited ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-70'}`}>
-                        <div className="flex justify-between items-center mb-2">
-                            <div className="flex items-center gap-2">
-                                <label htmlFor="isAnonymous" className={`font-bold text-sm ${isUnlimited ? 'cursor-pointer text-white' : 'text-gray-400'}`}>Votación Anónima</label>
-                                {!isUnlimited && <span className="px-2 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded uppercase">Unlimited Only</span>}
-                            </div>
-                            <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="isAnonymousVoting" id="isAnonymous" checked={currentEvent.isAnonymousVoting} onChange={(e) => { if (isUnlimited) setCurrentEvent({ ...currentEvent, isAnonymousVoting: e.target.checked }); }} disabled={!isUnlimited} className="toggle-checkbox absolute block w-12 h-8 rounded-full bg-white border-4 appearance-none cursor-pointer disabled:cursor-not-allowed z-10 opacity-0 inset-0" />
-                                <div className={`block overflow-hidden h-6 rounded-full transition-colors duration-300 ${currentEvent.isAnonymousVoting ? (isUnlimited ? 'bg-purple-600' : 'bg-gray-600') : 'bg-gray-700'}`}></div>
-                                <div className={`absolute left-0 top-0 bottom-0 w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 pointer-events-none ${currentEvent.isAnonymousVoting ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                            </div>
-                        </div>
-                        <p className="text-xs text-gray-500 leading-relaxed">{isUnlimited ? "Si desactivas esto, podrás ver la identidad de los votantes en las estadísticas avanzadas." : "Por defecto, los votos son 100% anónimos. Actualiza a Premium+ para rastrear votantes."}</p>
-                    </div>
 
-                    <div className="pt-2 flex justify-end">
+                    {/* SECCIÓN: PRIVACIDAD DE VOTOS */}
+                    <SectionCard
+                        icon={isUnlimited ? <ShieldCheck size={18} /> : <EyeOff size={18} />}
+                        title="Privacidad de votos"
+                        description="Controla si puedes ver la identidad de los votantes registrados."
+                        accent={isUnlimited ? "text-purple-400" : "text-gray-400"}
+                    >
+                        <div className={`p-4 rounded-lg border-2 transition-colors ${isUnlimited ? 'border-purple-500/30 bg-purple-500/5' : 'border-white/10 bg-white/5 opacity-80'}`}>
+                            <div className="flex justify-between items-center mb-2">
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="isAnonymous" className={`font-bold text-sm ${isUnlimited ? 'cursor-pointer text-white' : 'text-gray-400'}`}>Votación Anónima</label>
+                                    {!isUnlimited && <span className="px-2 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded uppercase">Unlimited Only</span>}
+                                </div>
+                                <div className="relative inline-block w-12 h-6 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="isAnonymousVoting" id="isAnonymous" checked={currentEvent.isAnonymousVoting} onChange={(e) => { if (isUnlimited) setCurrentEvent({ ...currentEvent, isAnonymousVoting: e.target.checked }); }} disabled={!isUnlimited} className="toggle-checkbox absolute block w-12 h-8 rounded-full bg-white border-4 appearance-none cursor-pointer disabled:cursor-not-allowed z-10 opacity-0 inset-0" />
+                                    <div className={`block overflow-hidden h-6 rounded-full transition-colors duration-300 ${currentEvent.isAnonymousVoting ? (isUnlimited ? 'bg-purple-600' : 'bg-gray-600') : 'bg-gray-700'}`}></div>
+                                    <div className={`absolute left-0 top-0 bottom-0 w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-300 pointer-events-none ${currentEvent.isAnonymousVoting ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 leading-relaxed">{isUnlimited ? "Si desactivas esto, podrás ver la identidad de los votantes registrados en las estadísticas avanzadas. Los votantes no logueados seguirán siendo anónimos." : "Por defecto, los votos son 100% anónimos. Actualiza a Unlimited para rastrear votantes registrados."}</p>
+                        </div>
+                    </SectionCard>
+
+                    <div className="flex justify-end">
                         <SubmitButton />
                     </div>
                 </form>
@@ -355,10 +430,10 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
             )}
 
 
-            {/* COLUMNA 2: ENLACES Y ZONA PELIGRO (MANTENER IGUAL) */}
+            {/* COLUMNA 2: ESTADO, ENLACES Y ZONA DE PELIGRO */}
             <div className="space-y-8">
 
-                {/* CAJA DE ESTADO DE PUBLICACIÓN — oculta en DIBUJO (siempre privado, no se publica) */}
+                {/* ESTADO DE PUBLICACIÓN — oculta en DIBUJO (siempre privado, no se publica) */}
                 {!isDibujo && (
                 <div className={`p-6 rounded-xl border-2 ${isApproved ? 'bg-green-900/20 border-green-500/30' :
                     isPending ? 'bg-yellow-900/20 border-yellow-500/30' :
@@ -424,10 +499,12 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
                 </div>
                 )}
 
+                {/* COMPARTIR / ENLACE */}
                 <div className="p-6 border-2 border-blue-500/20 bg-blue-500/5 rounded-xl space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-                            {currentEvent.isPublic ? '🌍 Enlace Público' : '🔒 Enlace Privado (Con Clave)'}
+                            {currentEvent.isPublic ? <Globe size={16} /> : <Lock size={16} />}
+                            {currentEvent.isPublic ? 'Enlace Público' : 'Enlace Privado (Con Clave)'}
                         </h3>
                         {!currentEvent.isPublic && canRotateKey && (
                             <button onClick={handleRotateKey} disabled={isRegenerating} className="text-[10px] flex items-center gap-1 text-blue-300 hover:text-white transition-colors disabled:opacity-50 cursor-pointer">
@@ -459,6 +536,7 @@ export default function EventSettings({ event, planSlug, permissions }: { event:
                     </div>
                 </div>
 
+                {/* ZONA DE PELIGRO */}
                 {canDelete && (
                     <div className="p-6 border-2 border-red-500/20 bg-red-500/5 rounded-xl">
                         <div className="flex justify-between items-center">

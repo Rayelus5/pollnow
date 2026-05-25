@@ -16,6 +16,7 @@ import TeamTab from "@/components/dashboard/TeamTab";
 import TierlistManager from "@/components/dashboard/TierlistManager";
 import QuestionManager from "@/components/dashboard/QuestionManager";
 import DrawingConfig from "@/components/dashboard/DrawingConfig";
+import SideRailAds from "@/components/ads/SideRailAds";
 import { Folders, UsersRound, Layers, CircleHelp, Brush } from "lucide-react";
 import clsx from "clsx";
 
@@ -124,8 +125,15 @@ export default async function EventDashboardPage({ params }: Props) {
 
     // 4. Obtener estadísticas del evento (GALA usa el panel clásico; el resto, stats por modo)
     const isGala = event.mode === "GALA";
+    // La identidad de votantes solo se adjunta si el plan lo permite (plus/unlimited o admin)
+    // Y el evento NO está en modo anónimo. Coincide con el gating de EventStatistics (GALA).
+    const isPlusPlan = plan.slug === "plus" || plan.slug === "unlimited";
+    const canSeeVoters = (isPlusPlan || isAdmin) && !event.isAnonymousVoting;
+    const showAds = plan.slug === "free" || plan.slug === "premium";
     const stats = isGala ? await getEventStats(event.id) : null;
-    const modeStats = !isGala ? await getModeStats(event.id, event.mode as "TIERLIST" | "PREGUNTAS" | "DIBUJO") : null;
+    const modeStats = !isGala
+        ? await getModeStats(event.id, event.mode as "TIERLIST" | "PREGUNTAS" | "DIBUJO", { includeVoters: canSeeVoters })
+        : null;
 
     return (
         <main className="min-h-screen bg-black text-white">
@@ -170,6 +178,7 @@ export default async function EventDashboardPage({ params }: Props) {
                 </div>
             </header>
 
+            <SideRailAds showAds={showAds}>
             <div className="max-w-7xl mx-auto px-6 py-8">
                 <EventTabs
                     eventId={event.id}
@@ -275,6 +284,8 @@ export default async function EventDashboardPage({ params }: Props) {
                             <ModeStatistics
                                 stats={modeStats}
                                 planSlug={plan.slug}
+                                isAdmin={isAdmin}
+                                isAnonymousVoting={event.isAnonymousVoting}
                                 canViewStats={permissions.canViewStats}
                             />
                         )
@@ -291,6 +302,7 @@ export default async function EventDashboardPage({ params }: Props) {
                     }
                 />
             </div>
+            </SideRailAds>
         </main>
     );
 }

@@ -8,6 +8,7 @@ import { PLANS } from "@/lib/plans";
 import { createTier, updateTier, deleteTier, reorderTiers } from "@/app/lib/tierlist-actions";
 import { bulkCreateTiers } from "@/app/lib/csv-actions";
 import CsvManagerModal, { type CsvManagerConfig, type ParsedRow } from "@/components/dashboard/CsvManagerModal";
+import { useToast } from "@/components/ui/ToastProvider";
 
 type Tier = { id: string; label: string; color: string; order: number };
 
@@ -52,6 +53,7 @@ export default function TierlistManager({
     canManage?: boolean;
 }) {
     const router = useRouter();
+    const toast = useToast();
     const [tiers, setTiers] = useState<Tier[]>([...initialTiers].sort((a, b) => a.order - b.order));
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
@@ -99,21 +101,25 @@ export default function TierlistManager({
     async function handleCreate(formData: FormData) {
         setError(null);
         const res = await createTier(eventId, formData);
-        if (res?.error) { setError(res.error); return; }
+        if (res?.error) { setError(res.error); toast.error(res.error); return; }
         setIsCreating(false);
+        toast.success("Tier creado");
         router.refresh();
     }
 
     async function handleUpdate(tierId: string, formData: FormData) {
         setError(null);
         const res = await updateTier(tierId, eventId, formData);
-        if (res?.error) { setError(res.error); return; }
+        if (res?.error) { setError(res.error); toast.error(res.error); return; }
         setEditingId(null);
+        toast.success("Tier actualizado");
         router.refresh();
     }
 
     async function handleDelete(tierId: string) {
-        await deleteTier(tierId, eventId);
+        const res = await deleteTier(tierId, eventId);
+        if (res?.error) { toast.error(res.error); return; }
+        toast.success("Tier eliminado");
         router.refresh();
     }
 

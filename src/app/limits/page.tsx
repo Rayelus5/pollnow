@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getActivePlans, getPlanFromUser } from "@/lib/user-plan";
+import SideRailAds from "@/components/ads/SideRailAds";
 import { planBadge } from "@/lib/plans";
 import type { ResolvedPlan } from "@/lib/plans";
 import type { Metadata } from "next";
@@ -302,11 +303,14 @@ export default async function LimitsPage() {
         if (user) currentSlug = (await getPlanFromUser(user)).slug;
     }
 
+    const showAds = currentSlug === "free" || currentSlug === "premium";
+
     return (
         <main className="min-h-screen bg-black text-white pt-24 pb-24 px-6 relative overflow-hidden">
             {/* Fondo ambiental */}
             <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-indigo-900/10 rounded-[100%] blur-[120px] pointer-events-none" />
 
+            <SideRailAds showAds={showAds}>
             <div className="max-w-5xl mx-auto relative">
                 {/* Hero */}
                 <header className="text-center mb-14">
@@ -377,6 +381,7 @@ export default async function LimitsPage() {
                     </Link>
                 </div>
             </div>
+            </SideRailAds>
         </main>
     );
 }

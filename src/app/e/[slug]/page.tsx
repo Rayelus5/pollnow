@@ -6,6 +6,7 @@ import TierlistVotingClient from "@/components/TierlistVotingClient";
 import TierlistResultsClient from "@/components/TierlistResultsClient";
 import PreguntasVotingClient from "@/components/PreguntasVotingClient";
 import DrawingVotingClient from "@/components/DrawingVotingClient";
+import SideRailAds from "@/components/ads/SideRailAds";
 import { computeDrawingPhase } from "@/lib/event-modes";
 import { getModeStats } from "@/app/lib/stats-actions";
 import { Lock } from "lucide-react";
@@ -70,7 +71,7 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
     });
 
     const plan = await getCurrentUserPlan();
-    const showAds = plan.slug === "free" || plan.slug === "premium"; // solo UNLIMITED NO ven anuncios
+    const showAds = plan.slug === "free" || plan.slug === "premium"; // solo UNLIMITED y PLUS NO ven anuncios
 
     if (!event) notFound();
 
@@ -106,12 +107,14 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
             const stats = await getModeStats(event.id, "TIERLIST");
             const tlStats = stats && stats.mode === "TIERLIST" ? stats : null;
             return (
-                <TierlistResultsClient
-                    event={{ title: event.title, description: event.description }}
-                    tiers={tiers}
-                    totalVotes={tlStats?.totalVotes ?? 0}
-                    participants={tlStats?.participants ?? []}
-                />
+                <SideRailAds showAds={showAds}>
+                    <TierlistResultsClient
+                        event={{ title: event.title, description: event.description }}
+                        tiers={tiers}
+                        totalVotes={tlStats?.totalVotes ?? 0}
+                        participants={tlStats?.participants ?? []}
+                    />
+                </SideRailAds>
             );
         }
 
@@ -121,11 +124,13 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
             select: { id: true, name: true, imageUrl: true },
         });
         return (
-            <TierlistVotingClient
-                event={{ id: event.id, title: event.title, description: event.description }}
-                tiers={tiers}
-                participants={participants}
-            />
+            <SideRailAds showAds={showAds}>
+                <TierlistVotingClient
+                    event={{ id: event.id, title: event.title, description: event.description }}
+                    tiers={tiers}
+                    participants={participants}
+                />
+            </SideRailAds>
         );
     }
 
@@ -147,10 +152,12 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
             include: { options: { orderBy: { order: "asc" } } },
         });
         return (
-            <PreguntasVotingClient
-                event={{ id: event.id, title: event.title, description: event.description }}
-                questions={questions}
-            />
+            <SideRailAds showAds={showAds}>
+                <PreguntasVotingClient
+                    event={{ id: event.id, title: event.title, description: event.description }}
+                    questions={questions}
+                />
+            </SideRailAds>
         );
     }
 
@@ -174,19 +181,21 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
                 : Promise.resolve(0),
         ]);
         return (
-            <DrawingVotingClient
-                event={{
-                    id: event.id,
-                    title: event.title,
-                    description: event.description,
-                    drawingPrompt: event.drawingPrompt,
-                    drawingTimeLimit: event.drawingTimeLimit,
-                }}
-                phase={phase}
-                alreadySubmitted={!!mySub}
-                myImageUrl={mySub?.imageUrl ?? null}
-                superlikeUsed={superCount > 0}
-            />
+            <SideRailAds showAds={showAds}>
+                <DrawingVotingClient
+                    event={{
+                        id: event.id,
+                        title: event.title,
+                        description: event.description,
+                        drawingPrompt: event.drawingPrompt,
+                        drawingTimeLimit: event.drawingTimeLimit,
+                    }}
+                    phase={phase}
+                    alreadySubmitted={!!mySub}
+                    myImageUrl={mySub?.imageUrl ?? null}
+                    superlikeUsed={superCount > 0}
+                />
+            </SideRailAds>
         );
     }
     // ─── GALA (formato original) ───
@@ -221,16 +230,18 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
                 />
             )}
-            <HomeHero
-                firstPollId={firstPollId}
-                isGalaTime={isGalaTime}
-                galaDate={galaDate}
-                title={event.title}
-                description={event.description || ""}
-                eventId={event.id}
-                slug={event.slug}
-                showAds={showAds}
-            />
+            <SideRailAds showAds={showAds}>
+                <HomeHero
+                    firstPollId={firstPollId}
+                    isGalaTime={isGalaTime}
+                    galaDate={galaDate}
+                    title={event.title}
+                    description={event.description || ""}
+                    eventId={event.id}
+                    slug={event.slug}
+                    showAds={false}
+                />
+            </SideRailAds>
         </>
     );
 }

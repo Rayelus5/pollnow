@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import Link from "next/link";
 import { Bug, ShieldCheck, ShieldAlert, LogIn, CheckCircle2, XCircle } from "lucide-react";
 import BugBountyForm from "@/components/BugBountyForm";
+import SideRailAds from "@/components/ads/SideRailAds";
+import { getCurrentUserPlan } from "@/lib/user-plan";
 
 export const metadata = {
     title: "Bug Bounty · Pollnow",
@@ -32,6 +34,9 @@ export default async function BugBountyPage() {
     const session = await auth();
     const isAuthed = !!session?.user;
 
+    const plan = await getCurrentUserPlan();
+    const showAds = plan.slug === "free" || plan.slug === "premium";
+
     return (
         <main className="min-h-screen bg-black text-white">
             {/* Fondo ambiental */}
@@ -39,6 +44,7 @@ export default async function BugBountyPage() {
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-[120px] pointer-events-none" />
                 <div className="absolute top-[10%] right-[-10%] w-[500px] h-[500px] bg-sky-900/10 rounded-full blur-[120px] pointer-events-none" />
 
+                <SideRailAds showAds={showAds}>
                 <div className="relative max-w-5xl mx-auto px-6 pt-16 pb-12">
                     {/* Hero */}
                     <div className="text-center mb-16">
@@ -167,6 +173,7 @@ export default async function BugBountyPage() {
                         </p>
                     </section>
                 </div>
+                </SideRailAds>
             </div>
         </main>
     );

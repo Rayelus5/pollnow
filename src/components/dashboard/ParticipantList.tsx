@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { updateEventParticipant, deleteEventParticipant, createEventParticipant } from "@/app/lib/event-actions";
+import { useToast } from "@/components/ui/ToastProvider";
 import { bulkCreateParticipants } from "@/app/lib/csv-actions";
 import CsvManagerModal, { type CsvManagerConfig, type ParsedRow } from "@/components/dashboard/CsvManagerModal";
 import {
@@ -780,6 +781,7 @@ export default function ParticipantList({
     limitOverride?: number;
 }) {
     const router = useRouter();
+    const toast = useToast();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -962,8 +964,13 @@ export default function ParticipantList({
                         <ParticipantForm
                             eventId={eventId}
                             onSubmit={async (fd) => {
-                                await createEventParticipant(eventId, fd);
-                                setIsCreating(false);
+                                try {
+                                    await createEventParticipant(eventId, fd);
+                                    setIsCreating(false);
+                                    toast.success("Nominado añadido");
+                                } catch {
+                                    toast.error("No se pudo añadir el nominado.");
+                                }
                             }}
                             onCancel={() => setIsCreating(false)}
                             planSlug={planSlug}
@@ -992,8 +999,13 @@ export default function ParticipantList({
                                         initialImage={p.imageUrl || ""}
                                         isEditMode
                                         onSubmit={async (fd) => {
-                                            await updateEventParticipant(p.id, eventId, fd);
-                                            setEditingId(null);
+                                            try {
+                                                await updateEventParticipant(p.id, eventId, fd);
+                                                setEditingId(null);
+                                                toast.success("Nominado actualizado");
+                                            } catch {
+                                                toast.error("No se pudo actualizar el nominado.");
+                                            }
                                         }}
                                         onCancel={() => setEditingId(null)}
                                         planSlug={planSlug}
@@ -1033,7 +1045,14 @@ export default function ParticipantList({
                                             >
                                                 <Pencil size={15} />
                                             </button>
-                                            <form action={deleteEventParticipant.bind(null, p.id, eventId)}>
+                                            <form action={async () => {
+                                                try {
+                                                    await deleteEventParticipant(p.id, eventId);
+                                                    toast.success("Nominado eliminado");
+                                                } catch {
+                                                    toast.error("No se pudo eliminar el nominado.");
+                                                }
+                                            }}>
                                                 <DeleteButton />
                                             </form>
                                         </div>

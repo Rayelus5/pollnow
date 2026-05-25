@@ -1,4 +1,5 @@
 import LandingClient from "@/components/home/LandingClient";
+import SideRailAds from "@/components/ads/SideRailAds";
 import { auth } from "@/auth";
 import { getCurrentUserPlan } from "@/lib/user-plan";
 import { LANDING_FAQ } from "@/components/home/faq-data";
@@ -65,7 +66,9 @@ export default async function LandingPage() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
             />
-            <LandingClient session={session} showAds={showAds} />
+            <SideRailAds showAds={showAds}>
+                <LandingClient session={session} showAds={showAds} />
+            </SideRailAds>
         </main>
     );
 }
