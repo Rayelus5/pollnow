@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, ArrowUp, Sparkles } from "lucide-react";
+import { MessageCircle, X, ArrowUp, Sparkles, Square, AlertTriangle } from "lucide-react";
 
 export default function ChatBot() {
     const [isOpen, setIsOpen] = useState(false);
@@ -9,29 +9,55 @@ export default function ChatBot() {
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     async function sendMessage() {
-        if (!input.trim()) return;
+        // No permitir enviar mientras la IA está respondiendo.
+        if (!input.trim() || isTyping) return;
 
         const newMessages = [...messages, { role: "user", content: input }];
         setMessages(newMessages);
         setInput("");
         setIsTyping(true);
 
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         try {
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messages: newMessages }),
+                signal: controller.signal,
             });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const data = await res.json();
             if (data.reply) {
-                setMessages([...newMessages, { role: "assistant", content: data.reply }]);
+                setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+            } else {
+                throw new Error("Respuesta vacía");
             }
+        } catch (err) {
+            // Si el usuario canceló la petición, no mostramos error.
+            if (err instanceof DOMException && err.name === "AbortError") {
+                return;
+            }
+            setMessages((prev) => [
+                ...prev,
+                { role: "error", content: "No se pudo obtener respuesta. Inténtalo de nuevo." },
+            ]);
         } finally {
             setIsTyping(false);
+            abortControllerRef.current = null;
         }
+    }
+
+    function cancelRequest() {
+        abortControllerRef.current?.abort();
+        abortControllerRef.current = null;
+        setIsTyping(false);
     }
 
     useEffect(() => {
@@ -91,14 +117,21 @@ export default function ChatBot() {
                                         className={`flex ${m.role === "user" ? "justify-end" : "justify-start"
                                             }`}
                                     >
-                                        <span
-                                            className={`inline-block px-3 py-2 rounded-lg max-w-[80%] break-words ${m.role === "user"
-                                                ? "bg-indigo-500/45 hover:bg-indigo-500/60 text-white border-2 border-white/20 hover:border-white/40 transition-colors duration-400 cursor-pointer hover:animate-bounceDrop bounce-hover"
-                                                : "bg-gray-900/45 hover:bg-gray-900/60 text-white border-2 border-white/20 hover:border-white/40 transition-colors duration-400 cursor-pointer hover:animate-bounceDrop bounce-hover"
-                                                }`}
-                                        >
-                                            {m.content}
-                                        </span>
+                                        {m.role === "error" ? (
+                                            <span className="inline-flex items-start gap-2 px-3 py-2 rounded-lg max-w-[80%] break-words bg-red-500/15 text-red-200 border-2 border-red-500/40">
+                                                <AlertTriangle size={16} className="shrink-0 mt-0.5 text-red-400" />
+                                                {m.content}
+                                            </span>
+                                        ) : (
+                                            <span
+                                                className={`inline-block px-3 py-2 rounded-lg max-w-[80%] break-words ${m.role === "user"
+                                                    ? "bg-indigo-500/45 hover:bg-indigo-500/60 text-white border-2 border-white/20 hover:border-white/40 transition-colors duration-400 cursor-pointer hover:animate-bounceDrop bounce-hover"
+                                                    : "bg-gray-900/45 hover:bg-gray-900/60 text-white border-2 border-white/20 hover:border-white/40 transition-colors duration-400 cursor-pointer hover:animate-bounceDrop bounce-hover"
+                                                    }`}
+                                            >
+                                                {m.content}
+                                            </span>
+                                        )}
                                     </div>
                                 ))}
 
@@ -124,15 +157,32 @@ export default function ChatBot() {
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={handleKeyDown}
-                                        placeholder="Escribe tu mensaje..."
-                                        className="flex-1 resize-none border-2 border-white/30 hover:border-white/50 rounded-xl px-3 py-3 text-sm p-3 backdrop-blur-md bg-white/10 hover:bg-white/20 text-white-800 font-semibold focus:outline-none focus:ring-1 focus:ring-white/50 transition-colors duration-500 overflow-y-auto hover:animate-bounceDropCardFast bounce-card-fast-hover"
+                                        disabled={isTyping}
+                                        placeholder={isTyping ? "La IA está respondiendo..." : "Escribe tu mensaje..."}
+                                        className="flex-1 resize-none border-2 border-white/30 hover:border-white/50 rounded-xl px-3 py-3 text-sm p-3 backdrop-blur-md bg-white/10 hover:bg-white/20 text-white-800 font-semibold focus:outline-none focus:ring-1 focus:ring-white/50 transition-colors duration-500 overflow-y-auto hover:animate-bounceDropCardFast bounce-card-fast-hover disabled:opacity-50 disabled:cursor-not-allowed"
                                     />
-                                    <button
-                                        onClick={sendMessage}
-                                        className="bg-indigo-500/40 hover:bg-indigo-500/50 border-2 border-white/30 hover:border-white/30 text-white px-3 py-3 rounded-full text-sm hover:animate-bounceDrop bounce-hover cursor-pointer transition-colors duration-400"
-                                    >
-                                        <ArrowUp size={20}></ArrowUp>
-                                    </button>
+                                    {isTyping ? (
+                                        <button
+                                            type="button"
+                                            onClick={cancelRequest}
+                                            title="Cancelar respuesta"
+                                            aria-label="Cancelar respuesta"
+                                            className="bg-red-500/80 hover:bg-red-500 border-2 border-red-400/50 hover:border-red-400 text-white px-3 py-3 rounded-full text-sm cursor-pointer transition-colors duration-400"
+                                        >
+                                            <Square size={20} fill="currentColor" />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={sendMessage}
+                                            disabled={!input.trim()}
+                                            title="Enviar"
+                                            aria-label="Enviar"
+                                            className="bg-indigo-500/40 hover:bg-indigo-500/50 border-2 border-white/30 hover:border-white/30 text-white px-3 py-3 rounded-full text-sm hover:animate-bounceDrop bounce-hover cursor-pointer transition-colors duration-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <ArrowUp size={20} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

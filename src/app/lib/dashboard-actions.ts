@@ -122,6 +122,19 @@ export async function createEvent(formData: FormData) {
   const defaultGalaDate = new Date();
   defaultGalaDate.setDate(defaultGalaDate.getDate() + 2);
 
+  // Fecha de fin/cierre elegida por el usuario (modos no-DIBUJO).
+  // El cliente la envía en ISO; si falta o es inválida/pasada, se usa el valor por defecto.
+  let chosenGalaDate: Date | null = null;
+  if (mode !== "DIBUJO") {
+    const galaDateStr = formData.get("galaDate") as string | null;
+    if (galaDateStr) {
+      const parsed = new Date(galaDateStr);
+      if (!isNaN(parsed.getTime()) && parsed > new Date()) {
+        chosenGalaDate = parsed;
+      }
+    }
+  }
+
   // Datos espec\u00edficos de modo (solo se rellenan para DIBUJO)
   const drawingData: {
     drawingPrompt?: string;
@@ -178,7 +191,7 @@ export async function createEvent(formData: FormData) {
         isPublic: false, // DIBUJO siempre privado; el resto nace privado igualmente
         status: "DRAFT",
         mode,
-        galaDate: drawingData.galaDate ?? defaultGalaDate,
+        galaDate: drawingData.galaDate ?? chosenGalaDate ?? defaultGalaDate,
         ...(mode === "DIBUJO"
           ? {
               drawingPrompt: drawingData.drawingPrompt,
