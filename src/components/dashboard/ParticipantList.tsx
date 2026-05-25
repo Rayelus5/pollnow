@@ -1159,7 +1159,7 @@ export default function ParticipantList({
             </AnimatePresence>
 
             {/* ── Grid de nominados (drag & drop en grid con @dnd-kit) ── */}
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+            <DndContext id="nominados" sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd}>
                 <SortableContext items={paginatedData.map(p => p.id)} strategy={rectSortingStrategy}>
                     <div
                         key={`${currentPage}-${isSearching ? "s" : "n"}`}

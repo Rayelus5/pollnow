@@ -1,15 +1,126 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+    DndContext,
+    closestCenter,
+    pointerWithin,
+    rectIntersection,
+    getFirstCollision,
+    PointerSensor,
+    KeyboardSensor,
+    useSensor,
+    useSensors,
+    useDroppable,
+    DragOverlay,
+    MeasuringStrategy,
+    type CollisionDetection,
+    type UniqueIdentifier,
+    type DragStartEvent,
+    type DragOverEvent,
+    type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    SortableContext,
+    rectSortingStrategy,
+    useSortable,
+    sortableKeyboardCoordinates,
+    arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ArrowLeft, Check, Trophy, ZoomIn, X } from "lucide-react";
 
 type Participant = { id: string; name: string; imageUrl: string | null };
 type Tier = { id: string; label: string; color: string; order: number };
+type Lists = Record<string, string[]>;
 
 const TRAY = "tray";
+
+// Devuelve la clave del contenedor que contiene `id`, o el propio `id` si ya es un contenedor.
+function findContainer(lists: Lists, id: string): string | undefined {
+    if (id in lists) return id;
+    return Object.keys(lists).find((k) => lists[k].includes(id));
+}
+
+// ─── Tarjeta arrastrable (dnd-kit) ───
+function SortableCard({
+    p,
+    disabled,
+    onOpen,
+}: {
+    p: Participant;
+    disabled: boolean;
+    onOpen: (p: Participant) => void;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+        id: p.id,
+        disabled,
+    });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            onClick={() => { if (p.imageUrl) onOpen(p); }}
+            className={`group relative aspect-square w-20 rounded-lg overflow-hidden border-2 bg-neutral-800 shrink-0 touch-none ${isDragging ? "opacity-30" : ""} border-white/10 ${disabled ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
+            title={p.imageUrl ? `${p.name} · pulsa para ampliar` : p.name}
+        >
+            <CardInner p={p} />
+        </div>
+    );
+}
+
+// Contenido visual reutilizado por la card y por el DragOverlay.
+function CardInner({ p }: { p: Participant }) {
+    return (
+        <>
+            {p.imageUrl ? (
+                <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover pointer-events-none" />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center text-center text-[11px] font-bold text-gray-200 px-1 pointer-events-none">{p.name}</div>
+            )}
+            {p.imageUrl && (
+                <>
+                    <div className="absolute top-1 right-1 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <ZoomIn size={12} />
+                    </div>
+                    <div className="hidden group-hover:block absolute inset-x-0 bottom-0 bg-black/60 text-[10px] text-white text-center truncate px-1 py-0.5 pointer-events-none">{p.name}</div>
+                </>
+            )}
+        </>
+    );
+}
+
+// ─── Contenedor que recibe items (tier o bandeja) ───
+function DroppableArea({
+    id,
+    items,
+    className,
+    overClassName,
+    children,
+}: {
+    id: string;
+    items: string[];
+    className: string;
+    overClassName: string;
+    children: React.ReactNode;
+}) {
+    const { setNodeRef, isOver } = useDroppable({ id });
+    return (
+        <SortableContext id={id} items={items} strategy={rectSortingStrategy}>
+            <div ref={setNodeRef} className={`${className} ${isOver ? overClassName : ""}`}>
+                {children}
+            </div>
+        </SortableContext>
+    );
+}
 
 export default function TierlistVotingClient({
     event,
@@ -24,16 +135,66 @@ export default function TierlistVotingClient({
     const partById = new Map(participants.map((p) => [p.id, p]));
 
     // Estado: droppableId -> participantId[]
-    const [lists, setLists] = useState<Record<string, string[]>>(() => {
-        const init: Record<string, string[]> = { [TRAY]: participants.map((p) => p.id) };
+    const [lists, setLists] = useState<Lists>(() => {
+        const init: Lists = { [TRAY]: participants.map((p) => p.id) };
         sortedTiers.forEach((t) => (init[`tier-${t.id}`] = []));
         return init;
     });
     const [submitting, setSubmitting] = useState(false);
     const [voted, setVoted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [activeId, setActiveId] = useState<string | null>(null);
     // Imagen ampliada (lightbox) al pulsar una tarjeta con imagen.
     const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    // Estabilizadores para el arrastre multi-contenedor (patrón oficial dnd-kit):
+    // evitan que el objetivo de colisión "parpadee" tras cruzar de tier.
+    const lastOverId = useRef<UniqueIdentifier | null>(null);
+    const recentlyMovedToNewContainer = useRef(false);
+
+    useEffect(() => {
+        requestAnimationFrame(() => { recentlyMovedToNewContainer.current = false; });
+    }, [lists]);
+
+    // Detección de colisión: puntero dentro → intersección de rects; si caemos sobre
+    // un contenedor con items, se resuelve al item más cercano dentro de él.
+    const collisionDetectionStrategy: CollisionDetection = useCallback(
+        (args) => {
+            const pointerIntersections = pointerWithin(args);
+            const intersections = pointerIntersections.length > 0 ? pointerIntersections : rectIntersection(args);
+            let overId = getFirstCollision(intersections, "id");
+
+            if (overId != null) {
+                if (typeof overId === "string" && overId in lists) {
+                    const containerItems = lists[overId];
+                    if (containerItems.length > 0) {
+                        const closest = closestCenter({
+                            ...args,
+                            droppableContainers: args.droppableContainers.filter(
+                                (c) => c.id !== overId && containerItems.includes(String(c.id))
+                            ),
+                        });
+                        overId = closest[0]?.id ?? overId;
+                    }
+                }
+                lastOverId.current = overId;
+                return [{ id: overId }];
+            }
+
+            if (recentlyMovedToNewContainer.current) {
+                lastOverId.current = activeId;
+            }
+            return lastOverId.current ? [{ id: lastOverId.current }] : [];
+        },
+        [activeId, lists]
+    );
+
+    const activeParticipant = activeId ? partById.get(activeId) : null;
 
     useEffect(() => {
         if (!lightbox) return;
@@ -44,10 +205,10 @@ export default function TierlistVotingClient({
 
     // Reconstruye un estado de listas válido a partir de lo guardado: descarta ids
     // que ya no existen y coloca en la bandeja cualquier nominado no clasificado.
-    function buildFromSaved(saved: Record<string, string[]>): Record<string, string[]> {
+    function buildFromSaved(saved: Lists): Lists {
         const valid = new Set(participants.map((p) => p.id));
         const placed = new Set<string>();
-        const next: Record<string, string[]> = { [TRAY]: [] };
+        const next: Lists = { [TRAY]: [] };
         sortedTiers.forEach((t) => (next[`tier-${t.id}`] = []));
         for (const t of sortedTiers) {
             const key = `tier-${t.id}`;
@@ -62,7 +223,7 @@ export default function TierlistVotingClient({
         return next;
     }
 
-    function persistLists(current: Record<string, string[]>) {
+    function persistLists(current: Lists) {
         try { localStorage.setItem(`tl_lists_${event.id}`, JSON.stringify(current)); } catch { /* no-op */ }
     }
 
@@ -78,21 +239,74 @@ export default function TierlistVotingClient({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [event.id]);
 
-    function onDragEnd(result: DropResult) {
+    function onDragStart(e: DragStartEvent) {
         if (voted) return;
-        const { source, destination } = result;
-        if (!destination) return;
-        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+        setActiveId(String(e.active.id));
+    }
+
+    // Mueve el item entre contenedores mientras se arrastra (patrón multi-container).
+    function onDragOver(e: DragOverEvent) {
+        if (voted) return;
+        const { active, over } = e;
+        if (!over) return;
+        const activeIdStr = String(active.id);
+        const overId = String(over.id);
+
+        // ¿El cursor está pasado el centro de la tarjeta de destino? → insertar después.
+        const overRect = over.rect;
+        const activeRect = active.rect.current.translated;
+        const isAfter =
+            !!activeRect && !!overRect &&
+            (activeRect.left + activeRect.width / 2 > overRect.left + overRect.width / 2 ||
+                activeRect.top + activeRect.height / 2 > overRect.top + overRect.height / 2);
 
         setLists((prev) => {
-            const next = { ...prev };
-            const src = Array.from(next[source.droppableId]);
-            const [moved] = src.splice(source.index, 1);
-            const dst = source.droppableId === destination.droppableId ? src : Array.from(next[destination.droppableId]);
-            dst.splice(destination.index, 0, moved);
-            next[source.droppableId] = source.droppableId === destination.droppableId ? dst : src;
-            next[destination.droppableId] = dst;
-            return next;
+            const activeContainer = findContainer(prev, activeIdStr);
+            const overContainer = findContainer(prev, overId);
+            if (!activeContainer || !overContainer || activeContainer === overContainer) return prev;
+
+            const activeItems = prev[activeContainer];
+            const overItems = prev[overContainer];
+            const overIndex = overItems.indexOf(overId);
+            // Si soltamos sobre el contenedor vacío/su zona, añadir al final;
+            // si es sobre una tarjeta, antes o después según la posición del cursor.
+            const newIndex = overId in prev
+                ? overItems.length
+                : overIndex >= 0 ? overIndex + (isAfter ? 1 : 0) : overItems.length;
+
+            recentlyMovedToNewContainer.current = true;
+            return {
+                ...prev,
+                [activeContainer]: activeItems.filter((id) => id !== activeIdStr),
+                [overContainer]: [
+                    ...overItems.slice(0, newIndex),
+                    activeIdStr,
+                    ...overItems.slice(newIndex),
+                ],
+            };
+        });
+    }
+
+    // Reordena dentro del contenedor de destino (el cruce ya lo hizo onDragOver).
+    function onDragEnd(e: DragEndEvent) {
+        setActiveId(null);
+        if (voted) return;
+        const { active, over } = e;
+        if (!over) return;
+        const activeIdStr = String(active.id);
+        const overId = String(over.id);
+
+        setLists((prev) => {
+            const activeContainer = findContainer(prev, activeIdStr);
+            const overContainer = findContainer(prev, overId);
+            if (!activeContainer || !overContainer || activeContainer !== overContainer) return prev;
+
+            const items = prev[activeContainer];
+            const oldIndex = items.indexOf(activeIdStr);
+            const newIndex = overId in prev ? items.length - 1 : items.indexOf(overId);
+            if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prev;
+
+            return { ...prev, [activeContainer]: arrayMove(items, oldIndex, newIndex) };
         });
     }
 
@@ -130,37 +344,6 @@ export default function TierlistVotingClient({
         }
     }
 
-    function Card({ p, index }: { p: Participant; index: number }) {
-        return (
-            <Draggable draggableId={p.id} index={index} isDragDisabled={voted}>
-                {(prov, snap) => (
-                    <div
-                        ref={prov.innerRef}
-                        {...prov.draggableProps}
-                        {...prov.dragHandleProps}
-                        onClick={() => { if (p.imageUrl) setLightbox({ url: p.imageUrl, name: p.name }); }}
-                        className={`group relative aspect-square w-20 rounded-lg overflow-hidden border-2 bg-neutral-800 shrink-0 ${snap.isDragging ? "border-blue-500 shadow-xl" : "border-white/10"} ${voted ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
-                        title={p.imageUrl ? `${p.name} · pulsa para ampliar` : p.name}
-                    >
-                        {p.imageUrl ? (
-                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-center text-[11px] font-bold text-gray-200 px-1">{p.name}</div>
-                        )}
-                        {p.imageUrl && (
-                            <>
-                                <div className="absolute top-1 right-1 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    <ZoomIn size={12} />
-                                </div>
-                                <div className="absolute inset-x-0 bottom-0 bg-black/60 text-[10px] text-white text-center truncate px-1 py-0.5">{p.name}</div>
-                            </>
-                        )}
-                    </div>
-                )}
-            </Draggable>
-        );
-    }
-
     return (
         <main className="min-h-screen bg-black text-white">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -187,7 +370,16 @@ export default function TierlistVotingClient({
                     </div>
                 )}
 
-                <DragDropContext onDragEnd={onDragEnd}>
+                <DndContext
+                    id="tierlist-voting"
+                    sensors={sensors}
+                    collisionDetection={collisionDetectionStrategy}
+                    measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+                    onDragStart={onDragStart}
+                    onDragOver={onDragOver}
+                    onDragEnd={onDragEnd}
+                    onDragCancel={() => setActiveId(null)}
+                >
                     {/* Tabla de tiers */}
                     <div className={`rounded-2xl overflow-hidden border-2 border-neutral-700 ${voted ? "opacity-90" : ""}`}>
                         {sortedTiers.map((t) => (
@@ -195,21 +387,17 @@ export default function TierlistVotingClient({
                                 <div className="w-24 shrink-0 flex items-center justify-center font-bold text-black/80 text-center px-2 break-words" style={{ backgroundColor: t.color }}>
                                     {t.label}
                                 </div>
-                                <Droppable droppableId={`tier-${t.id}`} direction="horizontal" isDropDisabled={voted}>
-                                    {(prov, snap) => (
-                                        <div
-                                            ref={prov.innerRef}
-                                            {...prov.droppableProps}
-                                            className={`flex-1 flex flex-wrap gap-2 p-2 items-center bg-neutral-900/40 ${snap.isDraggingOver ? "bg-blue-500/5" : ""}`}
-                                        >
-                                            {lists[`tier-${t.id}`].map((pid, i) => {
-                                                const p = partById.get(pid);
-                                                return p ? <Card key={pid} p={p} index={i} /> : null;
-                                            })}
-                                            {prov.placeholder}
-                                        </div>
-                                    )}
-                                </Droppable>
+                                <DroppableArea
+                                    id={`tier-${t.id}`}
+                                    items={lists[`tier-${t.id}`]}
+                                    className="flex-1 flex flex-wrap gap-2 p-2 items-center bg-neutral-900/40 transition-colors"
+                                    overClassName="bg-blue-500/5"
+                                >
+                                    {lists[`tier-${t.id}`].map((pid) => {
+                                        const p = partById.get(pid);
+                                        return p ? <SortableCard key={pid} p={p} disabled={voted} onOpen={(pp) => setLightbox({ url: pp.imageUrl!, name: pp.name })} /> : null;
+                                    })}
+                                </DroppableArea>
                             </div>
                         ))}
                     </div>
@@ -220,23 +408,28 @@ export default function TierlistVotingClient({
                             <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">
                                 {voted ? "Sin clasificar" : "Arrastra los nominados a los tiers"}
                             </p>
-                            <Droppable droppableId={TRAY} direction="horizontal" isDropDisabled={voted}>
-                                {(prov, snap) => (
-                                    <div
-                                        ref={prov.innerRef}
-                                        {...prov.droppableProps}
-                                        className={`flex flex-wrap gap-2 p-3 rounded-2xl border-2 border-neutral-700 bg-neutral-800/40 min-h-[110px] ${snap.isDraggingOver ? "border-blue-500/40" : ""} ${voted ? "opacity-90" : ""}`}
-                                    >
-                                        {lists[TRAY].map((pid, i) => {
-                                            const p = partById.get(pid);
-                                            return p ? <Card key={pid} p={p} index={i} /> : null;
-                                        })}
-                                        {prov.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
+                            <DroppableArea
+                                id={TRAY}
+                                items={lists[TRAY]}
+                                className={`flex flex-wrap gap-2 p-1.5 rounded-2xl border-2 border-neutral-700 bg-neutral-800/40 min-h-[110px] max-h-[400px] overflow-y-auto transition-colors ${voted ? "opacity-90" : ""}`}
+                                overClassName="border-blue-500/40"
+                            >
+                                {lists[TRAY].map((pid) => {
+                                    const p = partById.get(pid);
+                                    return p ? <SortableCard key={pid} p={p} disabled={voted} onOpen={(pp) => setLightbox({ url: pp.imageUrl!, name: pp.name })} /> : null;
+                                })}
+                            </DroppableArea>
                         </div>
                     )}
+
+                    {/* Tarjeta flotante que sigue al cursor mientras se arrastra */}
+                    <DragOverlay>
+                        {activeParticipant ? (
+                            <div className="relative aspect-square w-20 rounded-lg overflow-hidden border-2 border-blue-500 bg-neutral-800 shadow-2xl cursor-grabbing">
+                                <CardInner p={activeParticipant} />
+                            </div>
+                        ) : null}
+                    </DragOverlay>
 
                     {!voted && (
                         <>
@@ -253,7 +446,7 @@ export default function TierlistVotingClient({
                             </div>
                         </>
                     )}
-                </DragDropContext>
+                </DndContext>
             </div>
 
             {/* Lightbox: imagen ampliada de la opción */}
