@@ -337,7 +337,53 @@ Antes de dar por terminado un componente, comprueba:
 
 ---
 
-## 15. Qué evitar
+## 15. Notificaciones (Toasts)
+
+Feedback global de las mutaciones (crear/editar/borrar, ajustes, retiros…). `ToastProvider`
+(`src/components/ui/ToastProvider.tsx`) se monta en `layout.tsx` y se consume con el hook
+`useToast()` → `{ success, error, info }`. Pautas:
+
+- Una sola línea, concisa y en español. No sustituye a la validación inline de formularios.
+- Color semántico según tipo (`green` éxito, `red` error, `sky`/`blue` info), sobre superficie
+  translúcida con `border-2` y `rounded-2xl`, coherente con el resto.
+- Preferir toasts a estados de éxito/error dispersos en la página.
+
+---
+
+## 16. Drag-and-drop
+
+El proyecto usa **dos** librerías según la complejidad del layout (no mezclar en un mismo
+componente):
+
+| Caso | Librería | Por qué |
+|------|----------|---------|
+| Listas verticales de un eje (`TierlistManager`, `PollList`, `QuestionManager`) | `@hello-pangea/dnd` | Simple y suficiente para reordenar en columna. |
+| **Grids multi-columna** (`ParticipantList`) y **multi-contenedor** (`TierlistVotingClient`) | `@dnd-kit` | `@hello-pangea/dnd` no visualiza huecos ni soporta bien grids con `flex-wrap`. |
+
+Convenciones con `@dnd-kit`:
+
+- `SortableContext` con `rectSortingStrategy` para grids; `DragOverlay` para la tarjeta que sigue
+  al cursor (la original queda `opacity-30`).
+- `PointerSensor` con `activationConstraint: { distance: 5 }` para no romper los clics
+  (p. ej. abrir el lightbox de una card).
+- Pasar un **`id` estable** a cada `DndContext` (`"nominados"`, `"tierlist-voting"`) para evitar
+  el error de hidratación del `aria-describedby` autogenerado.
+- Multi-contenedor (tablero): detección de colisión personalizada
+  (`pointerWithin`→`rectIntersection`, narrowing a `closestCenter` dentro del contenedor), refs
+  `lastOverId`/`recentlyMovedToNewContainer` y `measuring: { droppable: Always }`.
+
+---
+
+## 17. Anuncios laterales (side-rail)
+
+Banners de patrocinio mostrados según plan (`free`/`premium` los ven; PLUS+ no).
+`SideRailAds.tsx` los renderiza como **overlay `fixed`** a partir de `2xl` (no reservan layout →
+sin bordes negros, consistente entre páginas). `CustomAdBannerVertical.tsx` rota sponsors con
+fade. No deben empujar ni recortar el contenido principal.
+
+---
+
+## 18. Qué evitar
 
 - ❌ Bordes de 1px (`border` sin `-2`) — rompe la consistencia.
 - ❌ Colores fuera de la paleta Tailwind estándar o tonos planos sin opacidad.

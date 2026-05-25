@@ -1,6 +1,6 @@
 ---
 title: Modos de evento (Gala, Tierlist, Preguntas, Dibujo)
-updated: 2026-05-23
+updated: 2026-05-25
 ---
 
 # Modos de evento
@@ -90,6 +90,17 @@ Requiere `BLOB_READ_WRITE_TOKEN` (ver [environments.md](../07-infrastructure/env
 clave), hasta 20 resultados (5 visibles, "mostrar más" de 5 en 5). Al elegir una, se re-aloja
 en Blob (`/api/participant-image/rehost`, whitelist anti-SSRF) y se guarda **tu** URL.
 
+## Nominados: gestión y orden (v3.2)
+
+`ParticipantList.tsx` (pestaña "Nominados" del dashboard): grid de **8 por página**, popups de
+crear (alta múltiple) y editar (con flechas ‹ › que recorren toda la lista filtrada), borrado
+masivo multi-página y **reordenado arrastrando** con `@dnd-kit` (`rectSortingStrategy` +
+`DragOverlay`). El orden se persiste en `Participant.order` y todas las lecturas
+(`dashboard/event/[id]`, `e/[slug]` TIERLIST, `stats-actions`) ordenan por
+`[{ order: asc }, { createdAt: asc }, { id: asc }]` (estable). La votación tierlist
+(`TierlistVotingClient.tsx`) también usa `@dnd-kit` en modo multi-contenedor (bandeja ↔ tiers).
+Ver [convenciones de DnD](../../DESIGN.md#16-drag-and-drop) y [v3.2](../10-changelog/v3.2.md).
+
 ## APIs
 
 Ver límites en [rate-limiting.md](../05-api/rate-limiting.md).
@@ -112,3 +123,8 @@ GET  /api/cron/blob-gc                limpieza de blobs huérfanos (CRON_SECRET)
 `getModeStats()` (`src/app/lib/stats-actions.ts`) + `ModeStatistics.tsx`: TIERLIST (tier más
 votado por nominado), PREGUNTAS (% por opción, privado), DIBUJO (KPIs + top dibujos). GALA
 mantiene `EventStatistics`.
+
+Desde v3.2, los modos TIERLIST / PREGUNTAS / DIBUJO incluyen **trazabilidad de votantes**
+(quién votó qué) cuando el evento no es de voto anónimo y quien consulta tiene permiso. Los
+modelos guardan `userId` (no relación directa), así que `getModeStats` los resuelve aparte vía
+`buildVoterResolver`.

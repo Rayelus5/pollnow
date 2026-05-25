@@ -1,6 +1,6 @@
 ---
 title: Documentación de Pollnow
-updated: 2026-05-24
+updated: 2026-05-25
 ---
 
 # 📚 Documentación de Pollnow
@@ -50,6 +50,8 @@ planes gestionables desde admin y SEO técnico completo.
 
 ### 10 · Changelog
 - [Changelog](./10-changelog/CHANGELOG.md)
+- [v3.2 — UX de eventos, anuncios & drag-and-drop](./10-changelog/v3.2.md)
+- [v3.1 — Bug Bounty, Ingresos & Footer](./10-changelog/v3.1.md)
 - [v3.0 — Performance, SEO, Rate limiting & Planes en BD](./10-changelog/v3.0.md)
 
 ## Otros recursos

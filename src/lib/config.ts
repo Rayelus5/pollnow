@@ -4,4 +4,4 @@ export const APP_NAME = "POLLNOW";
 export const APP_DESCRIPTION = "Create virtual events and polls";
 export const MAINTENANCE_MODE = false;
 // Versión visible en el footer. Mantener en sync con package.json#version.
-export const APP_VERSION = "3.1.0";
+export const APP_VERSION = "3.2.0";
