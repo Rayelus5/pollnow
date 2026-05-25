@@ -46,7 +46,7 @@ export async function getModeStats(
         const [totalVotes, tiers, participants, entries] = await Promise.all([
             prisma.tierlistVote.count({ where: { eventId } }),
             prisma.tierlistTier.findMany({ where: { eventId }, orderBy: { order: "asc" }, select: { id: true, label: true, color: true } }),
-            prisma.participant.findMany({ where: { eventId }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, imageUrl: true } }),
+            prisma.participant.findMany({ where: { eventId }, orderBy: [{ order: "asc" }, { createdAt: "asc" }, { id: "asc" }], select: { id: true, name: true, imageUrl: true } }),
             prisma.tierlistVoteEntry.findMany({
                 where: { vote: { eventId } },
                 select: { tierId: true, participantId: true, vote: { select: { userId: true } } },

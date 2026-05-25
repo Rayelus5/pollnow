@@ -264,6 +264,7 @@ model Participant {
   name      String   @db.VarChar(100)
   imageUrl  String?  @db.Text
   eventId   String
+  order     Int      @default(0) // Orden manual (insercion / drag). Sort estable.
   createdAt DateTime @default(now())
 
   // Relaciones
@@ -271,6 +272,7 @@ model Participant {
   event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId])
+  @@index([eventId, order])
   @@index([createdAt])
 }
 

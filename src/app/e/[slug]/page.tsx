@@ -120,7 +120,7 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
 
         const participants = await prisma.participant.findMany({
             where: { eventId: event.id },
-            orderBy: { createdAt: "asc" },
+            orderBy: [{ order: "asc" }, { createdAt: "asc" }, { id: "asc" }],
             select: { id: true, name: true, imageUrl: true },
         });
         return (

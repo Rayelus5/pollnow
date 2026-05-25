@@ -62,7 +62,7 @@ async function getEventAccessAndPlan(eventId: string, userId: string, permission
     const [event, collab, user] = await Promise.all([
         prisma.event.findUnique({
             where: { id: eventId },
-            select: { userId: true },
+            select: { userId: true, mode: true },
         }),
         prisma.eventCollaborator.findUnique({
             where: { eventId_userId: { eventId, userId } },
@@ -70,20 +70,20 @@ async function getEventAccessAndPlan(eventId: string, userId: string, permission
         prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
     ]);
 
-    if (!event) return { hasAccess: false, owner: null };
+    if (!event) return { hasAccess: false, owner: null, mode: null };
 
     const isOwner = event.userId === userId;
     // Los administradores y moderadores pueden gestionar cualquier evento (igual que en Gala).
     const isAdmin = user?.role === "ADMIN" || user?.role === "MODERATOR";
 
-    if (!isOwner && !isAdmin && !collab) return { hasAccess: false, owner: null };
+    if (!isOwner && !isAdmin && !collab) return { hasAccess: false, owner: null, mode: null };
 
     const permGranted = isOwner || isAdmin || !!(collab?.[permission]);
-    if (!permGranted) return { hasAccess: false, owner: null };
+    if (!permGranted) return { hasAccess: false, owner: null, mode: null };
 
     // El plan se calcula siempre sobre el dueño real del evento, no sobre el admin.
     const owner = await prisma.user.findUnique({ where: { id: event.userId } });
-    return { hasAccess: true, owner };
+    return { hasAccess: true, owner, mode: event.mode };
 }
 
 // ─── Bulk create participants ─────────────────────────────────────────────────
@@ -101,20 +101,25 @@ export async function bulkCreateParticipants(
         return { created: 0, errors: [] };
     }
 
-    const { hasAccess, owner } = await getEventAccessAndPlan(eventId, session.user.id, "canManageNominees");
+    const { hasAccess, owner, mode } = await getEventAccessAndPlan(eventId, session.user.id, "canManageNominees");
     if (!hasAccess || !owner) {
         return { created: 0, errors: [{ row: 0, value: "", reason: "Sin permisos para gestionar nominados" }] };
     }
 
     const plan = await getPlanFromUser(owner);
-    const limit = plan.limits.participantsPerEvent;
+    // En TIERLIST los "nominados" se rigen por tierlistMaxOptions; en GALA por participantsPerEvent
+    // (mismo criterio que el alta interactiva en event-actions.ts).
+    const limit = mode === "TIERLIST" ? plan.limits.tierlistMaxOptions : plan.limits.participantsPerEvent;
 
     let currentCount = await prisma.participant.count({ where: { eventId } });
+    // Orden secuencial a partir del máximo actual: el orden del CSV = orden mostrado.
+    const lastP = await prisma.participant.findFirst({ where: { eventId }, orderBy: { order: "desc" }, select: { order: true } });
+    let nextOrder = (lastP?.order ?? -1) + 1;
     const errors: BulkImportError[] = [];
     let created = 0;
 
     // 1) Validar todas las filas y acumular las válidas (respetando el límite del plan)
-    const valid: { rowNum: number; value: string; data: { name: string; imageUrl: string | null; eventId: string } }[] = [];
+    const valid: { rowNum: number; value: string; data: { name: string; imageUrl: string | null; eventId: string; order: number } }[] = [];
     for (let i = 0; i < rows.length; i++) {
         const { name, imageUrl } = rows[i];
         const rowNum = i + 1;
@@ -135,8 +140,9 @@ export async function bulkCreateParticipants(
         valid.push({
             rowNum,
             value: name,
-            data: { name: name.trim(), imageUrl: imageUrl?.trim() || null, eventId },
+            data: { name: name.trim(), imageUrl: imageUrl?.trim() || null, eventId, order: nextOrder },
         });
+        nextOrder++;
     }
 
     // 2) Insertar en lotes con createMany (chunks de 50) en vez de N round-trips

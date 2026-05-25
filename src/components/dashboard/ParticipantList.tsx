@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { updateEventParticipant, deleteEventParticipant, createEventParticipant } from "@/app/lib/event-actions";
+import { useState, useRef, useEffect } from "react";
+import { updateEventParticipant, createEventParticipant, reorderParticipants, deleteManyParticipants } from "@/app/lib/event-actions";
 import { useToast } from "@/components/ui/ToastProvider";
 import { bulkCreateParticipants } from "@/app/lib/csv-actions";
 import CsvManagerModal, { type CsvManagerConfig, type ParsedRow } from "@/components/dashboard/CsvManagerModal";
 import {
+    DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors,
+    DragOverlay, type DragEndEvent, type DragStartEvent,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy, useSortable, sortableKeyboardCoordinates, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
     Pencil, Trash2, Save, X, Plus, Search, Upload, Wand2,
     Lock, Star, Crown, ChevronLeft, ChevronRight, Sparkles,
     RefreshCw, User, Link2, AlertCircle, FileSpreadsheet,
-    Download, CheckCircle2, XCircle
+    Download, CheckCircle2, XCircle, GripVertical, Check, AlertTriangle, CheckCheck
 } from "lucide-react";
 import { useFormStatus } from 'react-dom';
 import Link from "next/link";
@@ -69,18 +75,6 @@ function CreateButton({ mode }: { mode: InputMode }) {
                 ? <Bouncy size="16" speed="1.75" color={isAi ? "white" : "black"} />
                 : <>{isAi ? <Sparkles size={14} /> : <Plus size={14} />} Crear nominado</>
             }
-        </button>
-    );
-}
-
-function DeleteButton() {
-    const { pending } = useFormStatus();
-    return (
-        <button
-            disabled={pending}
-            className="h-9 w-9 flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all cursor-pointer"
-        >
-            {pending ? <Bouncy size="16" speed="1.75" color="#f87171" /> : <Trash2 size={15} />}
         </button>
     );
 }
@@ -761,6 +755,103 @@ function ParticipantForm({
     );
 }
 
+// ─── Sortable card (grid drag & drop con @dnd-kit) ────────────────────────────
+
+function SortableCard({
+    p, isSelected, canManage, square, dragEnabled, onToggleSelect, onEdit, onDelete,
+}: {
+    p: Participant;
+    isSelected: boolean;
+    canManage: boolean;
+    square: boolean;
+    dragEnabled: boolean;
+    onToggleSelect: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+}) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id, disabled: !dragEnabled });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+    };
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`group relative bg-neutral-900/60 border-2 rounded-2xl overflow-hidden ${isSelected ? "border-blue-500/70" : "border-white/8 hover:border-white/20"}`}
+        >
+            <div className={`relative w-full ${square ? "aspect-square" : "aspect-[4/3]"} bg-neutral-800`}>
+                {p.imageUrl ? (
+                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-600 font-bold text-2xl">
+                        {p.name.substring(0, 2).toUpperCase()}
+                    </div>
+                )}
+                {canManage && (
+                    <button
+                        type="button"
+                        onClick={onToggleSelect}
+                        aria-label="Seleccionar nominado"
+                        className={`absolute top-2 left-2 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors cursor-pointer ${isSelected ? "bg-blue-600 border-blue-500 text-white" : "bg-black/50 border-white/40 text-transparent hover:border-white"}`}
+                    >
+                        <Check size={14} />
+                    </button>
+                )}
+                {dragEnabled && (
+                    <button
+                        type="button"
+                        {...attributes}
+                        {...listeners}
+                        aria-label="Arrastrar para reordenar"
+                        title="Arrastrar para reordenar"
+                        className="absolute top-2 right-2 p-1.5 rounded-md bg-black/50 text-gray-300 hover:text-white cursor-grab active:cursor-grabbing touch-none"
+                    >
+                        <GripVertical size={16} />
+                    </button>
+                )}
+            </div>
+            <div className="flex items-center gap-3 p-3">
+                <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-100 truncate">{p.name}</p>
+                    <p className="text-[11px] mt-0.5">
+                        {p.imageUrl ? <span className="text-emerald-500/80">Con imagen</span> : <span className="text-gray-600">Sin imagen</span>}
+                    </p>
+                </div>
+                {canManage && (
+                    <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={onEdit} className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all cursor-pointer" title="Editar">
+                            <Pencil size={16} />
+                        </button>
+                        <button onClick={onDelete} className="h-9 w-9 flex items-center justify-center text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all cursor-pointer" title="Eliminar">
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Tarjeta que sigue al cursor mientras se arrastra (DragOverlay).
+function OverlayCard({ p, square }: { p: Participant; square: boolean }) {
+    return (
+        <div className="bg-neutral-900 border-2 border-blue-500 rounded-2xl overflow-hidden shadow-2xl cursor-grabbing">
+            <div className={`relative w-full ${square ? "aspect-square" : "aspect-[4/3]"} bg-neutral-800`}>
+                {p.imageUrl ? (
+                    <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-600 font-bold text-2xl">
+                        {p.name.substring(0, 2).toUpperCase()}
+                    </div>
+                )}
+            </div>
+            <div className="p-3"><p className="font-semibold text-gray-100 truncate">{p.name}</p></div>
+        </div>
+    );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ParticipantList({
@@ -782,13 +873,24 @@ export default function ParticipantList({
 }) {
     const router = useRouter();
     const toast = useToast();
-    const [editingId, setEditingId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [formResetKey, setFormResetKey] = useState(0); // remonta el form para crear varios seguidos
+    const [editIndex, setEditIndex] = useState<number | null>(null); // índice dentro de filteredData
     const [searchQuery, setSearchQuery] = useState("");
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showCsvModal, setShowCsvModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6; // nominados por página
+    const itemsPerPage = 8; // nominados por página (2 columnas × 4)
+
+    // Copia local para reordenar en cliente (drag) sincronizada con el servidor.
+    const [items, setItems] = useState<Participant[]>(initialData);
+    useEffect(() => { setItems(initialData); }, [initialData]);
+
+    // Selección para borrado masivo (persiste entre páginas).
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [pendingDelete, setPendingDelete] = useState<string[]>([]); // ids a confirmar borrado
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
     const currentLimit = limitOverride ?? (PLANS[planKey]?.limits?.participantsPerEvent || 12);
@@ -826,18 +928,95 @@ export default function ParticipantList({
         else setIsCreating(true);
     };
 
-    const filteredData = initialData.filter(p =>
+    const isSearching = searchQuery.trim() !== "";
+    const filteredData = items.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const paginatedData = filteredData.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+    const pageStart = (currentPage - 1) * itemsPerPage;
+    const paginatedData = filteredData.slice(pageStart, pageStart + itemsPerPage);
+    // Arrastrar solo cuando no hay filtro de búsqueda (el slice de página mapea 1:1 con `items`).
+    const dragEnabled = canManageNominees && !isSearching;
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
         setCurrentPage(1);
+    };
+
+    // ── Selección masiva ──
+    const toggleSelect = (id: string) => {
+        setSelected(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+    const selectAllFiltered = () => setSelected(new Set(filteredData.map(p => p.id)));
+    const clearSelection = () => setSelected(new Set());
+
+    const handleBulkDelete = async () => {
+        if (!pendingDelete.length) return;
+        setIsDeleting(true);
+        const res = await deleteManyParticipants(pendingDelete, eventId);
+        setIsDeleting(false);
+        setShowDeleteModal(false);
+        if (res && "deleted" in res) {
+            toast.success(`${res.deleted} nominado(s) eliminado(s)`);
+            setSelected(prev => {
+                const next = new Set(prev);
+                pendingDelete.forEach(id => next.delete(id));
+                return next;
+            });
+            setPendingDelete([]);
+            router.refresh();
+        } else {
+            toast.error(res?.error || "No se pudieron eliminar los nominados.");
+        }
+    };
+
+    // ── Drag & drop dentro de la página (grid, con @dnd-kit) ──
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+    const activeParticipant = activeId ? items.find(p => p.id === activeId) ?? null : null;
+
+    const onDragStart = (event: DragStartEvent) => setActiveId(String(event.active.id));
+
+    const onDragEnd = async (event: DragEndEvent) => {
+        setActiveId(null);
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const ids = paginatedData.map(p => p.id);
+        const oldIndex = ids.indexOf(String(active.id));
+        const newIndex = ids.indexOf(String(over.id));
+        if (oldIndex < 0 || newIndex < 0) return;
+
+        const newPageOrder = arrayMove(paginatedData, oldIndex, newIndex);
+        const next = [...items];
+        for (let i = 0; i < newPageOrder.length; i++) next[pageStart + i] = newPageOrder[i];
+        setItems(next);
+
+        const payload = newPageOrder.map((p, i) => ({ id: p.id, order: pageStart + i }));
+        const res = await reorderParticipants(payload, eventId);
+        if (res?.error) {
+            toast.error("No se pudo reordenar.");
+            setItems(initialData); // revertir
+        } else {
+            router.refresh();
+        }
+    };
+
+    // ── Edición con paginador ──
+    const editing = editIndex !== null ? filteredData[editIndex] : null;
+    const gotoEdit = (dir: -1 | 1) => {
+        setEditIndex(idx => {
+            if (idx === null) return idx;
+            const n = idx + dir;
+            return n >= 0 && n < filteredData.length ? n : idx;
+        });
     };
 
     return (
@@ -949,127 +1128,72 @@ export default function ParticipantList({
                 )}
             </AnimatePresence>
 
-            {/* ── Create form ── */}
+            {/* ── Barra de selección masiva ── */}
             <AnimatePresence>
-                {isCreating && (
+                {selected.size > 0 && (
                     <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.99 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.99 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                        className="relative rounded-2xl border-2 border-blue-500/30 bg-gradient-to-b from-blue-950/20 to-black p-5 overflow-hidden"
+                        initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                        className="flex flex-wrap items-center gap-3 p-3 rounded-xl border-2 border-blue-500/30 bg-blue-500/5"
                     >
-                        {/* Decorative gradient top line */}
-                        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
-                        <ParticipantForm
-                            eventId={eventId}
-                            onSubmit={async (fd) => {
-                                try {
-                                    await createEventParticipant(eventId, fd);
-                                    setIsCreating(false);
-                                    toast.success("Nominado añadido");
-                                } catch {
-                                    toast.error("No se pudo añadir el nominado.");
-                                }
-                            }}
-                            onCancel={() => setIsCreating(false)}
-                            planSlug={planSlug}
-                        />
+                        <span className="text-sm font-bold text-white">{selected.size} seleccionado(s)</span>
+                        <button
+                            onClick={selectAllFiltered}
+                            className="inline-flex items-center gap-1.5 bg-white/5 text-gray-200 border-2 border-white/15 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-white/10 transition-colors cursor-pointer"
+                        >
+                            <CheckCheck size={14} /> Seleccionar todos{isSearching ? " (filtrados)" : ""}
+                        </button>
+                        <button
+                            onClick={clearSelection}
+                            className="inline-flex items-center gap-1.5 bg-white/5 text-gray-400 border-2 border-white/15 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                        >
+                            <X size={14} /> Limpiar
+                        </button>
+                        <button
+                            onClick={() => { setPendingDelete(Array.from(selected)); setShowDeleteModal(true); }}
+                            className="ml-auto inline-flex items-center gap-1.5 bg-red-500/20 text-red-300 border-2 border-red-500/30 px-4 py-1.5 rounded-full text-xs font-bold hover:bg-red-500 hover:text-white transition-colors cursor-pointer"
+                        >
+                            <Trash2 size={14} /> Eliminar seleccionados
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* ── Participant list ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 min-h-[300px] items-start">
-                <AnimatePresence>
-                    {paginatedData.map((p, i) => (
-                        <motion.div
-                            key={p.id}
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, x: -8 }}
-                            transition={{ delay: i * 0.04 }}
-                            className={`group bg-neutral-900/60 border-2 border-white/8 rounded-xl overflow-hidden hover:border-white/15 transition-all ${editingId === p.id ? "md:col-span-2 md:col-start-1" : ""}`}
-                        >
-                            {editingId === p.id ? (
-                                <div className="p-4">
-                                    <ParticipantForm
-                                        eventId={eventId}
-                                        initialName={p.name}
-                                        initialImage={p.imageUrl || ""}
-                                        isEditMode
-                                        onSubmit={async (fd) => {
-                                            try {
-                                                await updateEventParticipant(p.id, eventId, fd);
-                                                setEditingId(null);
-                                                toast.success("Nominado actualizado");
-                                            } catch {
-                                                toast.error("No se pudo actualizar el nominado.");
-                                            }
-                                        }}
-                                        onCancel={() => setEditingId(null)}
-                                        planSlug={planSlug}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-4 p-3.5">
-                                    {/* Avatar */}
-                                    <div className={`w-11 h-11 ${square ? "rounded-lg" : "rounded-full"} overflow-hidden shrink-0 border-2 border-white/10 bg-neutral-800`}>
-                                        {p.imageUrl ? (
-                                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-sm">
-                                                {p.name.substring(0, 2).toUpperCase()}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-gray-100 truncate text-sm">{p.name}</p>
-                                        <p className="text-[11px] text-gray-600 mt-0.5">
-                                            {p.imageUrl ? (
-                                                <span className="text-emerald-500/80">Con imagen</span>
-                                            ) : (
-                                                <span>Sin imagen</span>
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    {/* Actions */}
-                                    {canManageNominees && (
-                                        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-                                            <button
-                                                onClick={() => setEditingId(p.id)}
-                                                className="h-9 w-9 flex items-center justify-center text-blue-400/70 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all cursor-pointer"
-                                            >
-                                                <Pencil size={15} />
-                                            </button>
-                                            <form action={async () => {
-                                                try {
-                                                    await deleteEventParticipant(p.id, eventId);
-                                                    toast.success("Nominado eliminado");
-                                                } catch {
-                                                    toast.error("No se pudo eliminar el nominado.");
-                                                }
-                                            }}>
-                                                <DeleteButton />
-                                            </form>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-
-                {filteredData.length === 0 && !isCreating && (
-                    <div className="md:col-span-2 text-center py-12 border-2 border-dashed border-white/8 rounded-xl text-gray-600 text-sm flex flex-col items-center gap-2">
-                        <User size={28} className="text-gray-700" />
-                        {searchQuery ? "No se encontraron nominados." : "Aún no hay nominados. Pulsa \"Nuevo\" para empezar."}
+            {/* ── Grid de nominados (drag & drop en grid con @dnd-kit) ── */}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+                <SortableContext items={paginatedData.map(p => p.id)} strategy={rectSortingStrategy}>
+                    <div
+                        key={`${currentPage}-${isSearching ? "s" : "n"}`}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-4 items-start min-h-[300px] animate-in fade-in duration-200"
+                    >
+                        {paginatedData.map((p) => {
+                            const globalIndex = filteredData.indexOf(p);
+                            return (
+                                <SortableCard
+                                    key={p.id}
+                                    p={p}
+                                    isSelected={selected.has(p.id)}
+                                    canManage={canManageNominees}
+                                    square={square}
+                                    dragEnabled={dragEnabled}
+                                    onToggleSelect={() => toggleSelect(p.id)}
+                                    onEdit={() => setEditIndex(globalIndex)}
+                                    onDelete={() => { setPendingDelete([p.id]); setShowDeleteModal(true); }}
+                                />
+                            );
+                        })}
                     </div>
-                )}
-            </div>
+                </SortableContext>
+                <DragOverlay>
+                    {activeParticipant ? <OverlayCard p={activeParticipant} square={square} /> : null}
+                </DragOverlay>
+            </DndContext>
+
+            {filteredData.length === 0 && (
+                <div className="text-center py-12 border-2 border-dashed border-white/8 rounded-xl text-gray-600 text-sm flex flex-col items-center gap-2">
+                    <User size={28} className="text-gray-700" />
+                    {searchQuery ? "No se encontraron nominados." : "Aún no hay nominados. Pulsa \"Nuevo\" para empezar."}
+                </div>
+            )}
 
             {/* ── Pagination ── */}
             {totalPages > 1 && (
@@ -1093,6 +1217,142 @@ export default function ParticipantList({
                     </button>
                 </div>
             )}
+
+            {/* ── Modal Crear (multi-creación) ── */}
+            <AnimatePresence>
+                {isCreating && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setIsCreating(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.96, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.96, opacity: 0, y: 10 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md max-h-[88vh] overflow-y-auto p-6 shadow-2xl relative"
+                        >
+                            <div className="flex items-center justify-between mb-3">
+                                <h2 className="text-lg font-bold text-white flex items-center gap-2"><Plus size={18} className="text-blue-400" /> Nuevo nominado</h2>
+                                <button onClick={() => setIsCreating(false)} className="text-gray-400 hover:text-white cursor-pointer"><X size={18} /></button>
+                            </div>
+                            <p className="text-[11px] text-gray-500 mb-4">Puedes crear varios seguidos: el formulario se mantiene abierto tras añadir.</p>
+                            <ParticipantForm
+                                key={formResetKey}
+                                eventId={eventId}
+                                planSlug={planSlug}
+                                onSubmit={async (fd) => {
+                                    if (items.length >= currentLimit) {
+                                        toast.error(`Has alcanzado el límite de ${currentLimit} nominados.`);
+                                        return;
+                                    }
+                                    try {
+                                        await createEventParticipant(eventId, fd);
+                                        toast.success("Nominado añadido");
+                                        setFormResetKey(k => k + 1);
+                                        router.refresh();
+                                    } catch {
+                                        toast.error("No se pudo añadir el nominado.");
+                                    }
+                                }}
+                                onCancel={() => setIsCreating(false)}
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Modal Editar (con paginador de flechas) ── */}
+            <AnimatePresence>
+                {editing && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setEditIndex(null)}
+                    >
+                        <div className="flex items-center gap-2 sm:gap-3 w-full max-w-xl justify-center" onClick={(e) => e.stopPropagation()}>
+                            <button
+                                onClick={() => gotoEdit(-1)}
+                                disabled={editIndex === 0}
+                                title="Anterior"
+                                className="h-10 w-10 shrink-0 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+
+                            <motion.div
+                                initial={{ scale: 0.96, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.96, opacity: 0, y: 10 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                                className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md max-h-[88vh] overflow-y-auto p-6 shadow-2xl"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-bold text-white flex items-center gap-2"><Pencil size={16} className="text-blue-400" /> Editar nominado</h2>
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xs text-gray-500 font-mono">{(editIndex ?? 0) + 1} / {filteredData.length}</span>
+                                        <button onClick={() => setEditIndex(null)} className="text-gray-400 hover:text-white cursor-pointer"><X size={18} /></button>
+                                    </div>
+                                </div>
+                                <ParticipantForm
+                                    key={editing.id}
+                                    eventId={eventId}
+                                    planSlug={planSlug}
+                                    isEditMode
+                                    initialName={editing.name}
+                                    initialImage={editing.imageUrl || ""}
+                                    onSubmit={async (fd) => {
+                                        try {
+                                            await updateEventParticipant(editing.id, eventId, fd);
+                                            toast.success("Nominado actualizado");
+                                            router.refresh();
+                                        } catch {
+                                            toast.error("No se pudo actualizar el nominado.");
+                                        }
+                                    }}
+                                    onCancel={() => setEditIndex(null)}
+                                />
+                            </motion.div>
+
+                            <button
+                                onClick={() => gotoEdit(1)}
+                                disabled={editIndex === filteredData.length - 1}
+                                title="Siguiente"
+                                className="h-10 w-10 shrink-0 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors disabled:opacity-25 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Modal confirmar borrado ── */}
+            <AnimatePresence>
+                {showDeleteModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => !isDeleting && setShowDeleteModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl border-t-4 border-t-red-500"
+                        >
+                            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><AlertTriangle size={18} className="text-red-400" /> Eliminar nominados</h2>
+                            <p className="text-gray-400 text-sm mb-6">
+                                ¿Seguro que quieres eliminar <strong className="text-white">{pendingDelete.length}</strong> nominado(s)? Esta acción es irreversible.
+                            </p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowDeleteModal(false)} disabled={isDeleting} className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded text-gray-300 font-bold cursor-pointer disabled:opacity-50">Cancelar</button>
+                                <button onClick={handleBulkDelete} disabled={isDeleting} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded font-bold cursor-pointer flex items-center justify-center disabled:opacity-50">
+                                    {isDeleting ? <Bouncy size={20} color="white" /> : "Sí, eliminar"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* ── CSV Import/Export Modal ── */}
             {showCsvModal && canManageNominees && (

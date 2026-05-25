@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Check, Trophy } from "lucide-react";
+import { ArrowLeft, Check, Trophy, ZoomIn, X } from "lucide-react";
 
 type Participant = { id: string; name: string; imageUrl: string | null };
 type Tier = { id: string; label: string; color: string; order: number };
@@ -31,6 +32,15 @@ export default function TierlistVotingClient({
     const [submitting, setSubmitting] = useState(false);
     const [voted, setVoted] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Imagen ampliada (lightbox) al pulsar una tarjeta con imagen.
+    const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null);
+
+    useEffect(() => {
+        if (!lightbox) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightbox(null); };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [lightbox]);
 
     // Reconstruye un estado de listas válido a partir de lo guardado: descarta ids
     // que ya no existen y coloca en la bandeja cualquier nominado no clasificado.
@@ -128,8 +138,9 @@ export default function TierlistVotingClient({
                         ref={prov.innerRef}
                         {...prov.draggableProps}
                         {...prov.dragHandleProps}
-                        className={`relative aspect-square w-20 rounded-lg overflow-hidden border-2 bg-neutral-800 shrink-0 ${snap.isDragging ? "border-blue-500 shadow-xl" : "border-white/10"} ${voted ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
-                        title={p.name}
+                        onClick={() => { if (p.imageUrl) setLightbox({ url: p.imageUrl, name: p.name }); }}
+                        className={`group relative aspect-square w-20 rounded-lg overflow-hidden border-2 bg-neutral-800 shrink-0 ${snap.isDragging ? "border-blue-500 shadow-xl" : "border-white/10"} ${voted ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
+                        title={p.imageUrl ? `${p.name} · pulsa para ampliar` : p.name}
                     >
                         {p.imageUrl ? (
                             <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
@@ -137,7 +148,12 @@ export default function TierlistVotingClient({
                             <div className="w-full h-full flex items-center justify-center text-center text-[11px] font-bold text-gray-200 px-1">{p.name}</div>
                         )}
                         {p.imageUrl && (
-                            <div className="absolute inset-x-0 bottom-0 bg-black/60 text-[10px] text-white text-center truncate px-1 py-0.5">{p.name}</div>
+                            <>
+                                <div className="absolute top-1 right-1 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    <ZoomIn size={12} />
+                                </div>
+                                <div className="absolute inset-x-0 bottom-0 bg-black/60 text-[10px] text-white text-center truncate px-1 py-0.5">{p.name}</div>
+                            </>
                         )}
                     </div>
                 )}
@@ -239,6 +255,38 @@ export default function TierlistVotingClient({
                     )}
                 </DragDropContext>
             </div>
+
+            {/* Lightbox: imagen ampliada de la opción */}
+            <AnimatePresence>
+                {lightbox && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setLightbox(null)}
+                        className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
+                    >
+                        <button
+                            onClick={() => setLightbox(null)}
+                            aria-label="Cerrar"
+                            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                        >
+                            <X size={20} />
+                        </button>
+                        <motion.img
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            src={lightbox.url}
+                            alt={lightbox.name}
+                            onClick={(e) => e.stopPropagation()}
+                            className="max-w-[90vw] max-h-[80vh] object-contain rounded-xl border-2 border-white/15 shadow-2xl"
+                        />
+                        <p className="mt-4 text-white font-semibold text-center max-w-[90vw] break-words">{lightbox.name}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </main>
     );
 }

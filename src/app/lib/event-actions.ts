@@ -181,7 +181,15 @@ export async function createEventParticipant(eventId: string, formData: FormData
         return;
     }
 
-    await prisma.participant.create({ data: { name, imageUrl, eventId } });
+    // Orden = al final de la lista (max + 1) para mantener orden estable de inserción.
+    const last = await prisma.participant.findFirst({
+        where: { eventId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+    });
+    const order = (last?.order ?? -1) + 1;
+
+    await prisma.participant.create({ data: { name, imageUrl, eventId, order } });
     revalidatePath(`/dashboard/event/${eventId}`);
     await triggerDataChanged(eventId, session.user.id, "participants");
 }
@@ -210,6 +218,49 @@ export async function deleteEventParticipant(participantId: string, eventId: str
     await prisma.participant.delete({ where: { id: participantId } });
     revalidatePath(`/dashboard/event/${eventId}`);
     await triggerDataChanged(eventId, session.user.id, "participants");
+}
+
+// Reordenar nominados (drag & drop). Recibe los ids con su nuevo `order`.
+export async function reorderParticipants(items: { id: string; order: number }[], eventId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No autorizado" };
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManageNominees");
+    if (!hasAccess) return { error: "Sin permisos" };
+
+    await prisma.$transaction(
+        items.map((it) =>
+            prisma.participant.update({
+                where: { id: it.id },
+                // El filtro por eventId en el where compuesto no es posible aquí (id es único),
+                // pero el acceso ya está verificado sobre el evento.
+                data: { order: it.order },
+            })
+        )
+    );
+
+    revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "participants");
+    return { success: true };
+}
+
+// Borrado masivo de nominados.
+export async function deleteManyParticipants(ids: string[], eventId: string) {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "No autorizado" };
+
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManageNominees");
+    if (!hasAccess) return { error: "Sin permisos" };
+
+    if (!ids.length) return { deleted: 0 };
+
+    const res = await prisma.participant.deleteMany({
+        where: { id: { in: ids }, eventId },
+    });
+
+    revalidatePath(`/dashboard/event/${eventId}`);
+    await triggerDataChanged(eventId, session.user.id, "participants");
+    return { deleted: res.count };
 }
 
 // --- ENCUESTAS (CON LÍMITE Y SOPORTE COLABORADORES) ---

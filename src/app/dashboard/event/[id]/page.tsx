@@ -37,7 +37,7 @@ export default async function EventDashboardPage({ params }: Props) {
     const event = await prisma.event.findUnique({
         where: { id },
         include: {
-            participants: { orderBy: { createdAt: "desc" } },
+            participants: { orderBy: [{ order: "asc" }, { createdAt: "asc" }, { id: "asc" }] },
             polls: {
                 orderBy: { order: "asc" },
                 include: {
