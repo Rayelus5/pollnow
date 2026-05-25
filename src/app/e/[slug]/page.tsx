@@ -7,6 +7,7 @@ import TierlistResultsClient from "@/components/TierlistResultsClient";
 import PreguntasVotingClient from "@/components/PreguntasVotingClient";
 import DrawingVotingClient from "@/components/DrawingVotingClient";
 import SideRailAds from "@/components/ads/SideRailAds";
+import EventShareButton from "@/components/EventShareButton";
 import { computeDrawingPhase } from "@/lib/event-modes";
 import { getModeStats } from "@/app/lib/stats-actions";
 import { Lock } from "lucide-react";
@@ -97,6 +98,11 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
     }
     // ---------------------------
 
+    // Botón flotante para compartir el evento (incluye ?key= si es privado).
+    const shareBtn = (
+        <EventShareButton eventTitle={event.title} slug={event.slug} isPublic={event.isPublic} accessKey={event.accessKey} />
+    );
+
     // ─── RUTEO POR MODO DE EVENTO (v3.0) ───
     if (event.mode === "TIERLIST") {
         const tiers = await prisma.tierlistTier.findMany({ where: { eventId: event.id }, orderBy: { order: "asc" } });
@@ -107,14 +113,17 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
             const stats = await getModeStats(event.id, "TIERLIST");
             const tlStats = stats && stats.mode === "TIERLIST" ? stats : null;
             return (
-                <SideRailAds showAds={showAds}>
-                    <TierlistResultsClient
-                        event={{ title: event.title, description: event.description }}
-                        tiers={tiers}
-                        totalVotes={tlStats?.totalVotes ?? 0}
-                        participants={tlStats?.participants ?? []}
-                    />
-                </SideRailAds>
+                <>
+                    <SideRailAds showAds={showAds}>
+                        <TierlistResultsClient
+                            event={{ title: event.title, description: event.description }}
+                            tiers={tiers}
+                            totalVotes={tlStats?.totalVotes ?? 0}
+                            participants={tlStats?.participants ?? []}
+                        />
+                    </SideRailAds>
+                    {shareBtn}
+                </>
             );
         }
 
@@ -124,13 +133,16 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
             select: { id: true, name: true, imageUrl: true },
         });
         return (
-            <SideRailAds showAds={showAds}>
-                <TierlistVotingClient
-                    event={{ id: event.id, title: event.title, description: event.description }}
-                    tiers={tiers}
-                    participants={participants}
-                />
-            </SideRailAds>
+            <>
+                <SideRailAds showAds={showAds}>
+                    <TierlistVotingClient
+                        event={{ id: event.id, title: event.title, description: event.description }}
+                        tiers={tiers}
+                        participants={participants}
+                    />
+                </SideRailAds>
+                {shareBtn}
+            </>
         );
     }
 
@@ -138,12 +150,15 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
         const closed = new Date() >= (event.galaDate ?? new Date("2999-01-01"));
         if (closed) {
             return (
-                <main className="min-h-screen bg-black text-white flex items-center justify-center p-6 text-center">
-                    <div className="bg-neutral-900/50 border-2 border-white/10 p-10 rounded-3xl max-w-md">
-                        <h1 className="text-2xl font-bold mb-2">Formulario cerrado</h1>
-                        <p className="text-gray-400">Este formulario ya no admite respuestas.</p>
-                    </div>
-                </main>
+                <>
+                    <main className="min-h-screen bg-black text-white flex items-center justify-center p-6 text-center">
+                        <div className="bg-neutral-900/50 border-2 border-white/10 p-10 rounded-3xl max-w-md">
+                            <h1 className="text-2xl font-bold mb-2">Formulario cerrado</h1>
+                            <p className="text-gray-400">Este formulario ya no admite respuestas.</p>
+                        </div>
+                    </main>
+                    {shareBtn}
+                </>
             );
         }
         const questions = await prisma.question.findMany({
@@ -152,12 +167,15 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
             include: { options: { orderBy: { order: "asc" } } },
         });
         return (
-            <SideRailAds showAds={showAds}>
-                <PreguntasVotingClient
-                    event={{ id: event.id, title: event.title, description: event.description }}
-                    questions={questions}
-                />
-            </SideRailAds>
+            <>
+                <SideRailAds showAds={showAds}>
+                    <PreguntasVotingClient
+                        event={{ id: event.id, title: event.title, description: event.description }}
+                        questions={questions}
+                    />
+                </SideRailAds>
+                {shareBtn}
+            </>
         );
     }
 
@@ -181,21 +199,24 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
                 : Promise.resolve(0),
         ]);
         return (
-            <SideRailAds showAds={showAds}>
-                <DrawingVotingClient
-                    event={{
-                        id: event.id,
-                        title: event.title,
-                        description: event.description,
-                        drawingPrompt: event.drawingPrompt,
-                        drawingTimeLimit: event.drawingTimeLimit,
-                    }}
-                    phase={phase}
-                    alreadySubmitted={!!mySub}
-                    myImageUrl={mySub?.imageUrl ?? null}
-                    superlikeUsed={superCount > 0}
-                />
-            </SideRailAds>
+            <>
+                <SideRailAds showAds={showAds}>
+                    <DrawingVotingClient
+                        event={{
+                            id: event.id,
+                            title: event.title,
+                            description: event.description,
+                            drawingPrompt: event.drawingPrompt,
+                            drawingTimeLimit: event.drawingTimeLimit,
+                        }}
+                        phase={phase}
+                        alreadySubmitted={!!mySub}
+                        myImageUrl={mySub?.imageUrl ?? null}
+                        superlikeUsed={superCount > 0}
+                    />
+                </SideRailAds>
+                {shareBtn}
+            </>
         );
     }
     // ─── GALA (formato original) ───
@@ -242,6 +263,7 @@ export default async function EventLobbyPage({ params, searchParams }: Props) {
                     showAds={false}
                 />
             </SideRailAds>
+            {shareBtn}
         </>
     );
 }
