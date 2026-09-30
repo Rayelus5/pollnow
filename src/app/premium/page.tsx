@@ -40,11 +40,15 @@ export default async function PremiumPage() {
     const showAds = currentPlanSlug === "free" || currentPlanSlug === "premium";
 
     // Serializamos solo lo que el cliente necesita (ResolvedPlan ya es serializable).
+    // `quota` viaja aparte de `features`: es el límite real que aplica createEvent,
+    // y PricingSection lo usa para generar la línea "N Eventos Activos" siempre
+    // sincronizada con /admin/plans (features.featureList es solo marketing extra).
     const planCards = plans.map((p) => ({
         slug: p.slug,
         name: p.name,
         price: p.price,
         priceId: p.priceId,
+        quota: p.quota,
         features: p.features,
     }));
 
