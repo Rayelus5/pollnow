@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, ArrowLeft, ArrowRight, Trophy, ListOrdered, CircleHelp, Brush, Lock, Check } from "lucide-react";
 import TagsInput from "@/components/ui/TagsInput";
 import DatePresetPicker, { type DatePreset } from "@/components/ui/DatePresetPicker";
-import { PLANS } from "@/lib/plans";
+import { PLANS, planBadge } from "@/lib/plans";
 
 type CreateEventButtonProps = {
     planSlug: string;
@@ -67,8 +67,6 @@ const END_LABEL: Record<EventMode, string> = {
 const STEPS = ["Tipo", "Datos", "Fechas"] as const;
 
 export default function CreateEventButton({ planSlug, onCreatingChange }: CreateEventButtonProps) {
-    const isPremium = planSlug === "premium" || planSlug === "plus";
-
     const planLimits = Object.values(PLANS).find((p) => p.slug === planSlug)?.limits ?? PLANS.FREE.limits;
     const drawingAllowed = planLimits.drawingMaxEvents > 0;
     const drawingAllowUnlimited = planLimits.drawingAllowUnlimited;
@@ -202,19 +200,26 @@ export default function CreateEventButton({ planSlug, onCreatingChange }: Create
 
                         {isQuotaExceeded ? (
                             <>
-                                <h4 className="text-xl font-bold text-indigo-400 mb-4 pb-2 border-b-2 border-indigo-600">
-                                    Límite alcanzado
-                                </h4>
-                                <p className="text-white mb-6 text-sm">
-                                    Has llegado al número máximo de eventos para tu plan actual.
-                                    <br />
-                                    Para crear más eventos, necesitas unirte a <b>{isPremium ? "Premium+" : "Premium"}</b>.
+                                {/* Glow decorativo, mismo lenguaje visual que el resto de modales de límite */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none -mr-16 -mt-16" />
+
+                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-5 shadow-[0_0_30px_-8px_rgba(99,102,241,0.6)]">
+                                    <Lock className="text-white w-7 h-7" />
+                                </div>
+
+                                <h2 className="text-xl font-bold text-white mb-2">
+                                    Límite de eventos alcanzado
+                                </h2>
+                                <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                                    Tu plan actual (<span className="text-white font-semibold">{planBadge(planSlug).label}</span>) ya tiene el máximo de eventos activos que permite.
+                                    Borra alguno para liberar espacio, o mejora tu plan para crear más.
                                 </p>
+
                                 <div className="flex gap-3 pt-2">
                                     <button
                                         type="button"
                                         onClick={closeModal}
-                                        className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded text-gray-300 font-bold transition-colors cursor-pointer"
+                                        className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-300 font-bold transition-colors cursor-pointer"
                                         disabled={loadingPremium}
                                     >
                                         Cerrar
@@ -222,9 +227,9 @@ export default function CreateEventButton({ planSlug, onCreatingChange }: Create
                                     <Link
                                         href="/premium"
                                         onClick={() => setLoadingPremium(true)}
-                                        className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded text-white font-bold transition-colors text-center flex justify-center items-center disabled:opacity-50"
+                                        className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl text-white font-bold transition-colors text-center flex justify-center items-center shadow-lg disabled:opacity-50"
                                     >
-                                        {loadingPremium ? <Bouncy size="28" speed="1.75" color="#fff" /> : "Unirme ahora"}
+                                        {loadingPremium ? <Bouncy size="28" speed="1.75" color="#fff" /> : "Ver planes"}
                                     </Link>
                                 </div>
                             </>
