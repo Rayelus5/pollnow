@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { clsx } from "clsx";
 import { LifeBuoy } from "lucide-react";
 import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
@@ -57,6 +58,8 @@ export default function Avatar({
     variant?: "user" | "support";
     className?: string;
 }) {
+    const [imgError, setImgError] = useState(false);
+
     const base = clsx(
         "relative rounded-full overflow-hidden flex items-center justify-center font-bold shrink-0",
         SIZES[size],
@@ -73,10 +76,15 @@ export default function Avatar({
 
     const safeName = name?.trim() || "Usuario";
 
-    if (image) {
+    if (image && !imgError) {
         return (
             <div className={clsx(base, "bg-neutral-800 border-2 border-white/10")}>
-                <ImageWithSkeleton src={image} alt={safeName} className="w-full h-full object-cover" />
+                <ImageWithSkeleton
+                    src={image}
+                    alt={safeName}
+                    className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
+                />
             </div>
         );
     }

@@ -25,6 +25,12 @@ export async function updateProfile(formData: FormData) {
     const username = rawUsername !== null ? rawUsername.toLowerCase() : (currentUser.username ?? "");
     const image = rawImage !== null ? rawImage : currentUser.image;
 
+    // El avatar nunca debe guardarse como base64: o es una URL (subida ya
+    // optimizada a Vercel Blob, o pegada externamente) o no se guarda.
+    if (image && image.startsWith("data:")) {
+        return { error: "Formato de imagen no válido. Usa el botón de la cámara para subir una foto." };
+    }
+
     // === VALIDACIONES USERNAME (@) ===
     if (!username) {
         return { error: "El nombre de usuario (@) es obligatorio." };

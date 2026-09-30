@@ -1,6 +1,6 @@
 ---
 title: Rate limiting
-updated: 2026-05-24
+updated: 2026-09-30
 ---
 
 # Rate limiting (Upstash)
@@ -37,16 +37,18 @@ Retry-After: <segundos>   (solo en 429)
 
 | Ruta | Clave | Límite (por 60s) |
 |------|-------|------------------|
-| `/api/generate-image` | user / ip | 5 (auth) · 2 (anónimo) |
+| `/api/generate-image` | user | 5 (requiere sesión + permiso sobre el evento) |
 | `/api/drawing/upload` | ip | 5 |
 | `/api/admin/send-email` | user | 5 |
 | `/api/polls` (crear) | ip | 10 |
 | `/api/collaborators/invite` | ip | 10 |
+| `/api/user-avatar/upload` | user+ip | 10 |
 | `/api/events/[id]/like` | user | 15 |
 | `/api/polls/[id]/vote` | ip | 15 |
 | `/api/tierlist-votes` | ip | 15 |
 | `/api/preguntas-votes` | ip | 15 |
-| `/api/participant-image/rehost` | user | 15 |
+| `/api/participant-image/rehost` | user+ip | 15 |
+| `/api/participant-image/upload` | user+ip | 15 |
 | `/api/chat` | ip | 15 |
 | `/api/events/[id]/vote` | user | 20 |
 | `/api/collaborators/respond` | ip | 20 |
