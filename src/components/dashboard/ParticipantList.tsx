@@ -17,7 +17,7 @@ import {
     Lock, Star, Crown, ChevronLeft, ChevronRight, Sparkles,
     RefreshCw, User, Link2, AlertCircle, FileSpreadsheet,
     Download, CheckCircle2, XCircle, GripVertical, Check, AlertTriangle, CheckCheck,
-    ClipboardPaste, ArrowDownUp
+    ClipboardPaste, ArrowDownUp, ImageDown
 } from "lucide-react";
 import { useFormStatus } from 'react-dom';
 import Link from "next/link";
@@ -379,6 +379,8 @@ function ParticipantForm({
     const [image, setImage] = useState(initialImage);
     const [aiPrompt, setAiPrompt] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState(false);
     const [aiError, setAiError] = useState(false);
     const [cooldownRemaining, setCooldownRemaining] = useState(0);
     const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -400,16 +402,31 @@ function ParticipantForm({
         }
     };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+        e.target.value = ""; // permite volver a elegir el mismo archivo tras un error
         if (!file) return;
-        if (file.size > 4 * 1024 * 1024) {
-            alert("La imagen es demasiado grande (Max 4MB)");
+        if (file.size > 6 * 1024 * 1024) {
+            alert("La imagen es demasiado grande (Max 6MB)");
             return;
         }
-        const reader = new FileReader();
-        reader.onloadend = () => setImage(reader.result as string);
-        reader.readAsDataURL(file);
+        setIsUploading(true);
+        setUploadError(false);
+        try {
+            const fd = new FormData();
+            fd.set("file", file);
+            fd.set("eventId", eventId);
+            const res = await fetch("/api/participant-image/upload", { method: "POST", body: fd });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const { url } = await res.json();
+            setImage(url);
+        } catch (error) {
+            console.error("Error subiendo imagen:", error);
+            setUploadError(true);
+            setTimeout(() => setUploadError(false), 5000);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const startCooldown = () => {
@@ -445,7 +462,7 @@ function ParticipantForm({
             const res = await fetch("/api/generate-image", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt, seed }),
+                body: JSON.stringify({ prompt, seed, eventId }),
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const { imageUrl } = await res.json();
@@ -472,7 +489,7 @@ function ParticipantForm({
                 <div className="shrink-0">
                     <ImagePreview
                         image={image}
-                        isGenerating={isGenerating}
+                        isGenerating={isGenerating || isUploading}
                         mode={mode}
                         onUploadClick={() => fileInputRef.current?.click()}
                         onRegenerate={generateAIImage}
@@ -560,6 +577,13 @@ function ParticipantForm({
                         </div>
                     )}
 
+                    {uploadError && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border-2 border-red-500/30 text-red-400 text-xs">
+                            <AlertCircle size={12} className="shrink-0" />
+                            <span>No se pudo subir la imagen. Inténtalo de nuevo.</span>
+                        </div>
+                    )}
+
                     <div className="flex gap-2 pt-1">
                         <SaveButton />
                         <button type="button" onClick={onCancel}
@@ -596,7 +620,7 @@ function ParticipantForm({
                 <div className="flex flex-col items-center gap-2 shrink-0">
                     <ImagePreview
                         image={image}
-                        isGenerating={isGenerating}
+                        isGenerating={isGenerating || isUploading}
                         mode={mode}
                         onUploadClick={() => fileInputRef.current?.click()}
                         onRegenerate={generateAIImage}
@@ -608,10 +632,14 @@ function ParticipantForm({
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+                            disabled={isUploading}
+                            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors cursor-pointer disabled:opacity-40"
                         >
-                            Subir foto
+                            {isUploading ? "Subiendo..." : "Subir foto"}
                         </button>
+                    )}
+                    {mode === "manual" && uploadError && (
+                        <p className="text-[10px] text-red-400 text-center max-w-24">No se pudo subir. Reinténtalo.</p>
                     )}
                     {isAi && image && !isGenerating && (
                         <button
@@ -810,7 +838,7 @@ function CompactSortableCard({ p }: { p: Participant }) {
         >
             <div className="relative w-full aspect-square bg-neutral-800">
                 {p.imageUrl ? (
-                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="w-full h-full object-cover pointer-events-none" />
+                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="object-cover pointer-events-none" sizes="(min-width: 1024px) 12vw, (min-width: 640px) 20vw, 30vw" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-600 font-bold text-lg">
                         {p.name.substring(0, 2).toUpperCase()}
@@ -851,7 +879,7 @@ function SortableCard({
         >
             <div className={`relative w-full ${square ? "aspect-square" : "aspect-[4/3]"} bg-neutral-800`}>
                 {p.imageUrl ? (
-                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="object-cover" sizes="(min-width: 1024px) 20vw, (min-width: 640px) 30vw, 45vw" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-600 font-bold text-2xl">
                         {p.name.substring(0, 2).toUpperCase()}
@@ -908,7 +936,7 @@ function OverlayCard({ p, square }: { p: Participant; square: boolean }) {
         <div className="bg-neutral-900 border-2 border-blue-500 rounded-2xl overflow-hidden shadow-2xl cursor-grabbing">
             <div className={`relative w-full ${square ? "aspect-square" : "aspect-[4/3]"} bg-neutral-800`}>
                 {p.imageUrl ? (
-                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="object-cover" sizes="(min-width: 1024px) 20vw, (min-width: 640px) 30vw, 45vw" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-600 font-bold text-2xl">
                         {p.name.substring(0, 2).toUpperCase()}
@@ -929,6 +957,7 @@ export default function ParticipantList({
     canManageNominees = true,
     square = false,
     limitOverride,
+    isAdmin = false,
 }: {
     initialData: Participant[];
     eventId: string;
@@ -938,6 +967,8 @@ export default function ParticipantList({
     square?: boolean;
     /** Sobrescribe el límite de items (p.ej. tierlistMaxOptions en TIERLIST). */
     limitOverride?: number;
+    /** Muestra herramientas de mantenimiento solo visibles para administradores. */
+    isAdmin?: boolean;
 }) {
     const router = useRouter();
     const toast = useToast();
@@ -962,6 +993,11 @@ export default function ParticipantList({
     const [pendingDelete, setPendingDelete] = useState<string[]>([]); // ids a confirmar borrado
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // ── Admin: optimización masiva de imágenes legacy (base64 / sin comprimir) ──
+    const [showOptimizeConfirm, setShowOptimizeConfirm] = useState(false);
+    const [isOptimizingAll, setIsOptimizingAll] = useState(false);
+    const [optimizeProgress, setOptimizeProgress] = useState({ done: 0, total: 0 });
 
     const planKey = planSlug.toUpperCase() as keyof typeof PLANS;
     const currentLimit = limitOverride ?? (PLANS[planKey]?.limits?.participantsPerEvent || 12);
@@ -1048,6 +1084,53 @@ export default function ParticipantList({
         } else {
             toast.error(res?.error || "No se pudieron eliminar los nominados.");
         }
+    };
+
+    // ── Admin: optimizar todas las imágenes que no sean ya WebP en Blob ──
+    const needsOptimization = (url: string) =>
+        !url.includes(".blob.vercel-storage.com") || !url.split("?")[0].endsWith(".webp");
+
+    const handleOptimizeAll = async () => {
+        setShowOptimizeConfirm(false);
+        const candidates = items.filter((p) => p.imageUrl && needsOptimization(p.imageUrl));
+        if (candidates.length === 0) {
+            toast.success("Todas las imágenes ya están optimizadas.");
+            return;
+        }
+
+        setIsOptimizingAll(true);
+        setOptimizeProgress({ done: 0, total: candidates.length });
+        let savedBytes = 0;
+        let failed = 0;
+        const CONCURRENCY = 3;
+
+        for (let i = 0; i < candidates.length; i += CONCURRENCY) {
+            const batch = candidates.slice(i, i + CONCURRENCY);
+            await Promise.all(batch.map(async (p) => {
+                try {
+                    const res = await fetch(`/api/dashboard/event/${eventId}/participants/${p.id}/optimize-image`, { method: "POST" });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const { url, originalSize, optimizedSize } = await res.json();
+                    savedBytes += Math.max(0, originalSize - optimizedSize);
+                    setItems((prev) => prev.map((it) => (it.id === p.id ? { ...it, imageUrl: url } : it)));
+                } catch (error) {
+                    console.error("Error optimizando imagen de nominado:", p.id, error);
+                    failed++;
+                } finally {
+                    setOptimizeProgress((prev) => ({ ...prev, done: prev.done + 1 }));
+                }
+            }));
+        }
+
+        setIsOptimizingAll(false);
+        const ok = candidates.length - failed;
+        const savedMb = (savedBytes / (1024 * 1024)).toFixed(1);
+        if (failed > 0) {
+            toast.error(`${ok} imagen(es) optimizada(s), ${failed} fallaron. Ahorro: ${savedMb} MB.`);
+        } else {
+            toast.success(`${ok} imagen(es) optimizada(s). Ahorro total: ${savedMb} MB.`);
+        }
+        router.refresh();
     };
 
     // ── Drag & drop dentro de la página (grid, con @dnd-kit) ──
@@ -1171,6 +1254,19 @@ export default function ParticipantList({
                             <Plus size={14} /> Nuevo
                         </button>
                     )}
+                    {isAdmin && (
+                        <button
+                            onClick={() => setShowOptimizeConfirm(true)}
+                            disabled={isOptimizingAll}
+                            title="Herramienta de admin: recomprime a WebP y re-aloja en Blob las imágenes de nominados que aún sean base64 o no estén optimizadas"
+                            className="bg-fuchsia-500/10 text-fuchsia-300 border-2 border-fuchsia-500/25 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-fuchsia-500/20 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+                        >
+                            <ImageDown size={14} />
+                            {isOptimizingAll
+                                ? `Optimizando ${optimizeProgress.done}/${optimizeProgress.total}…`
+                                : "Optimizar todas las imágenes"}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -1233,6 +1329,47 @@ export default function ParticipantList({
                                 <Link href="/premium" className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-bold text-center shadow-lg transition-colors">
                                     Mejorar Plan
                                 </Link>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ── Confirmación: optimizar todas las imágenes (admin) ── */}
+            <AnimatePresence>
+                {showOptimizeConfirm && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setShowOptimizeConfirm(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                            className="bg-neutral-900 border-2 border-white/10 rounded-2xl w-full max-w-md p-8 shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                <ImageDown className="text-fuchsia-400" /> Optimizar imágenes
+                            </h2>
+                            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                                Se detectarán todas las imágenes de nominados de este evento que no estén ya optimizadas
+                                (base64, URLs externas o blobs sin comprimir) y se reemplazarán por una versión
+                                redimensionada en <strong>WebP</strong>, alojada en Vercel Blob. Esta acción no se puede deshacer.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowOptimizeConfirm(false)}
+                                    className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-gray-300 font-bold transition-colors cursor-pointer"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleOptimizeAll}
+                                    className="flex-1 py-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-xl font-bold transition-colors cursor-pointer"
+                                >
+                                    Optimizar
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>

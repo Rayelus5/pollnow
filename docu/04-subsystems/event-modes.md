@@ -1,6 +1,6 @@
 ---
 title: Modos de evento (Gala, Tierlist, Preguntas, Dibujo)
-updated: 2026-05-25
+updated: 2026-09-30
 ---
 
 # Modos de evento
@@ -70,12 +70,21 @@ Reacciones con score denormalizado y atómico:
 
 **Resultados:** top 100 por `score` (índice `[eventId, score]`) con podio + galería; confeti.
 
-## Almacenamiento de imágenes (Vercel Blob)
+## Almacenamiento e imágenes de nominados (Vercel Blob + optimización WebP)
 
-Los dibujos y las imágenes de nominados re-alojadas (ver "Buscar en internet") se guardan en
-**Vercel Blob** bajo `events/{eventId}/...`, no en la BD.
+Los dibujos y **todas** las imágenes de nominados (Manual, IA y "Buscar en internet") se
+guardan en **Vercel Blob** bajo `events/{eventId}/...`, no en la BD. Antes de este cambio, los modos
+Manual e IA guardaban la imagen como **base64 directamente en `Participant.imageUrl`**, lo que
+inflaba el HTML servido en cada carga de las páginas de voto (`force-dynamic`, sin caché) y
+disparaba el "Fast Origin Transfer" de Vercel con tráfico alto. Ahora los 3 modos pasan
+por el mismo pipeline de optimización antes de subir a Blob.
 
-- `src/lib/drawing-storage.ts` — `putDrawing`, `deleteDrawing` (acepta lote), `isBlobUrl`.
+- `src/lib/participant-image.ts` — capa única de optimización + subida para nominados:
+  `optimizeToWebp` (sharp: resize máx. 800px + WebP calidad 82, respetando orientación EXIF),
+  `storeParticipantImage` (sube el resultado a Blob, cache 1 año ya que la key es un uuid
+  único) y `replaceParticipantImage` (sube la nueva y borra la anterior si era un blob).
+- `src/lib/drawing-storage.ts` — equivalente para dibujos: `putDrawing`, `deleteDrawing`
+  (acepta lote), `isBlobUrl`.
 - `src/lib/blob-cleanup.ts` — al borrar evento/usuario se recogen las URLs **antes** del
   cascade y se borran los blobs (best-effort). Cubre `deleteEvent` (dashboard-actions y
   event-actions), `deleteUser` y `/api/admin/users/batch`.
@@ -83,12 +92,38 @@ Los dibujos y las imágenes de nominados re-alojadas (ver "Buscar en internet") 
 
 Requiere `BLOB_READ_WRITE_TOKEN` (ver [environments.md](../07-infrastructure/environments.md)).
 
-## Nominados: "Buscar en internet"
+### Los 3 modos de subida de imagen del nominado
 
-`ParticipantList.tsx` añade un 4º modo de imagen (junto a Manual / URL / IA): **Buscar**.
-`src/lib/image-search.ts` agrega **Pexels** (`PEXELS_API_KEY`) + **Wikimedia Commons** (sin
-clave), hasta 20 resultados (5 visibles, "mostrar más" de 5 en 5). Al elegir una, se re-aloja
-en Blob (`/api/participant-image/rehost`, whitelist anti-SSRF) y se guarda **tu** URL.
+- **Manual**: `POST /api/participant-image/upload` (multipart, nodejs runtime) — recibe el
+  `File` elegido en `ParticipantList.tsx`, lo optimiza y sube con `storeParticipantImage`.
+  Sustituye al antiguo `FileReader.readAsDataURL` (base64 en BD).
+- **IA**: `POST /api/generate-image` genera la imagen (Pollinations) y, en vez de devolver un
+  data-URI, la optimiza y sube a Blob del `eventId` recibido (requiere sesión + permiso
+  `canManageNominees` sobre ese evento) antes de devolver la URL al cliente.
+- **Buscar en internet**: `ParticipantList.tsx` agrega **Pexels** (`PEXELS_API_KEY`) +
+  **Wikimedia Commons** (sin clave) vía `src/lib/image-search.ts`, hasta 20 resultados (5
+  visibles, "mostrar más" de 5 en 5). Al elegir una, `POST /api/participant-image/rehost`
+  (whitelist anti-SSRF) descarga, optimiza y re-aloja en Blob.
+
+### Presentación: `next/image`
+
+`src/components/ui/ImageWithSkeleton.tsx` usa `next/image` (`fill` + `sizes`) en vez de un
+`<img>` plano, con skeleton/fade-in propio. Esto activa `srcset` responsivo, negociación
+automática AVIF/WebP y caché en el edge de Vercel Image Optimization (no cuenta como "Fast
+Origin Transfer", a diferencia del HTML generado por SSR). El dominio de Blob
+(`*.public.blob.vercel-storage.com`) está whitelisted en `next.config.ts`
+(`images.remotePatterns`). Las imágenes legacy en base64 (`data:...`) se siguen sirviendo con
+`unoptimized` para no romper el render mientras no se hayan migrado.
+
+### Migración de imágenes legacy (herramienta de admin)
+
+En `/dashboard/event/[id]` → pestaña **Nominados**, los usuarios con `role === "ADMIN"` ven un
+botón **"Optimizar todas las imágenes"**. Detecta los nominados cuya imagen no sea ya un blob
+WebP (base64, URL externa o blob antiguo sin comprimir) y llama, con concurrencia limitada (3
+a la vez), a `POST /api/dashboard/event/[id]/participants/[participantId]/optimize-image`, que
+descodifica/descarga la imagen actual, la re-optimiza con `replaceParticipantImage` (borrando
+el blob anterior) y actualiza `Participant.imageUrl`. Pensado para migrar en caliente eventos
+creados antes de esta optimización (p. ej. tras un pico de tráfico de un evento en directo).
 
 ## Nominados: gestión y orden (v3.2)
 

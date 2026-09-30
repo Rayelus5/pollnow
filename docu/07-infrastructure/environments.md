@@ -1,6 +1,6 @@
 ---
 title: Variables de entorno
-updated: 2026-05-23
+updated: 2026-09-30
 ---
 
 # Variables de entorno
@@ -52,7 +52,7 @@ exponen al cliente.
 
 | Variable | Uso |
 |----------|-----|
-| `BLOB_READ_WRITE_TOKEN` | Subida/borrado de dibujos (modo DIBUJO) e imágenes de nominados re-alojadas. En Vercel se autoconfigura al crear un store Blob; en local cópiala del dashboard. |
+| `BLOB_READ_WRITE_TOKEN` | Subida/borrado de dibujos (modo DIBUJO) e imágenes de nominados (subida manual, generadas por IA y re-alojadas desde "Buscar en internet" — los 3 modos se optimizan a WebP y se suben a Blob). En Vercel se autoconfigura al crear un store Blob; en local cópiala del dashboard. |
 
 Ver [event-modes.md](../04-subsystems/event-modes.md) (almacenamiento y limpieza de blobs).
 
