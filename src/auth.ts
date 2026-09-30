@@ -172,6 +172,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             } catch (e) {
                 console.error("[auth] createUser bonus error:", e);
             }
+
+            // Auto-alojar el avatar de Google en Blob: Google devuelve 429 si se
+            // "hotlinkea" lh3.googleusercontent.com desde muchos sitios a la vez
+            // (tablas de admin, navbar, etc.). Se hace una sola vez aquí porque
+            // Auth.js nunca vuelve a sincronizar `image` en logins posteriores.
+            let avatarUrl = user.image ?? null;
+            if (avatarUrl && avatarUrl.startsWith("https://lh3.googleusercontent.com")) {
+                try {
+                    const res = await fetch(avatarUrl);
+                    if (res.ok) {
+                        const buffer = Buffer.from(await res.arrayBuffer());
+                        const { storeUserAvatar } = await import("./lib/user-avatar");
+                        const stored = await storeUserAvatar(user.id, buffer);
+                        await prisma.user.update({ where: { id: user.id }, data: { image: stored.url } });
+                        avatarUrl = stored.url;
+                    }
+                } catch (e) {
+                    console.error("[auth] avatar rehost error:", e);
+                }
+            }
+
+            try {
+                const { after } = await import("next/server");
+                const { getServerActionIp } = await import("./lib/rate-limit-redis");
+                const { notifyNewUser } = await import("./lib/telegram");
+                const ip = await getServerActionIp();
+                after(() =>
+                    notifyNewUser({
+                        name: user.name ?? "(sin nombre)",
+                        username: (user as { username?: string }).username ?? user.email?.split("@")[0] ?? "?",
+                        email: user.email ?? "(sin email)",
+                        image: avatarUrl,
+                        provider: "google",
+                        ip,
+                    })
+                );
+            } catch (e) {
+                console.error("[auth] createUser telegram notify error:", e);
+            }
         },
     },
 

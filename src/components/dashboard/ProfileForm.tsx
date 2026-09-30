@@ -38,6 +38,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
 
     // Estado para previsualizar la imagen antes de guardar
     const [previewImage, setPreviewImage] = useState(user.image || "");
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Helpers de toasts
@@ -59,22 +60,31 @@ export default function ProfileForm({ user }: { user: UserData }) {
         setToasts((prev) => prev.filter((t) => t.id !== id));
     };
 
-    // Handler para subir imagen local
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handler para subir imagen local: se sube y optimiza en el servidor
+    // (Vercel Blob), nunca se guarda base64 en la BD.
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            // Validar tamaño (max 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                pushToast("La imagen es demasiado grande (máx 2MB).", "error");
-                return;
-            }
+        e.target.value = ""; // permite volver a elegir el mismo archivo tras un error
+        if (!file) return;
 
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result as string;
-                setPreviewImage(base64String);
-            };
-            reader.readAsDataURL(file);
+        if (file.size > 6 * 1024 * 1024) {
+            pushToast("La imagen es demasiado grande (máx 6MB).", "error");
+            return;
+        }
+
+        setIsUploadingAvatar(true);
+        try {
+            const fd = new FormData();
+            fd.set("file", file);
+            const res = await fetch("/api/user-avatar/upload", { method: "POST", body: fd });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const { url } = await res.json();
+            setPreviewImage(url);
+        } catch (err) {
+            console.error("Error subiendo avatar:", err);
+            pushToast("No se pudo subir la imagen. Inténtalo de nuevo.", "error");
+        } finally {
+            setIsUploadingAvatar(false);
         }
     };
 
@@ -242,7 +252,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                         <div className="flex flex-col md:flex-row items-center gap-8">
                             <div className="relative group">
                                 <div
-                                    onClick={() => fileInputRef.current?.click()}
+                                    onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
                                     className="w-32 h-32 rounded-full bg-gray-800 overflow-hidden relative border-4 border-white/10 cursor-pointer group-hover:border-blue-500 transition-colors shadow-xl"
                                 >
                                     {previewImage ? (
@@ -257,10 +267,10 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                         </div>
                                     )}
 
-                                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <div className={`absolute inset-0 bg-black/60 flex flex-col items-center justify-center transition-opacity duration-200 ${isUploadingAvatar ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                                         <Camera className="text-white mb-1" size={24} />
                                         <span className="text-[10px] uppercase font-bold text-gray-300">
-                                            Cambiar
+                                            {isUploadingAvatar ? "Subiendo..." : "Cambiar"}
                                         </span>
                                     </div>
                                 </div>
@@ -270,6 +280,7 @@ export default function ProfileForm({ user }: { user: UserData }) {
                                     ref={fileInputRef}
                                     onChange={handleImageChange}
                                     accept="image/*"
+                                    disabled={isUploadingAvatar}
                                     className="hidden"
                                 />
                             </div>

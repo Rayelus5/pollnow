@@ -113,3 +113,15 @@ export function getClientIp(req: Request): string {
     if (xff) return xff.split(",")[0].trim();
     return req.headers.get("x-real-ip") ?? "unknown";
 }
+
+/**
+ * Igual que `getClientIp`, pero para server actions (no reciben un `Request`).
+ * Lee las cabeceras de la petición actual vía `next/headers`.
+ */
+export async function getServerActionIp(): Promise<string> {
+    const { headers } = await import("next/headers");
+    const h = await headers();
+    const xff = h.get("x-forwarded-for");
+    if (xff) return xff.split(",")[0].trim();
+    return h.get("x-real-ip") ?? "unknown";
+}

@@ -1,22 +1,30 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Image, { type ImageProps } from "next/image";
 import { clsx } from "clsx";
 import { Ring } from "ldrs/react";
 import "ldrs/react/Ring.css";
 
-type Props = React.ImgHTMLAttributes<HTMLImageElement> & {
+type Props = Omit<ImageProps, "fill" | "alt" | "src"> & {
+    src: string;
+    alt?: string;
     skeletonClassName?: string;
 };
 
 /**
- * <img> con animación de carga: muestra un skeleton con spinner Ring mientras
- * la imagen no ha cargado, luego hace fade-in. Si falla, muestra un placeholder
- * de imagen rota. Maneja correctamente imágenes cacheadas comprobando img.complete
- * en el momento de montaje.
+ * Imagen optimizada (next/image, `fill`) con animación de carga: muestra un
+ * skeleton con spinner Ring mientras la imagen no ha cargado, luego hace
+ * fade-in. Si falla, muestra un placeholder de imagen rota. Maneja
+ * correctamente imágenes cacheadas comprobando img.complete en el montaje.
  *
- * IMPORTANTE: debe usarse dentro de un contenedor posicionado
- * (`relative`/`absolute`), ya que el skeleton se renderiza con `absolute inset-0`.
+ * IMPORTANTE: debe usarse dentro de un contenedor posicionado y con tamaño
+ * (`relative` + alto explícito o `aspect-*`), ya que tanto el skeleton como
+ * la imagen (`fill`) se renderizan con `absolute inset-0`.
+ *
+ * Las imágenes legacy guardadas como data-URI (nominados creados antes de
+ * migrar a Vercel Blob) se sirven con `unoptimized`, ya que next/image no
+ * admite data-URLs en su optimizador.
  */
 export default function ImageWithSkeleton({
     className,
@@ -24,6 +32,9 @@ export default function ImageWithSkeleton({
     onLoad,
     onError,
     alt = "",
+    sizes = "(min-width: 768px) 25vw, 45vw",
+    src,
+    unoptimized,
     ...rest
 }: Props) {
     const [loaded, setLoaded] = useState(false);
@@ -34,6 +45,8 @@ export default function ImageWithSkeleton({
     const imgRef = useCallback((img: HTMLImageElement | null) => {
         if (img?.complete && img.naturalWidth > 0) setLoaded(true);
     }, []);
+
+    const isDataUrl = typeof src === "string" && src.startsWith("data:");
 
     return (
         <>
@@ -71,10 +84,14 @@ export default function ImageWithSkeleton({
                 </div>
             )}
 
-            <img
+            <Image
                 {...rest}
                 ref={imgRef}
+                src={src}
                 alt={alt}
+                fill
+                sizes={sizes}
+                unoptimized={unoptimized ?? isDataUrl}
                 className={clsx(
                     className,
                     "transition-opacity duration-500",

@@ -346,8 +346,9 @@ export default function VotingForm({
                                     <ImageWithSkeleton
                                         src={opt.imageUrl}
                                         alt={opt.name}
+                                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 100vw"
                                         className={clsx(
-                                            "w-full h-full object-cover transition-transform duration-700",
+                                            "object-cover transition-transform duration-700",
                                             isSelected
                                                 ? "scale-110 grayscale-0"
                                                 : hasVoted

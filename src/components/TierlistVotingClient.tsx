@@ -83,7 +83,7 @@ function CardInner({ p }: { p: Participant }) {
     return (
         <>
             {p.imageUrl ? (
-                <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="w-full h-full object-cover pointer-events-none" />
+                <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="object-cover pointer-events-none" sizes="80px" />
             ) : (
                 <div className="w-full h-full flex items-center justify-center text-center text-[11px] font-bold text-gray-200 px-1 pointer-events-none">{p.name}</div>
             )}

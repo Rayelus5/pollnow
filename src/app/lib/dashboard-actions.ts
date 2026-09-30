@@ -1,11 +1,13 @@
 "use server";
 
+import { after } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlanFromUser } from "@/lib/user-plan";
 import { canCreateDrawingEvent, clampDrawingTime } from "@/lib/event-modes";
 import { collectEventBlobUrls, deleteBlobsBatched } from "@/lib/blob-cleanup";
 import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
+import { notifyNewEvent, notifyPublicationRequested } from "@/lib/telegram";
 import { z } from "zod";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
@@ -203,6 +205,17 @@ export async function createEvent(formData: FormData) {
           : {}),
       },
     });
+
+    after(() =>
+      notifyNewEvent({
+        eventId: newEvent.id,
+        slug: newEvent.slug,
+        title: newEvent.title,
+        mode: newEvent.mode,
+        ownerUsername: user.username,
+        ownerEmail: user.email,
+      })
+    );
 
     return { success: true, eventId: newEvent.id };
   } catch (error) {
@@ -405,6 +418,14 @@ export async function requestEventPublication(eventId: string) {
   if (isAdmin) {
     revalidatePath("/admin/events");
   }
+
+  after(() =>
+    notifyPublicationRequested({
+      eventId: event.id,
+      title: event.title,
+      requestedByUsername: session.user.username ?? session.user.id,
+    })
+  );
 
   return { success: true, event: updated };
 }

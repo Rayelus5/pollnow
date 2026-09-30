@@ -49,6 +49,7 @@
     "react-dom": "^19.2.1",
     "react-phone-number-input": "^3.4.16",
     "resend": "^6.5.2",
+    "sharp": "^0.35.5",
     "shepherd.js": "^14.5.1",
     "stripe": "^20.0.0",
     "tailwind-merge": "^3.4.0",

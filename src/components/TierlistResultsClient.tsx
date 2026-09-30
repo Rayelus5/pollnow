@@ -49,7 +49,7 @@ export default function TierlistResultsClient({
         return (
             <div className="relative aspect-square w-20 rounded-lg overflow-hidden border-2 border-white/10 bg-neutral-800 shrink-0" title={`${p.name} · ${inTier} votos`}>
                 {p.imageUrl ? (
-                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                    <ImageWithSkeleton src={p.imageUrl} alt={p.name} className="object-cover" sizes="80px" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-center text-[11px] font-bold text-gray-200 px-1">{p.name}</div>
                 )}

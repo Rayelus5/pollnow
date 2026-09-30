@@ -233,6 +233,7 @@ export default async function EventDashboardPage({ params }: Props) {
                                 canManageNominees={permissions.canManageNominees}
                                 square={event.mode === "TIERLIST"}
                                 limitOverride={event.mode === "TIERLIST" ? plan.limits.tierlistMaxOptions : plan.limits.participantsPerEvent}
+                                isAdmin={session.user.role === "ADMIN"}
                             />
                         </div>
                     }
