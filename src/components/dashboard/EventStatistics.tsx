@@ -370,7 +370,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin, canViewStats
                                                     </p>
                                                     <p className="text-sm text-gray-600 max-w-xs">
                                                         {!isPlus
-                                                            ? "Necesitas el plan Premium+ para ver identidades."
+                                                            ? "Necesitas el plan Plus o superior para ver identidades."
                                                             : "La configuración de este evento está en 'Voto Anónimo'."}
                                                     </p>
                                                 </div>
