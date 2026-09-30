@@ -10,7 +10,6 @@ import { pusherServer, eventChannel, PUSHER_EVENTS } from "@/lib/pusher";
 import { notifyNewEvent, notifyPublicationRequested } from "@/lib/telegram";
 import { z } from "zod";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { redirect } from "next/navigation";
 
 const EVENT_MODES = ["GALA", "TIERLIST", "PREGUNTAS", "DIBUJO"] as const;
 type EventModeValue = (typeof EVENT_MODES)[number];
@@ -338,11 +337,16 @@ export async function deleteEvent(eventId: string) {
 
   if (isAdmin) {
     revalidatePath("/admin/events");
-    redirect("/admin/events");
   } else {
     revalidatePath("/dashboard");
-    redirect("/dashboard");
   }
+
+  // No usamos redirect() aquí: esta acción se invoca desde un onClick del
+  // cliente envuelto en try/catch (EventSettings.tsx), y redirect() lanza
+  // internamente una excepción para que Next intercepte la navegación — ese
+  // throw lo capturaría el catch del cliente y mostraría un error falso aunque
+  // el borrado ya se haya completado. El cliente navega con router.push().
+  return { success: true, redirectTo: isAdmin ? "/admin/events" : "/dashboard" };
 }
 
 // --- ROTAR CLAVE PRIVADA ---

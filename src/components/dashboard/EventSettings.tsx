@@ -197,8 +197,14 @@ export default function EventSettings({ event, planSlug, permissions, isAdmin = 
     const handleDelete = async () => {
         setIsDeleting(true);
         try {
-            await deleteEvent(event.id);
-            // En caso de éxito, deleteEvent redirige al dashboard.
+            const res = await deleteEvent(event.id);
+            if (res?.success) {
+                toast.success("Evento eliminado correctamente");
+                router.push(res.redirectTo);
+            } else {
+                toast.error("No se pudo eliminar el evento.");
+                setIsDeleting(false);
+            }
         } catch (e) {
             console.error("Error al eliminar el evento", e);
             toast.error("No se pudo eliminar el evento.");
