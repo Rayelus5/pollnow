@@ -6,6 +6,7 @@ import { Users, UserPlus, Lock, Crown, ShieldCheck, Settings2, Loader2, Contact 
 import { AnimatePresence as AP } from "framer-motion";
 import clsx from "clsx";
 import Image from "next/image";
+import { isConfiguredImageHost } from "@/lib/image-hosts";
 import CollaboratorCard, {
     PendingInvitationCard,
     PERMISSION_LABELS,
@@ -289,6 +290,7 @@ export default function TeamTab({ eventId, eventTitle, planSlug, collaboratorLim
                                         alt={owner.name}
                                         width={32}
                                         height={32}
+                                        unoptimized={!isConfiguredImageHost(owner.image)}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (

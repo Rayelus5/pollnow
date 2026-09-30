@@ -57,14 +57,14 @@ async function getTimelineBuckets(
 ): Promise<{ bucket: Date; count: number }[]> {
     if (source === "vote") {
         return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
-            SELECT date_bin(${intervalText}::interval, v."createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket, COUNT(*)::int AS count
+            SELECT date_bin(${intervalText}::interval, v."createdAt", ${TIMELINE_ORIGIN}::timestamp) AS bucket, COUNT(*)::int AS count
             FROM "Vote" v JOIN "Poll" p ON v."pollId" = p.id
             WHERE p."eventId" = ${eventId}
             GROUP BY bucket ORDER BY bucket`;
     }
     if (source === "tierlistVote") {
         return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
-            SELECT date_bin(${intervalText}::interval, "createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket, COUNT(*)::int AS count
+            SELECT date_bin(${intervalText}::interval, "createdAt", ${TIMELINE_ORIGIN}::timestamp) AS bucket, COUNT(*)::int AS count
             FROM "TierlistVote" WHERE "eventId" = ${eventId}
             GROUP BY bucket ORDER BY bucket`;
     }
@@ -73,13 +73,13 @@ async function getTimelineBuckets(
         return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
             SELECT bucket, COUNT(*)::int AS count FROM (
                 SELECT DISTINCT ON ("voterHash") "voterHash",
-                       date_bin(${intervalText}::interval, "createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket
+                       date_bin(${intervalText}::interval, "createdAt", ${TIMELINE_ORIGIN}::timestamp) AS bucket
                 FROM "QuestionAnswer" WHERE "eventId" = ${eventId}
                 ORDER BY "voterHash", "createdAt" ASC
             ) sub GROUP BY bucket ORDER BY bucket`;
     }
     return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
-        SELECT date_bin(${intervalText}::interval, "createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket, COUNT(*)::int AS count
+        SELECT date_bin(${intervalText}::interval, "createdAt", ${TIMELINE_ORIGIN}::timestamp) AS bucket, COUNT(*)::int AS count
         FROM "DrawingReaction" WHERE "eventId" = ${eventId}
         GROUP BY bucket ORDER BY bucket`;
 }

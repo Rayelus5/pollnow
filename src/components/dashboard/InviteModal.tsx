@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, UserPlus, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useDebounce } from "use-debounce";
 import Image from "next/image";
+import { isConfiguredImageHost } from "@/lib/image-hosts";
 
 type UserSuggestion = {
     id: string;
@@ -170,7 +171,7 @@ export default function InviteModal({ eventId, onClose, onInvited }: Props) {
                                         >
                                             <div className="w-8 h-8 rounded-full bg-neutral-700 overflow-hidden shrink-0">
                                                 {u.image ? (
-                                                    <Image src={u.image} alt={u.name} width={32} height={32} className="w-full h-full object-cover" />
+                                                    <Image src={u.image} alt={u.name} width={32} height={32} unoptimized={!isConfiguredImageHost(u.image)} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <span className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-300">
                                                         {u.name.charAt(0).toUpperCase()}
@@ -199,7 +200,7 @@ export default function InviteModal({ eventId, onClose, onInvited }: Props) {
                             >
                                 <div className="w-9 h-9 rounded-full bg-neutral-700 overflow-hidden shrink-0">
                                     {selected.image ? (
-                                        <Image src={selected.image} alt={selected.name} width={36} height={36} className="w-full h-full object-cover" />
+                                        <Image src={selected.image} alt={selected.name} width={36} height={36} unoptimized={!isConfiguredImageHost(selected.image)} className="w-full h-full object-cover" />
                                     ) : (
                                         <span className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-300">
                                             {selected.name.charAt(0).toUpperCase()}
