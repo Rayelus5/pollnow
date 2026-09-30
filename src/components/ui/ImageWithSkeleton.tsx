@@ -5,6 +5,7 @@ import Image, { type ImageProps } from "next/image";
 import { clsx } from "clsx";
 import { Ring } from "ldrs/react";
 import "ldrs/react/Ring.css";
+import { isConfiguredImageHost } from "@/lib/image-hosts";
 
 type Props = Omit<ImageProps, "fill" | "alt" | "src"> & {
     src: string;
@@ -22,9 +23,11 @@ type Props = Omit<ImageProps, "fill" | "alt" | "src"> & {
  * (`relative` + alto explícito o `aspect-*`), ya que tanto el skeleton como
  * la imagen (`fill`) se renderizan con `absolute inset-0`.
  *
- * Las imágenes legacy guardadas como data-URI (nominados creados antes de
- * migrar a Vercel Blob) se sirven con `unoptimized`, ya que next/image no
- * admite data-URLs en su optimizador.
+ * Las imágenes legacy guardadas como data-URI, o cualquier URL externa pegada
+ * por el usuario (nominados en modo "Manual", avatar de perfil) cuyo dominio
+ * no esté en `images.remotePatterns` (src/lib/image-hosts.ts), se sirven con
+ * `unoptimized` — si no, next/image lanza un error duro ("hostname is not
+ * configured") en vez de solo perder la optimización para esa imagen.
  */
 export default function ImageWithSkeleton({
     className,
@@ -46,7 +49,8 @@ export default function ImageWithSkeleton({
         if (img?.complete && img.naturalWidth > 0) setLoaded(true);
     }, []);
 
-    const isDataUrl = typeof src === "string" && src.startsWith("data:");
+    const needsUnoptimized =
+        typeof src === "string" && (src.startsWith("data:") || !isConfiguredImageHost(src));
 
     return (
         <>
@@ -91,7 +95,7 @@ export default function ImageWithSkeleton({
                 alt={alt}
                 fill
                 sizes={sizes}
-                unoptimized={unoptimized ?? isDataUrl}
+                unoptimized={unoptimized ?? needsUnoptimized}
                 className={clsx(
                     className,
                     "transition-opacity duration-500",

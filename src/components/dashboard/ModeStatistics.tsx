@@ -5,6 +5,7 @@ import { Lock, TrendingUp, Users, ListOrdered, CircleHelp, Brush, ThumbsUp, Thum
 import { motion, AnimatePresence } from "framer-motion";
 import type { ModeStats, Voter } from "@/app/lib/stats-actions";
 import ImageWithSkeleton from "@/components/ui/ImageWithSkeleton";
+import VotingPerformanceCard from "@/components/dashboard/VotingPerformanceCard";
 
 function KpiCard({ title, value, icon, subtext }: { title: string; value: string | number; icon: React.ReactNode; subtext?: string }) {
     return (
@@ -138,6 +139,7 @@ export default function ModeStatistics({
                     <KpiCard title="Votos totales" value={stats.totalVotes} icon={<TrendingUp className="text-blue-400" />} subtext="Personas que ordenaron la tierlist" />
                     <KpiCard title="Nominados" value={stats.participants.length} icon={<ListOrdered className="text-purple-400" />} />
                 </div>
+                <VotingPerformanceCard data={stats.votesOverTime} />
                 {lockReason && stats.totalVotes > 0 && <VotersLockedBanner reason={lockReason} />}
                 <div className="bg-neutral-900/50 border-2 border-white/10 rounded-2xl p-6">
                     <h3 className="text-lg font-bold text-white mb-4">Tier más votado por nominado</h3>
@@ -204,6 +206,7 @@ export default function ModeStatistics({
                     <KpiCard title="Respuestas (personas)" value={stats.totalRespondents} icon={<Users className="text-green-400" />} subtext="Resultados privados (solo tú los ves)" />
                     <KpiCard title="Preguntas" value={stats.questions.length} icon={<CircleHelp className="text-purple-400" />} />
                 </div>
+                <VotingPerformanceCard data={stats.votesOverTime} />
                 {lockReason && stats.totalRespondents > 0 && <VotersLockedBanner reason={lockReason} />}
                 <div className="space-y-5">
                     {stats.questions.map((q) => (
@@ -254,6 +257,7 @@ export default function ModeStatistics({
                 <KpiCard title="Dislikes" value={stats.dislikes} icon={<ThumbsDown className="text-red-400" />} />
                 <KpiCard title="Superlikes" value={stats.superlikes} icon={<Star className="text-amber-400" />} />
             </div>
+            <VotingPerformanceCard data={stats.votesOverTime} />
             {lockReason && stats.submissions > 0 && <VotersLockedBanner reason={lockReason} />}
             <div className="bg-neutral-900/50 border-2 border-white/10 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Brush size={18} /> Top dibujos</h3>
@@ -262,8 +266,8 @@ export default function ModeStatistics({
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                         {stats.top.map((d, i) => (
-                            <div key={d.id} className="rounded-xl overflow-hidden border-2 border-white/10 bg-neutral-900 relative">
-                                {d.imageUrl ? <ImageWithSkeleton src={d.imageUrl} alt={`#${i + 1}`} className="w-full aspect-[3/2] object-cover bg-white" skeletonClassName="bg-neutral-300" /> : <div className="w-full aspect-[3/2] bg-neutral-800" />}
+                            <div key={d.id} className="rounded-xl overflow-hidden border-2 border-white/10 bg-neutral-900 relative aspect-[3/2]">
+                                {d.imageUrl ? <ImageWithSkeleton src={d.imageUrl} alt={`#${i + 1}`} className="object-cover bg-white" skeletonClassName="bg-neutral-300" sizes="(min-width: 1024px) 18vw, (min-width: 640px) 28vw, 45vw" /> : <div className="absolute inset-0 bg-neutral-800" />}
                                 {canViewVoters && (
                                     <button
                                         onClick={() => setModal({

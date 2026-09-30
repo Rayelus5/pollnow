@@ -2,6 +2,7 @@
 
 import { motion, Variants } from "framer-motion";
 import Image from "next/image";
+import { isConfiguredImageHost } from "@/lib/image-hosts";
 import Link from "next/link";
 import WinnerConfetti from "@/components/WinnerConfetti";
 import { clsx } from "clsx";
@@ -110,7 +111,7 @@ export default function ResultsClient({
                                         fill
                                         priority
                                         sizes="(min-width: 768px) 56rem, 100vw"
-                                        unoptimized={winnerImage.startsWith("data:")}
+                                        unoptimized={winnerImage.startsWith("data:") || !isConfiguredImageHost(winnerImage)}
                                         className="object-cover group-hover:scale-105 transition-transform duration-[3s] ease-out"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-blue-950/30 mix-blend-multiply" />

@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 import dotenv from 'dotenv';
+import { ALLOWED_IMAGE_HOSTS } from './src/lib/image-hosts';
 dotenv.config();
 
 const ip = process.env.IP_ADDRESS;
@@ -27,59 +28,10 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     formats: ['image/avif', 'image/webp'],
 
-    // Lista blanca de dominios externos
-    remotePatterns: [
-      {
-        // Imágenes de nominados: subidas manuales, generadas por IA y re-alojadas
-        // desde "Buscar en internet" (ver src/lib/participant-image.ts).
-        protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'api.dicebear.com',
-        port: '',
-        pathname: '/**', // Permitir cualquier ruta dentro de este dominio
-      },
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**', // Permitir cualquier ruta dentro de este dominio
-      },
-      {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'pollinations.ai',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'external-content.duckduckgo.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'duckduckgo.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.ibb.co',
-        port: '',
-        pathname: '/**',
-      }
-    ],
+    // Lista blanca de dominios externos — única fuente de verdad en src/lib/image-hosts.ts
+    // (compartida con ImageWithSkeleton.tsx/ResultsClient.tsx para saber cuándo NO se
+    // puede optimizar una URL pegada por el usuario y hay que caer a `unoptimized`).
+    remotePatterns: ALLOWED_IMAGE_HOSTS,
   },
 };
 

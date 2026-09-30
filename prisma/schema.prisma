@@ -391,6 +391,7 @@ model TierlistVote {
 
   @@unique([eventId, voterHash])
   @@index([eventId])
+  @@index([eventId, createdAt]) // Timeline de "rendimiento de votaciones"
 }
 
 // Asignación de un nominado (participantId) a un tier dentro de un voto.
@@ -460,6 +461,7 @@ model QuestionAnswer {
   @@index([questionId])
   @@index([eventId])
   @@index([voterHash])
+  @@index([eventId, createdAt]) // Timeline de "rendimiento de votaciones"
 }
 
 // ===================================
@@ -505,6 +507,7 @@ model DrawingReaction {
   @@unique([submissionId, voterHash]) // Una reacción por dibujo y votante
   @@index([submissionId])
   @@index([eventId, voterHash]) // Contar superlikes del votante en el evento
+  @@index([eventId, createdAt]) // Timeline de "rendimiento de votaciones"
 }
 
 // ===================================

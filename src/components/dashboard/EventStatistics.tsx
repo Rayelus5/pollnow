@@ -6,6 +6,7 @@ import Link from "next/link";
 // import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { clsx } from "clsx";
+import VotingPerformanceCard, { type VotesOverTimePoint } from "@/components/dashboard/VotingPerformanceCard";
 
 // Tipos actualizados
 type Voter = {
@@ -31,7 +32,7 @@ type StatsData = {
     totalVotes: number;
     totalPolls: number;
     votesByPoll: { name: string; votes: number }[];
-    activityTimeline: { date: string; count: number }[];
+    votesOverTime: VotesOverTimePoint[];
     pollsDetail: PollDetail[];
     isAnonymousConfig: boolean;
     likeCount: number;
@@ -77,7 +78,7 @@ export default function EventStatistics({ stats, planSlug, isAdmin, canViewStats
             totalVotes: 0,
             totalPolls: 0,
             votesByPoll: [],
-            activityTimeline: [],
+            votesOverTime: [],
             pollsDetail: [],
             isAnonymousConfig: true,
             likeCount: 0,
@@ -86,11 +87,6 @@ export default function EventStatistics({ stats, planSlug, isAdmin, canViewStats
             voteScore: 0,
         };
 
-    // (por si en el futuro dibujas timeline)
-    const maxTimelineVotes = Math.max(
-        ...displayStats.activityTimeline.map((d) => d.count),
-        1
-    );
     const maxPollVotes = Math.max(displayStats.totalVotes, 1);
 
     return (
@@ -179,6 +175,9 @@ export default function EventStatistics({ stats, planSlug, isAdmin, canViewStats
                         accent={displayStats.voteScore > 0 ? "emerald" : displayStats.voteScore < 0 ? "red" : undefined}
                     />
                 </div>
+
+                {/* 3. Rendimiento de votaciones (serie temporal) */}
+                <VotingPerformanceCard data={displayStats.votesOverTime} />
 
                 <div className="grid lg:grid-cols-2 gap-8">
                     {/* 2. GRÁFICO BARRAS */}
@@ -473,7 +472,10 @@ const MOCK_STATS: StatsData = {
     totalVotes: 1243,
     totalPolls: 8,
     votesByPoll: [],
-    activityTimeline: [],
+    votesOverTime: Array.from({ length: 24 }, (_, i) => ({
+        bucket: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toISOString(),
+        count: Math.round(20 + Math.random() * 60),
+    })),
     pollsDetail: [],
     isAnonymousConfig: true,
     likeCount: 47,

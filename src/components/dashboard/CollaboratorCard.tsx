@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Trash2, Loader2, Shield, Clock, UserMinus, X } from "lucide-react";
 import Image from "next/image";
+import { isConfiguredImageHost } from "@/lib/image-hosts";
 import clsx from "clsx";
 
 export type PermissionKey =
@@ -149,6 +150,7 @@ export default function CollaboratorCard({
                             alt={collaborator.user.name}
                             width={40}
                             height={40}
+                            unoptimized={!isConfiguredImageHost(collaborator.user.image)}
                             className="w-full h-full object-cover"
                         />
                     ) : (
@@ -255,6 +257,7 @@ export default function CollaboratorCard({
                                                 alt={collaborator.user.name}
                                                 width={36}
                                                 height={36}
+                                                unoptimized={!isConfiguredImageHost(collaborator.user.image)}
                                                 className="w-full h-full object-cover"
                                             />
                                         ) : (
@@ -378,6 +381,7 @@ export function PendingInvitationCard({
                         alt={invitation.invitedUser.name}
                         width={36}
                         height={36}
+                        unoptimized={!isConfiguredImageHost(invitation.invitedUser.image)}
                         className="w-full h-full object-cover"
                     />
                 ) : (

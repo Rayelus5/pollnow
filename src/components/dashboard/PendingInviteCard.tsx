@@ -6,6 +6,7 @@ import { CheckCircle2, XCircle, Loader2, UserCircle, CalendarDays, LayoutList } 
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import Image from "next/image";
+import { isConfiguredImageHost } from "@/lib/image-hosts";
 
 type EventRow = {
     id: string;
@@ -90,7 +91,7 @@ export default function PendingInviteCard({ invitationId, event, invitedBy, onAc
             <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/4 border-2 border-white/8">
                 <div className="w-7 h-7 rounded-full bg-neutral-700 overflow-hidden shrink-0">
                     {invitedBy.image ? (
-                        <Image src={invitedBy.image} alt={invitedBy.name} width={28} height={28} className="w-full h-full object-cover" />
+                        <Image src={invitedBy.image} alt={invitedBy.name} width={28} height={28} unoptimized={!isConfiguredImageHost(invitedBy.image)} className="w-full h-full object-cover" />
                     ) : (
                         <span className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-400">
                             {invitedBy.name.charAt(0).toUpperCase()}
