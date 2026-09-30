@@ -14,8 +14,18 @@ type PlanCard = {
     name: string;
     price: number;
     priceId: string | null;
+    quota: number;
     features: Record<string, unknown>;
 };
+
+// Detecta cualquier bullet de marketing tipo "5 Eventos Activos" que venga del
+// featureList manual o del fallback hardcodeado, para no duplicarlo con la
+// línea generada dinámicamente a partir de `quota` (ver buildCard).
+const EVENTS_BULLET_RE = /\bevento[s]?\s+activo[s]?\b/i;
+
+function eventsBullet(quota: number): string {
+    return `${quota} Evento${quota === 1 ? "" : "s"} Activo${quota === 1 ? "" : "s"}`;
+}
 
 // FALLBACK de presentación por slug. Solo se usa si el JSON `features` del plan en
 // BD no trae estos campos. Lo "de marca" (textos) puede moverse al JSON desde /admin.
@@ -52,13 +62,17 @@ const numOr = (v: unknown, fb: number): number => (typeof v === "number" ? v : f
 function buildCard(p: PlanCard) {
     const f = p.features ?? {};
     const pres = PRESENTATION[p.slug] ?? { description: "", features: [] };
+    // La línea de "Eventos Activos" SIEMPRE sale de `quota` (fuente de verdad,
+    // la misma que aplica createEvent) — nunca del texto de marketing, para que
+    // cambiar el límite en /admin/plans se refleje aquí sin editar nada más.
+    const restFeatures = (strArr(f.featureList) ?? pres.features).filter((line) => !EVENTS_BULLET_RE.test(line));
     return {
         key: p.slug,
         title: p.name,
         price: p.price === 0 ? "GRATIS" : `${p.price.toFixed(2)}€`,
         period: p.price === 0 ? undefined : (str(f.period) ?? pres.period),
         description: str(f.tagline) ?? pres.description,
-        features: strArr(f.featureList) ?? pres.features,
+        features: [eventsBullet(p.quota), ...restFeatures],
         priceId: p.priceId,
         highlight: typeof f.highlight === "boolean" ? f.highlight : pres.highlight,
         enterpriseLike: typeof f.enterpriseLike === "boolean" ? (f.enterpriseLike as boolean) : pres.enterpriseLike,
