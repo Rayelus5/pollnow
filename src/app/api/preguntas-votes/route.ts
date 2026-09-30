@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
+import { checkVoteMilestone } from "@/lib/vote-milestones";
 
 // POST /api/preguntas-votes
 // Body: { eventId, answers: [{ questionId, optionIds: string[] }] }
@@ -70,6 +71,8 @@ export async function POST(req: Request) {
         void qById;
 
         await prisma.questionAnswer.createMany({ data: rows, skipDuplicates: true });
+
+        after(() => checkVoteMilestone(eventId));
 
         return NextResponse.json({ success: true });
     } catch (error: unknown) {

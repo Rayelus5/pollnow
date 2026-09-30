@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
+import { checkEventAccess } from "@/lib/event-access";
+import { storeParticipantImage } from "@/lib/participant-image";
+
+export const runtime = "nodejs";
 
 // Modelos gratuitos que corren en paralelo; p-image es de pago y sólo se usa como último recurso
 const FREE_MODELS = ["klein", "flux", "zimage"] as const;
@@ -72,25 +76,27 @@ async function raceModels(
 }
 
 export async function POST(req: Request) {
-    // Rate limit: 5 imágenes/min por usuario autenticado, 2/min por IP anónima
+    // La imagen se aloja en el Blob del evento, así que hace falta ser dueño/colaborador.
     const session = await auth();
-    const rateLimitKey = session?.user?.id
-        ? `gen-image:user:${session.user.id}`
-        : `gen-image:ip:${getClientIp(req)}`;
-    const limit = session?.user?.id ? 5 : 2;
+    if (!session?.user?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-    const rl = await rateLimit(rateLimitKey, limit);
+    const rl = await rateLimit(`gen-image:user:${session.user.id}:${getClientIp(req)}`, 5);
     if (!rl.allowed) return tooManyRequests(rl);
 
     if (!process.env.POLLINATIONS_API_KEY) {
         return NextResponse.json({ error: "POLLINATIONS_API_KEY no configurada." }, { status: 500 });
     }
 
-    const { prompt, seed } = await req.json();
+    const { prompt, seed, eventId } = await req.json();
 
     if (!prompt || typeof prompt !== "string") {
         return NextResponse.json({ error: "Prompt inválido." }, { status: 400 });
     }
+    if (!eventId || typeof eventId !== "string") {
+        return NextResponse.json({ error: "Falta el evento." }, { status: 400 });
+    }
+    const hasAccess = await checkEventAccess(eventId, session.user.id, "canManageNominees");
+    if (!hasAccess) return NextResponse.json({ error: "Sin permisos sobre este evento" }, { status: 403 });
 
     const resolvedSeed = seed ?? Math.floor(Math.random() * 10000);
 
@@ -104,12 +110,9 @@ export async function POST(req: Request) {
     }
 
     if (result.ok) {
-        const base64 = Buffer.from(result.buffer).toString("base64");
+        const { url } = await storeParticipantImage(eventId, Buffer.from(result.buffer));
         console.log(`Imagen generada con modelo: ${result.model}`);
-        return NextResponse.json({
-            imageUrl: `data:${result.contentType};base64,${base64}`,
-            model: result.model,
-        });
+        return NextResponse.json({ imageUrl: url, model: result.model });
     }
 
     console.error("Todos los modelos fallaron (incluido p-image).");

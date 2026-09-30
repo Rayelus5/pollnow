@@ -1,11 +1,14 @@
 "use client";
 
 import { motion, Variants } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import WinnerConfetti from "@/components/WinnerConfetti";
 import { clsx } from "clsx";
 import { ArrowLeft } from "lucide-react";
 import { CustomAdBannerVertical } from "./ads/CustomAdBannerVertical";
+
+const MotionImage = motion.create(Image);
 
 type Result = {
     id: string;
@@ -98,13 +101,17 @@ export default function ResultsClient({
                             {/* 1. IMAGEN DE FONDO */}
                             {winnerImage && (
                                 <div className="absolute inset-0 z-0">
-                                    <motion.img
+                                    <MotionImage
                                         initial={{ scale: 1.1, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 0.6 }}
                                         transition={{ duration: 1.5 }}
                                         src={winnerImage}
                                         alt="Winner Background"
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3s] ease-out"
+                                        fill
+                                        priority
+                                        sizes="(min-width: 768px) 56rem, 100vw"
+                                        unoptimized={winnerImage.startsWith("data:")}
+                                        className="object-cover group-hover:scale-105 transition-transform duration-[3s] ease-out"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-blue-950/30 mix-blend-multiply" />
                                 </div>

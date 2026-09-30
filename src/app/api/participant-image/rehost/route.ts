@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { put } from "@vercel/blob";
 import { rateLimit, getClientIp, tooManyRequests } from "@/lib/rate-limit-redis";
 import { checkEventAccess } from "@/lib/event-access";
 import { isAllowedImageHost } from "@/lib/image-search";
+import { storeParticipantImage } from "@/lib/participant-image";
 
 export const runtime = "nodejs";
 
@@ -45,14 +45,9 @@ export async function POST(req: Request) {
         const buffer = Buffer.from(await imgRes.arrayBuffer());
         if (buffer.byteLength > 5 * 1024 * 1024) return NextResponse.json({ error: "La imagen es demasiado grande" }, { status: 413 });
 
-        const key = `events/${eventId}/participants/${crypto.randomUUID()}.${ext}`;
-        const blob = await put(key, new Blob([buffer as BlobPart], { type: contentType }), {
-            access: "public",
-            contentType,
-            addRandomSuffix: false,
-        });
+        const stored = await storeParticipantImage(eventId, buffer);
 
-        return NextResponse.json({ url: blob.url });
+        return NextResponse.json({ url: stored.url });
     } catch (error) {
         console.error("[participant-image/rehost]", error);
         return NextResponse.json({ error: "Error al guardar la imagen" }, { status: 500 });

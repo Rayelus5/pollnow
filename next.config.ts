@@ -25,9 +25,18 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    formats: ['image/avif', 'image/webp'],
 
     // Lista blanca de dominios externos
     remotePatterns: [
+      {
+        // Imágenes de nominados: subidas manuales, generadas por IA y re-alojadas
+        // desde "Buscar en internet" (ver src/lib/participant-image.ts).
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+        port: '',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: 'api.dicebear.com',

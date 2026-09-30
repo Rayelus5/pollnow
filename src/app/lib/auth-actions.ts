@@ -1,5 +1,6 @@
 'use server';
 
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -8,6 +9,8 @@ import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/mail";
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import { applyWelcomeBonus } from "@/lib/promotion-utils";
+import { getServerActionIp } from "@/lib/rate-limit-redis";
+import { notifyNewUser } from "@/lib/telegram";
 
 // --- SCHEMAS ---
 const strictNameRegex = /^[a-z]+$/;
@@ -105,6 +108,18 @@ export async function registerUser(
 
         const verificationToken = await generateVerificationToken(data.email);
         await sendVerificationEmail(verificationToken.email, verificationToken.token);
+
+        const ip = await getServerActionIp();
+        after(() =>
+            notifyNewUser({
+                name: newUser.name,
+                username: newUser.username,
+                email: newUser.email,
+                image: newUser.image,
+                provider: "credentials",
+                ip,
+            })
+        );
 
         return { success: "Cuenta creada. Revisa tu correo para verificarla." };
 

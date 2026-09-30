@@ -1,6 +1,6 @@
 ---
 title: Variables de entorno
-updated: 2026-05-23
+updated: 2026-09-30
 ---
 
 # Variables de entorno
@@ -52,7 +52,7 @@ exponen al cliente.
 
 | Variable | Uso |
 |----------|-----|
-| `BLOB_READ_WRITE_TOKEN` | Subida/borrado de dibujos (modo DIBUJO) e imágenes de nominados re-alojadas. En Vercel se autoconfigura al crear un store Blob; en local cópiala del dashboard. |
+| `BLOB_READ_WRITE_TOKEN` | Subida/borrado de dibujos (modo DIBUJO) e imágenes de nominados (subida manual, generadas por IA y re-alojadas desde "Buscar en internet" — los 3 modos se optimizan a WebP y se suben a Blob). En Vercel se autoconfigura al crear un store Blob; en local cópiala del dashboard. |
 
 Ver [event-modes.md](../04-subsystems/event-modes.md) (almacenamiento y limpieza de blobs).
 
@@ -64,6 +64,18 @@ Ver [event-modes.md](../04-subsystems/event-modes.md) (almacenamiento y limpieza
 | `GEMINI_API_KEY` | Chatbot (Google Generative AI) |
 | `POLLINATIONS_API_KEY` | Generación de imágenes (IA) |
 | `PEXELS_API_KEY` | Búsqueda de imágenes de nominados ("Buscar en internet"). Opcional: sin ella solo se usan resultados de Wikimedia. |
+
+## Notificaciones (Telegram) — **nuevo**
+
+| Variable | Uso |
+|----------|-----|
+| `TELEGRAM_BOT_TOKEN` | Token del bot de Telegram (BotFather). Sin ella, las notificaciones se desactivan silenciosamente (fail-open). |
+| `TELEGRAM_ADMIN_CHAT_ID` | Chat/grupo donde el bot envía todos los avisos al admin. |
+
+Avisa en tiempo real de: registro de usuario (con IP), evento creado, solicitud de
+publicación, reporte de contenido, bug report, tickets/mensajes de soporte, y "hitos" de
+votación (umbrales de votos por evento, para no saturar el chat con un aviso por voto). Ver
+`src/lib/telegram.ts` y `src/lib/vote-milestones.ts`.
 
 ## Otras
 
