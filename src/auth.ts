@@ -172,6 +172,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             } catch (e) {
                 console.error("[auth] createUser bonus error:", e);
             }
+
+            try {
+                const { after } = await import("next/server");
+                const { getServerActionIp } = await import("./lib/rate-limit-redis");
+                const { notifyNewUser } = await import("./lib/telegram");
+                const ip = await getServerActionIp();
+                after(() =>
+                    notifyNewUser({
+                        name: user.name ?? "(sin nombre)",
+                        username: (user as { username?: string }).username ?? user.email?.split("@")[0] ?? "?",
+                        email: user.email ?? "(sin email)",
+                        image: user.image,
+                        provider: "google",
+                        ip,
+                    })
+                );
+            } catch (e) {
+                console.error("[auth] createUser telegram notify error:", e);
+            }
         },
     },
 

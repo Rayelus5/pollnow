@@ -1,9 +1,11 @@
 "use server";
 
+import { after } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { pusherServer, chatChannel, PUSHER_EVENTS } from "@/lib/pusher";
+import { notifyNewSupportChat, notifyNewSupportMessage } from "@/lib/telegram";
 
 // Crear un nuevo chat de soporte (usuario)
 export async function createSupportChat() {
@@ -50,6 +52,14 @@ export async function createSupportChat() {
 
     revalidatePath("/admin/chats");
     revalidatePath("/dashboard/support");
+
+    after(() =>
+        notifyNewSupportChat({
+            chatId: chat.id,
+            userName: session.user.name ?? "?",
+            userUsername: session.user.username ?? session.user.id,
+        })
+    );
 
     return { chatId: chat.id };
 }
@@ -132,6 +142,14 @@ export async function sendSupportMessage(chatId: string, content: string) {
             }
         }
         revalidatePath("/admin/notifications");
+
+        after(() =>
+            notifyNewSupportMessage({
+                chatId: chat.id,
+                userName: chat.user.name,
+                preview: content,
+            })
+        );
     }
 
     revalidatePath(`/admin/chats/${chatId}`);

@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { put } from "@vercel/blob";
@@ -7,6 +8,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { rateLimit } from "@/lib/rate-limit-redis";
 import { sendBugReportToAdmin, sendBugReplyToUser } from "@/lib/mail";
+import { notifyBugReport } from "@/lib/telegram";
 import { BugSeverity, BugStatus } from "@prisma/client";
 
 const EXT_BY_TYPE: Record<string, string> = {
@@ -92,7 +94,7 @@ export async function submitBugReport(
                 description: data.description,
                 screenshotUrl,
             },
-            include: { user: { select: { name: true, email: true, id: true } } },
+            include: { user: { select: { name: true, email: true, id: true, username: true } } },
         });
 
         // Email al admin (best-effort: no rompe el flujo si Resend falla)
@@ -111,6 +113,16 @@ export async function submitBugReport(
         } catch (e) {
             console.error("[bug-report] admin email failed", e);
         }
+
+        after(() =>
+            notifyBugReport({
+                reportId: report.id,
+                title: report.title,
+                severity: report.severity,
+                pageUrl: report.pageUrl,
+                reporterUsername: report.user.username,
+            })
+        );
 
         return { success: true };
     } catch (e) {
