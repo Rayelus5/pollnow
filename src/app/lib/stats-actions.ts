@@ -9,10 +9,91 @@ import { prisma } from "@/lib/prisma";
 /** Identidad de un votante. `isAnonymous` = no estaba logueado (sin userId). */
 export type Voter = { name: string; image: string | null; isAnonymous: boolean };
 
+/** Punto del timeline de "Rendimiento de votaciones": bucket de tiempo (ISO) + nº de votos. */
+export type VotesOverTimePoint = { bucket: string; count: number };
+
 export type ModeStats =
-    | { mode: "TIERLIST"; totalVotes: number; participants: { id: string; name: string; imageUrl: string | null; placements: number; topTierId: string | null; topTier: { label: string; color: string } | null; tiers: { tierId: string; label: string; color: string; count: number; voters?: Voter[] }[] }[] }
-    | { mode: "PREGUNTAS"; totalRespondents: number; questions: { id: string; text: string; type: string; totalAnswers: number; options: { id: string; text: string; count: number; pct: number; voters?: Voter[] }[] }[] }
-    | { mode: "DIBUJO"; submissions: number; reactions: number; likes: number; dislikes: number; superlikes: number; top: { id: string; imageUrl: string; score: number; likeCount: number; dislikeCount: number; superlikeCount: number; author?: Voter | null; reactors?: { type: string; voter: Voter }[] }[] };
+    | { mode: "TIERLIST"; totalVotes: number; votesOverTime: VotesOverTimePoint[]; participants: { id: string; name: string; imageUrl: string | null; placements: number; topTierId: string | null; topTier: { label: string; color: string } | null; tiers: { tierId: string; label: string; color: string; count: number; voters?: Voter[] }[] }[] }
+    | { mode: "PREGUNTAS"; totalRespondents: number; votesOverTime: VotesOverTimePoint[]; questions: { id: string; text: string; type: string; totalAnswers: number; options: { id: string; text: string; count: number; pct: number; voters?: Voter[] }[] }[] }
+    | { mode: "DIBUJO"; submissions: number; reactions: number; likes: number; dislikes: number; superlikes: number; votesOverTime: VotesOverTimePoint[]; top: { id: string; imageUrl: string; score: number; likeCount: number; dislikeCount: number; superlikeCount: number; author?: Voter | null; reactors?: { type: string; voter: Voter }[] }[] };
+
+// ─── Timeline de votos ("Rendimiento de votaciones") ─────────────────────────────
+// Bucketing adaptativo: se calcula el rango real (min/max createdAt) de los votos
+// del evento y se reparte en ~24 buckets de ancho variable (nunca menos de 60s),
+// para que sirva igual de bien a un evento de 2h que a uno de varias semanas.
+// Prisma no soporta date_trunc/date_bin en `groupBy`, así que se usa $queryRaw
+// (con `eventId`/intervalo como parámetros normales, sin riesgo de inyección).
+
+type TimelineSource = "vote" | "tierlistVote" | "questionAnswer" | "drawingReaction";
+
+const TIMELINE_BUCKETS = 24;
+const MIN_BUCKET_SECONDS = 60;
+const TIMELINE_ORIGIN = "2001-01-01 00:00:00";
+
+async function getTimelineRange(source: TimelineSource, eventId: string): Promise<{ min: Date; max: Date } | null> {
+    const rows =
+        source === "vote"
+            ? await prisma.$queryRaw<{ min: Date | null; max: Date | null }[]>`
+                SELECT MIN(v."createdAt") as min, MAX(v."createdAt") as max
+                FROM "Vote" v JOIN "Poll" p ON v."pollId" = p.id WHERE p."eventId" = ${eventId}`
+            : source === "tierlistVote"
+            ? await prisma.$queryRaw<{ min: Date | null; max: Date | null }[]>`
+                SELECT MIN("createdAt") as min, MAX("createdAt") as max FROM "TierlistVote" WHERE "eventId" = ${eventId}`
+            : source === "questionAnswer"
+            ? await prisma.$queryRaw<{ min: Date | null; max: Date | null }[]>`
+                SELECT MIN("createdAt") as min, MAX("createdAt") as max FROM "QuestionAnswer" WHERE "eventId" = ${eventId}`
+            : await prisma.$queryRaw<{ min: Date | null; max: Date | null }[]>`
+                SELECT MIN("createdAt") as min, MAX("createdAt") as max FROM "DrawingReaction" WHERE "eventId" = ${eventId}`;
+
+    const row = rows[0];
+    if (!row?.min || !row?.max) return null;
+    return { min: row.min, max: row.max };
+}
+
+async function getTimelineBuckets(
+    source: TimelineSource,
+    eventId: string,
+    intervalText: string
+): Promise<{ bucket: Date; count: number }[]> {
+    if (source === "vote") {
+        return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
+            SELECT date_bin(${intervalText}::interval, v."createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket, COUNT(*)::int AS count
+            FROM "Vote" v JOIN "Poll" p ON v."pollId" = p.id
+            WHERE p."eventId" = ${eventId}
+            GROUP BY bucket ORDER BY bucket`;
+    }
+    if (source === "tierlistVote") {
+        return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
+            SELECT date_bin(${intervalText}::interval, "createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket, COUNT(*)::int AS count
+            FROM "TierlistVote" WHERE "eventId" = ${eventId}
+            GROUP BY bucket ORDER BY bucket`;
+    }
+    if (source === "questionAnswer") {
+        // Interesa el envío del formulario (1 por voterHash), no cada fila de respuesta.
+        return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
+            SELECT bucket, COUNT(*)::int AS count FROM (
+                SELECT DISTINCT ON ("voterHash") "voterHash",
+                       date_bin(${intervalText}::interval, "createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket
+                FROM "QuestionAnswer" WHERE "eventId" = ${eventId}
+                ORDER BY "voterHash", "createdAt" ASC
+            ) sub GROUP BY bucket ORDER BY bucket`;
+    }
+    return prisma.$queryRaw<{ bucket: Date; count: number }[]>`
+        SELECT date_bin(${intervalText}::interval, "createdAt", TIMESTAMP ${TIMELINE_ORIGIN}) AS bucket, COUNT(*)::int AS count
+        FROM "DrawingReaction" WHERE "eventId" = ${eventId}
+        GROUP BY bucket ORDER BY bucket`;
+}
+
+async function computeVotesOverTime(source: TimelineSource, eventId: string): Promise<VotesOverTimePoint[]> {
+    const range = await getTimelineRange(source, eventId);
+    if (!range) return [];
+
+    const spanSeconds = Math.max(1, (range.max.getTime() - range.min.getTime()) / 1000);
+    const bucketSeconds = Math.max(MIN_BUCKET_SECONDS, Math.ceil(spanSeconds / TIMELINE_BUCKETS));
+
+    const rows = await getTimelineBuckets(source, eventId, `${bucketSeconds} seconds`);
+    return rows.map((r) => ({ bucket: r.bucket.toISOString(), count: Number(r.count) }));
+}
 
 /**
  * Estadísticas por modo. Si `includeVoters` es true (plan suficiente + voto NO anónimo),
@@ -90,7 +171,8 @@ export async function getModeStats(
                 tiers: tierCounts,
             };
         }).sort((a, b) => b.placements - a.placements);
-        return { mode: "TIERLIST", totalVotes, participants: result };
+        const votesOverTime = await computeVotesOverTime("tierlistVote", eventId);
+        return { mode: "TIERLIST", totalVotes, votesOverTime, participants: result };
     }
 
     if (mode === "PREGUNTAS") {
@@ -122,7 +204,8 @@ export async function getModeStats(
                 })),
             };
         });
-        return { mode: "PREGUNTAS", totalRespondents: respondents.length, questions: qStats };
+        const votesOverTime = await computeVotesOverTime("questionAnswer", eventId);
+        return { mode: "PREGUNTAS", totalRespondents: respondents.length, votesOverTime, questions: qStats };
     }
 
     // DIBUJO
@@ -140,6 +223,7 @@ export async function getModeStats(
     const likes = byType.get("LIKE") ?? 0;
     const dislikes = byType.get("DISLIKE") ?? 0;
     const superlikes = byType.get("SUPERLIKE") ?? 0;
+    const votesOverTime = await computeVotesOverTime("drawingReaction", eventId);
 
     // Reacciones (con identidad) para los dibujos del top
     const reactorsBySubmission = new Map<string, { type: string; voter: Voter }[]>();
@@ -162,14 +246,14 @@ export async function getModeStats(
             author: resolveVoter(t.userId),
             reactors: reactorsBySubmission.get(t.id) ?? [],
         }));
-        return { mode: "DIBUJO", submissions, reactions: likes + dislikes + superlikes, likes, dislikes, superlikes, top };
+        return { mode: "DIBUJO", submissions, reactions: likes + dislikes + superlikes, likes, dislikes, superlikes, votesOverTime, top };
     }
 
     const top = topRows.map((t) => ({
         id: t.id, imageUrl: t.imageUrl, score: t.score, likeCount: t.likeCount, dislikeCount: t.dislikeCount, superlikeCount: t.superlikeCount,
     }));
 
-    return { mode: "DIBUJO", submissions, reactions: likes + dislikes + superlikes, likes, dislikes, superlikes, top };
+    return { mode: "DIBUJO", submissions, reactions: likes + dislikes + superlikes, likes, dislikes, superlikes, votesOverTime, top };
 }
 
 export async function getEventStats(eventId: string) {
@@ -178,9 +262,9 @@ export async function getEventStats(eventId: string) {
 
     // Query 1: estructura del evento + contadores (sin arrastrar votos/usuarios anidados).
     // Query 2: detalle de votantes por opción (solo lo que necesita el modal), con join plano.
-    // Query 3: timeline de las últimas 50 votaciones.
+    // Query 3: timeline de "rendimiento de votaciones" (bucketing adaptativo, ver computeVotesOverTime).
     // Las tres se ejecutan en paralelo.
-    const [event, voteOptionRows, recentVotes] = await Promise.all([
+    const [event, voteOptionRows, votesOverTime] = await Promise.all([
         prisma.event.findUnique({
             where: { id: eventId },
             select: {
@@ -215,12 +299,7 @@ export async function getEventStats(eventId: string) {
                 },
             },
         }),
-        prisma.vote.findMany({
-            where: { poll: { eventId } },
-            orderBy: { createdAt: "desc" },
-            take: 50,
-            select: { createdAt: true },
-        }),
+        computeVotesOverTime("vote", eventId),
     ]);
 
     if (!event) return null;
@@ -267,17 +346,6 @@ export async function getEventStats(eventId: string) {
             .sort((a, b) => b.votesCount - a.votesCount),
     }));
 
-    // Timeline simple de las últimas 50 votaciones
-    const votesByDateMap = new Map<string, number>();
-    recentVotes.forEach((vote) => {
-        const date = vote.createdAt.toISOString().split("T")[0];
-        votesByDateMap.set(date, (votesByDateMap.get(date) || 0) + 1);
-    });
-
-    const activityTimeline = Array.from(votesByDateMap.entries())
-        .map(([date, count]) => ({ date, count }))
-        .reverse();
-
     const likeCount = event._count.likes;
     const upvotes = event.eventVotes.filter((v) => v.value === 1).length;
     const downvotes = event.eventVotes.filter((v) => v.value === -1).length;
@@ -287,7 +355,7 @@ export async function getEventStats(eventId: string) {
         totalVotes,
         totalPolls,
         votesByPoll,
-        activityTimeline,
+        votesOverTime,
         pollsDetail,
         isAnonymousConfig: event.isAnonymousVoting,
         likeCount,
